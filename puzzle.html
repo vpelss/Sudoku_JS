@@ -123,7 +123,7 @@ font-size: 6vmin;
    <SCRIPT SRC="./js/cookie.js"></SCRIPT>
   </HEAD>
   
-  <body onload="Main();"; ONKEYUP="keyinput(LastCursorID , event.keyCode);"	CLASS="pad_button_numeric">
+  <body id="body" CLASS="pad_button_numeric">
   
 <SCRIPT TYPE="text/javascript">
 
@@ -139,7 +139,7 @@ var sudoku = DIM([3, 3, 3, 3], {
 	9: true
 }); //fill Sudoku board with all probabilities
 
-//set path to traverse Sudoku
+//set path to traverse Sudoku 
 var path = [];
 for (let by = 0; by < 3; by++) {
 	for (let ly = 0; ly < 3; ly++) {
@@ -152,6 +152,13 @@ for (let by = 0; by < 3; by++) {
 }
 
 function Main() {
+//set event functions  
+document.getElementById("how_to_play").onclick = Howtoplay;
+document.getElementById("statistics").onclick = Statistics;
+document.getElementById("solution").onclick = SolutionsDialog;
+document.getElementById("clear_blank_cells").onclick = ClearUnlockedCells;
+document.getElementById("body").onkeydown = keyinput;
+
 	//start create full Sudoku board
 	SetNextSquare(path);
 
@@ -173,8 +180,9 @@ function Main() {
 			xx = 0;
 		}
 	}
-
+  
 }
+document.getElementById("body").onload = Main;
 
 function SetNextSquare(path) { //recursive
 	if (path.length == 0) {
@@ -262,9 +270,7 @@ function shuffleArray(array) {
 	return array;
 }
 
-//like the BASIC DIM : var multiDimensionalArray = DIM([7,8,9])
-
-function DIM(arrayOfDimensions, theValue) {
+function DIM(arrayOfDimensions, theValue) { //like the BASIC DIM : var multiDimensionalArray = DIM([7,8,9],{jj:9 , kk:8})
 	let localArrayOfDimensions = arrayOfDimensions.slice(); //must copy array as scope for arrayofdimensions is global 
 	let returnArray = [];
 	if (localArrayOfDimensions.length === 0) //no more dimensions
@@ -277,12 +283,6 @@ function DIM(arrayOfDimensions, theValue) {
 		returnArray[arrayPointer] = DIM(localArrayOfDimensions, theValue);
 	}
 	return returnArray; //return here if there are still more array dimensions
-}
-
-function arrayRemove(arr, value) {
-	return arr.filter(function(ele) {
-		return ele != value;
-	});
 }
 
 //start dialogs and turn off
@@ -313,33 +313,11 @@ function gup(name) {
 		return results[1];
 }
 
-//variables passed from facebook to .cgi script
-var uid = "%uid%";
-var browserType;
 var LastCursorID = "cell_0_0";
-//var LastCursorClass = "";
-var StaticArray = new Array(9);
-for (var x = 0; x <= 8; x++) {
-	StaticArray[x] = new Array(9);
-} //StaticArray[x][y]
-var ScratchArray = new Array(9);
-for (x = 0; x <= 8; x++) {
-	ScratchArray[x] = new Array(9);
-} //ScratchArray[x][y]
+var StaticArray = DIM([9,9] , 0);
 
 var blanksquares = "%blanksquares%";
 var intable = 1;
-
-//document.getElementById(CursorID).innerHTML=String.fromCharCode(event.keyCode);
-if (document.layers) {
-	browserType = "nn4";
-}
-if (document.all) {
-	browserType = "ie";
-}
-if (window.navigator.userAgent.toLowerCase().match("gecko")) {
-	browserType = "gecko";
-}
 
 function PositionFromID(cellID) {
 	var gridID = cellID.slice(5, 9999); //strip Grid_
@@ -375,12 +353,12 @@ function IsCellStaticID(cellID) {
 	}
 }
 
-function chooseOnClick(cellID) {
+function chooseOnClick() {
+  cellID = this.id;
 	choose(cellID);
 }
 
 function choose(cellID) {
-
 	//take care of last cursor cell
 	//if (LastCursorClass == '') {LastCursorClass = document.getElementById(cellID).className} //so we don't pooch the starting square
 	//else {document.getElementById(LastCursorID).className = LastCursorClass;} //restore last selected square
@@ -408,7 +386,10 @@ function choose(cellID) {
 	}
 }
 
-function keyinput(cellID, keyCode) {
+function keyinput() {
+  var keyCode = event.key;
+  let cellID = LastCursorID;
+  
 	var xy = Array();
 	xy = PositionFromID(cellID);
 	var x = xy[0];
@@ -418,7 +399,8 @@ function keyinput(cellID, keyCode) {
 		return 0;
 	} //we are not typing in the table. ignore
 
-	if (keyCode == 37) {
+	//if (keyCode == 37) {
+	if (keyCode == "ArrowLeft") {
 		if (x <= 0) {
 			x = 8;
 		} else {
@@ -426,7 +408,8 @@ function keyinput(cellID, keyCode) {
 		}
 		choose('cell_' + x + '_' + y);
 	} //left
-	if (keyCode == 38) {
+	if (keyCode == "ArrowUp") {
+	//if (keyCode == 38) {
 		if (y <= 0) {
 			y = 8;
 		} else {
@@ -434,7 +417,8 @@ function keyinput(cellID, keyCode) {
 		}
 		choose('cell_' + x + '_' + y);
 	} //up
-	if (keyCode == 39) {
+	if (keyCode == "ArrowRight") {
+	//if (keyCode == 39) {
 		if (x >= 8) {
 			x = 0;
 		} else {
@@ -442,7 +426,8 @@ function keyinput(cellID, keyCode) {
 		}
 		choose('cell_' + x + '_' + y);
 	} //right
-	if (keyCode == 40) {
+	if (keyCode == "ArrowDown") {
+	//if (keyCode == 40) {
 		if (y >= 8) {
 			y = 0;
 		} else {
@@ -451,7 +436,7 @@ function keyinput(cellID, keyCode) {
 		choose('cell_' + x + '_' + y);
 	} //down
 
-	if (keyCode == 67) //c - clear - clear current cell, if not locked
+	if (keyCode == "c") //c - clear - clear current cell, if not locked
 	{
 		if (IsAnEditCellID(cellID) == 1) {
 			document.getElementById(cellID).innerHTML = "";
@@ -459,7 +444,7 @@ function keyinput(cellID, keyCode) {
 		}
 	}
 
-	if (keyCode == 72) //h - how - check how we are doing status and send to chat box
+	if (keyCode == "h") //h - how - check how we are doing status and send to chat box
 	{
 		var textmsg = 'Numbers selected:' + CountLocked() + ' Correct:' + CountCorrectLocked('how') + '\n\r\n\rNote: this only counts locked numbers.';
 		//send_chat(textmsg);
@@ -467,7 +452,7 @@ function keyinput(cellID, keyCode) {
 		//send_chat('Numbers selected:' + CountLocked() + '    Correct:' + CountCorrectLocked('how'));
 	}
 
-	if (keyCode == 82) //r - reveal - check how we are doing status and send to chat box
+	if (keyCode == "r") //r - reveal - check how we are doing status and send to chat box
 	{
 		let textmsg = 'Numbers selected:' + CountLocked() + '    Correct:' + CountCorrectLocked('reveal') + '\n\r\n\rNote: this only counts locked numbers.';
 		//send_chat(textmsg);
@@ -479,7 +464,7 @@ function keyinput(cellID, keyCode) {
 	} //static cells can't be modified
 
 	//lock - unlock function
-	if (keyCode == 83) //s - save
+	if (keyCode == "s") //s - save
 	{
 		var numberlist = document.getElementById(cellID).innerHTML;
 		//remove all but numbers
@@ -501,8 +486,7 @@ function keyinput(cellID, keyCode) {
 				document.getElementById(cellID).className = 'cellgrayclass';
 				send_cell_update(document.getElementById(cellID).innerHTML);
 				//did we win!
-				if (blanksquares == CountCorrectLocked(count)) {
-					//send_chat('You win!');
+				if (blanksquares == CountCorrectLocked(count)) {	//send_chat('You win!');
 					IWin();
 				}
 			} else {
@@ -516,20 +500,13 @@ function keyinput(cellID, keyCode) {
 		return 0;
 	} //can't edit a locked cell
 
-	if (keyCode >= 97 && keyCode <= 105) //convert numberpad characters
-	{
-		keyCode = keyCode - 48;
-	}
-
-	if (keyCode >= 49 && keyCode <= 57) //number keys pressed 1 - 9
+    if (keyCode >= 1 && keyCode <= 9) //number keys pressed 1 - 9
 	{
 		let numberlist = document.getElementById(cellID).innerHTML;
-		//remove all but numbers
-		numberlist = numberlist.replace(/\D/g, '');
-		var keychar = String.fromCharCode(keyCode);
+		numberlist = numberlist.replace(/\D/g, ''); //remove all but numbers
+		var keychar = keyCode;
 		var founditindex = numberlist.indexOf(keychar, 0);
-		if (founditindex > -1) {
-			//remove number from sring
+		if (founditindex > -1) { //remove number from string
 			var re = new RegExp(keychar, 'g');
 			numberlist = numberlist.replace(re, '');
 		} else {
@@ -553,31 +530,6 @@ function IsAnEditCellID(cellID) {
 		return 0;
 	} else {
 		return 1;
-	}
-}
-
-function FindStatic() {
-	for (var x = 0; x <= 8; x++) {
-		for (var y = 0; y <= 8; y++) {
-			var text = document.getElementById('cell_' + x + '_' + y).innerHTML;
-			StaticArray[x][y] = 0; {
-				if (text.indexOf('static', 0) > -1) {
-					StaticArray[x][y] = 1;
-				}
-			}
-		}
-	}
-}
-
-function ColorStatic() {
-	for (var x = 0; x <= 8; x++) {
-		for (var y = 0; y <= 8; y++) {
-			if (StaticArray[x][y] == 1) {
-				document.getElementById('cell_' + x + '_' + y).className = 'cellstaticclass';
-			} else {
-				document.getElementById('cell_' + x + '_' + y).className = 'cellnotselectedclass';
-			}
-		}
 	}
 }
 
@@ -618,23 +570,6 @@ function CountLocked() {
 	return (LockedCount);
 }
 
-function CreateBookmarkLink() {
-	var title = "Crossword game %game%";
-	var url = "%archiveurl%/%uid%/%game%";
-	if (window.sidebar) { // Mozilla Firefox Bookmark
-		window.sidebar.addPanel(title, url, "");
-	} else if (window.external) { // IE Favorite
-		window.external.AddFavorite(url, title);
-	} else if (window.opera && window.print) { // Opera Hotlist
-		return true;
-	}
-}
-
-</SCRIPT>
-  
-  
-<SCRIPT TYPE="text/javascript">
- 
 function send_cell_update(k)
 	{
 	var letter = k;
@@ -658,29 +593,9 @@ for (var i = 0 ; i < cookieNames.length ; i++) {
 		}
 }
 
-function get_sudoku_updates()
-	{
-	//ajax_send_uri('%archiveurl%/%uid%/%game%/out.txt' , processupdates , '');
+function get_sudoku_updates(){
 	SetCellsFromCookies();
 	} 
-
-function CreateBookmarkLink()
-	{
-	var title = "Crossword game % game %";
-	var url = "% archiveurl % /%uid%/ % game %";
-	if (window.sidebar)
- 		{ // Mozilla Firefox Bookmark
-		window.sidebar.addPanel(title, url,"");
-		}
-	else if( window.external )
-		{ // IE Favorite
-		window.external.AddFavorite( url, title);
-		}
-	else if(window.opera && window.print)
-		{ // Opera Hotlist
-		return true;
-		}
- 	}
 
 var fivesec = 0;
 function IWin()
@@ -727,77 +642,48 @@ if (winstate == 'done')
 			document.getElementById(CellID).style.backgroundColor = '';
 			}
 		}
-	}
- //showID('win');
+	} //showID('win');
  }
 
-function ClearUnlockedCells()
-{
-   for (var x = 0 ; x <= 8; x++)
-		{
-		for (var y = 0 ; y <= 8; y++) {
+function SimulateKey( key_pushed ){
+  const kbEvent = new KeyboardEvent('keydown', {
+    bubbles: true,
+    cancelable: true,
+    key: key_pushed,
+  });
+  document.body.dispatchEvent(kbEvent);
+}
+SimulateKey();
+
+function Howtoplay() {
+	$('#dialog-message').dialog("open");
+	$("#dialog-message").dialog("option", "width", 800);
+}
+
+function Statistics() {
+	$('#Statistics').dialog("open");
+	$("#Statistics").dialog("option", "width", 800);
+}
+
+function SolutionsDialog() {
+	$('#SolutionDialog').dialog("open");
+	$("#SolutionDialog").dialog("option", "width", 800);
+}
+
+function ClearUnlockedCells() {
+	if (!confirm('Are you sure? This will clear the board of all numbers that are not locked.')) {
+		return false;
+	}
+
+	for (var x = 0; x <= 8; x++) {
+		for (var y = 0; y <= 8; y++) {
 			var cellID = 'cell_' + x + '_' + y;
 			//document.getElementById(CellID).style.backgroundColor = '';
-				if (IsAnEditCellID(cellID)	== 1) {
-					document.getElementById(cellID).innerHTML = "";
-					//send_cell_update(document.getElementById(cellID).innerHTML);
-					deleteCookie(cellID);
-					}
+			if (IsAnEditCellID(cellID) == 1) {
+				document.getElementById(cellID).innerHTML = "";
+				//send_cell_update(document.getElementById(cellID).innerHTML);
+				deleteCookie(cellID);
 			}
-			}
-}
-
-function MakeSmaller()
-{
-var oStyleSheet=document.styleSheets[0];
-for (var x = 0 ; x <= 5; x++)
-	{
-  var oRules;
-	if (browserType == 'ie')
-		{oRules = oStyleSheet.rules[x];}
-	else
-		{oRules = oStyleSheet.cssRules[x];}
-	var newwidth = oRules.style.width;
-	newwidth = newwidth.replace(/\D/g , '');
-	newwidth  = newwidth  - 2;
-	var fontsizes = Math.floor(newwidth / 4.0) - 1 ;
-	if ((x == 2) || (x == 3) || (x == 4)) //static cells
-		{fontsizes = Math.floor(newwidth / 2) - 1 ;}
-	oRules.style.width = newwidth + 'pt';
-	oRules.style.height = newwidth + 'pt';
-	oRules.style.fontSize = fontsizes + 'pt';
-	}
-}
-
-function MakeBigger()
-{
-var oStyleSheet=document.styleSheets[0];
-for (var x = 0 ; x <= 5; x++)
-	{
-  var oRules;
-	if (browserType == 'ie')
-		{oRules = oStyleSheet.rules[x];}
-	else
-		{oRules = oStyleSheet.cssRules[x];}
-	var newwidth = oRules.style.width;
-	newwidth = newwidth.replace(/\D/g , '');
-	newwidth  = newwidth - 2 + 4; //fool string into int
-	var fontsizes = Math.floor(newwidth / 4.0) - 1 ;
-	if ((x == 2) || (x == 3) || (x == 4)) //static cells
-		{fontsizes = Math.floor(newwidth / 2) - 1 ;}
-	oRules.style.width = newwidth + 'pt';
-	oRules.style.height = newwidth + 'pt';
-	oRules.style.fontSize = fontsizes + 'pt';
-	}
-}
-
-function SolutionClass()
-{
-for (var x = 0 ; x <= 8; x++)
-	{
-	for (var y = 0 ; y <= 8; y++)
-		{
-		document.getElementById('solution_' + x + '_' + y).className = 'celllockedclass';
 		}
 	}
 }
@@ -971,7 +857,7 @@ for (var x = 0 ; x <= 8; x++)
 				 </table>
 			 </td>
 
-			 <td><img src="./images/lock.jpg" alt=" Lock / Unlock " width=" 113" height=" 136" border=" 0" onclick=" keyinput(LastCursorID, 83);" class=" pad_button_numeric" title=" Lock / Unlock "></td>
+			 <td><img src="./images/lock.jpg" alt=" Lock / Unlock " width=" 113" height=" 136" border=" 0" onclick="SimulateKey('s');" class=" pad_button_numeric" title=" Lock / Unlock "></td>
 		 </tr>
 
 		 <tr>
@@ -1140,7 +1026,7 @@ for (var x = 0 ; x <= 8; x++)
 				 </table>
 			 </td>
 
-			 <td><img src="./images/clearcell.jpg" alt=" Clear Cell " title=" Clear Cell " width=" 200" height=" 200" border=" 0" onclick=" keyinput(LastCursorID, 67);" class=" pad_button_numeric"></td>
+			 <td><img src="./images/clearcell.jpg" alt=" Clear Cell " title=" Clear Cell " width=" 200" height=" 200" border=" 0" onclick="SimulateKey('c');" class=" pad_button_numeric"></td>
 		 </tr>
 
 		 <tr>
@@ -1309,7 +1195,7 @@ for (var x = 0 ; x <= 8; x++)
 				 </table>
 			 </td>
 
-			 <td><img src="./images/clearunlockedcells.jpg" alt=" Clear blank cells " title=" Clear blank cells " border=" 0" width=" 200" height=" 200" onclick=" if (confirm('Are you sure? This will clear the board of all numbers that are not locked.')) { ClearUnlockedCells(); } else { return false; }" class=" pad_button_numeric"></td>
+			 <td><img src="./images/clearunlockedcells.jpg" alt="Clear blank cells" title="Clear blank cells" id="clear_blank_cells" border=" 0" width=" 200" height=" 200" class=" pad_button_numeric"></td>
 		 </tr>
 	 </table>
   
@@ -1317,55 +1203,55 @@ for (var x = 0 ; x <= 8; x++)
 		 <tr>
 			 <td>
 				 <form style="display: inline;">
-					 <input type="button" name="Button1" value=" 1 " onclick="keyinput(LastCursorID, 49);" class="pad_button_numeric">
+					 <input type="button" name="Button1" value=" 1 " onclick="SimulateKey('1');" class="pad_button_numeric">
 				 </form>
 			 </td>
 
 			 <td>
 				 <form style="display: inline;">
-					 <input type="button" name="Button1" value=" 2 " onclick="keyinput(LastCursorID, 50);" class="pad_button_numeric">
+					 <input type="button" name="Button1" value=" 2 " onclick="SimulateKey('2');" class="pad_button_numeric">
 				 </form>
 			 </td>
 
 			 <td>
 				 <form style="display: inline;">
-					 <input type="button" name="Button1" value=" 3 " onclick="keyinput(LastCursorID, 51);" class="pad_button_numeric">
+					 <input type="button" name="Button1" value=" 3 " onclick="SimulateKey('3');" class="pad_button_numeric">
 				 </form>
 			 </td>
 
 			 <td>
 				 <form style="display: inline;">
-					 <input type="button" name="Button1" value=" 4 " onclick="keyinput(LastCursorID, 52);" class="pad_button_numeric">
+					 <input type="button" name="Button1" value=" 4 " onclick="SimulateKey('4');" class="pad_button_numeric">
 				 </form>
 			 </td>
 
 			 <td>
 				 <form style="display: inline;">
-					 <input type="button" name="Button1" value=" 5 " onclick="keyinput(LastCursorID, 53);" class="pad_button_numeric">
+					 <input type="button" name="Button1" value=" 5 " onclick="SimulateKey('5');" class="pad_button_numeric">
 				 </form>
 			 </td>
 
 			 <td>
 				 <form style="display: inline;">
-					 <input type="button" name="Button1" value=" 6 " onclick="keyinput(LastCursorID, 54);" class="pad_button_numeric">
+					 <input type="button" name="Button1" value=" 6 " onclick="SimulateKey('6');" class="pad_button_numeric">
 				 </form>
 			 </td>
 
 			 <td>
 				 <form style="display: inline;">
-					 <input type="button" name="Button1" value=" 7 " onclick="keyinput(LastCursorID, 55);" class="pad_button_numeric">
+					 <input type="button" name="Button1" value=" 7 " onclick="SimulateKey('7');" class="pad_button_numeric">
 				 </form>
 			 </td>
 
 			 <td>
 				 <form style="display: inline;">
-					 <input type="button" name="Button1" value=" 8 " onclick="keyinput(LastCursorID, 56);" class="pad_button_numeric">
+					 <input type="button" name="Button1" value=" 8 " onclick="SimulateKey('8');" class="pad_button_numeric">
 				 </form>
 			 </td>
 
 			 <td>
 				 <form style="display: inline;">
-					 <input type="button" name="Button1" value=" 9 " onclick="keyinput(LastCursorID, 57);" class="pad_button_numeric">
+					 <input type="button" name="Button1" value=" 9 " onclick="SimulateKey('9');" class="pad_button_numeric">
 				 </form>
 			 </td>
 		 </tr>
@@ -1375,9 +1261,9 @@ for (var x = 0 ; x <= 8; x++)
 		 <tr>
 			 <td><img src="./images/help.gif" alt=" How do I play " title=" How do I play" id="how_to_play" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
 
-			 <td><img src="./images/check.jpg" alt=" How am I doing " title=" How am I doing " width="200" height="200" border=" 0" onclick="keyinput(LastCursorID, 72);" class="pad_button_numeric"></td>
+			 <td><img src="./images/check.jpg" alt=" How am I doing " title=" How am I doing " width="200" height="200" border=" 0" onclick="SimulateKey('h');" class="pad_button_numeric"></td>
 
-			 <td><img src="./images/badchoices.jpg" alt=" Reveal bad choices " title=" Reveal bad choices " width="200" height="200" border=" 0" onclick="keyinput(LastCursorID, 82);" class="pad_button_numeric"></td>
+			 <td><img src="./images/badchoices.jpg" alt=" Reveal bad choices " title=" Reveal bad choices " width="200" height="200" border=" 0" onclick="SimulateKey('r');" class="pad_button_numeric"></td>
 
 			 <td><img src="./images/statistics.png" alt=" Puzzle statistics " title=" Puzzle statistics " id="statistics" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
 
@@ -1427,7 +1313,7 @@ for (var x = 0 ; x <= 8; x++)
 		%globalstring%</DIV>
   
 	 <div id="SolutionDialog" style="" class="dialogs" title="Solution">
-		 <table class="bigtable"cellspacing=" 0"cellpadding=" 0" align="center">
+		 <table class="bigtable" cellspacing="0" cellpadding="0" align="center">
 			 <tr>
 				 <td>
 					 <table class="subtable"cellspacing=" 0"cellpadding=" 0">
@@ -2037,27 +1923,4 @@ for (var x = 0 ; x <= 8; x++)
 		 </div>
 	 </div>
    
-<script>
-  
-function Howtoplay() {
-	$('#dialog-message').dialog("open");
-	$("#dialog-message").dialog("option", "width", 800);
-}
-document.getElementById("how_to_play").onclick = Howtoplay;
-
-function Statistics() {
-	$('#Statistics').dialog("open");
-	$("#Statistics").dialog("option", "width", 800);
-}
-document.getElementById("statistics").onclick = Statistics;
-
-function SolutionsDialog() {
-	$('#SolutionDialog').dialog("open");
-	$("#SolutionDialog").dialog("option", "width", 800);
-}
-document.getElementById("solution").onclick = SolutionsDialog;
-
-
-</script>
-
 </body>
