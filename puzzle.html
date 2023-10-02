@@ -233,9 +233,13 @@ function RemoveACell(){
 }
 
 function Solve_Me() { //mangles sudoku. so calling routines must accomodate
-	let sudoku_array_no_probabilities;
+  //let sudoku_array_no_probabilities;
 	let progress; //true if we made any progress
 
+  //start board off by calculating simple starting probabilities for blank cells in entire board
+	Calculate_Simple_Probabilities(); 
+	//then try to reduce all probabilities to 1 value for each cell     
+       
 	do {
 		for (let cell_count = 0; cell_count < 81; cell_count++) {
 			let next_square = path[cell_count];
@@ -244,16 +248,29 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 			let littlex = next_square[2];
 			let littley = next_square[3];
 
-      sudoku_array_no_probabilities = JSON.stringify(sudoku);
+      //sudoku_array_no_probabilities = JSON.stringify(sudoku);
       
       
 			//calculate probabilities for entire board
-			//solved = Calculate_Probabilities(test_array);
+			//solved = Calculate_Probabilities(); 
 			//return  false = filled in probabilities : true = cells all single probabilities therefore solved
 
-			//ns
       
-      
+			//ns solved=ns(); if all are ns!!!!
+       //return  false = filled in probabilities : true = cells all single probabilities therefore solved
+     
+     //hs
+     
+     //np
+     
+     //hp
+               
+      //ir does probabilities
+     
+     //xwing
+     
+     //ywing
+     
 			if (solved) {
 				//sudoku = JSON.parse(backup_sudoku_array); //restore board
 				return true;
@@ -269,11 +286,29 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 
 }
 
-function Calculate_Probabilities(){
-  let backup_sudoku_array = JSON.stringify(sudoku);
-  
-  
-  sudoku = JSON.parse(backup_sudoku_array); //restore board 
+function Calculate_Simple_Probabilities(){
+  	for (let cell_count = 0; cell_count < 81; cell_count++) {
+			let next_square = path[cell_count];
+			let bigx = next_square[0];
+			let bigy = next_square[1];
+			let littlex = next_square[2];
+			let littley = next_square[3];
+      
+      let probable_numbers_row_col_3 = [];
+      //if cell has no values get all numbers from cells with SINGLE values in row,col,3x3
+      //then this cell will have inverse of that list
+      if(Object.keys(sudoku[bx][by][lx][ly]).length == 0){ //if cell has no values 
+        //get all numbers from cells with SINGLE values in row,col,3x3
+      
+      //3x3
+      probable_numbers_row_col_3 = Probable_Potential_Values([bigx, bigx, bigx], [bigy, bigy, bigy], [0, 1, 2], [0, 1, 2], bigx, bigy, littlex, littley);
+
+      }
+      //then this cell will have inverse of that list
+      
+      
+      
+    }
 }
 
 function getRandomInt(max) {
@@ -346,7 +381,6 @@ function Remove_Potential_Values(bigxArray, bigyArray, littlexArray, littleyArra
 					} //skip our cell
 					delete sudoku[bx][by][lx][ly][chosen];
 					if (Object.keys(sudoku[bx][by][lx][ly]).length == 0) {
-            result = false;
             return false; //really does not do much as it only returns up to previous anonymous function
             } //a cell has no more potential values. we have failed :(
 				}); 
