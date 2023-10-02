@@ -118,8 +118,9 @@ font-size: 6vmin;
 	font-size: 2vmin;
 }
 </STYLE> <SCRIPT SRC="./js/ncross.js"></SCRIPT>
-	 <LINK REL="stylesheet" HREF="./jqueryui/jquery-ui.css">
-   <SCRIPT SRC="//code.jquery.com/jquery-1.10.2.js"></SCRIPT> <SCRIPT SRC="/jqueryui/jquery-ui.js"></SCRIPT>
+	 <LINK REL="stylesheet" HREF="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+   <SCRIPT SRC="https://code.jquery.com/jquery-3.7.1.min.js"></SCRIPT>
+   <SCRIPT SRC="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></SCRIPT>
    <SCRIPT SRC="./js/cookie.js"></SCRIPT>
   </HEAD>
   
@@ -127,6 +128,8 @@ font-size: 6vmin;
   
 <SCRIPT TYPE="text/javascript">
 
+// sudoku[BigX][BigY][LittleX][LittleY] = {} 1..9 values can be true,false,static
+// to choose a column, we need a static BigX and LittleX
 var sudoku = DIM([3, 3, 3, 3], {
 	1: true,
 	2: true,
@@ -137,7 +140,7 @@ var sudoku = DIM([3, 3, 3, 3], {
 	7: true,
 	8: true,
 	9: true
-}); //fill Sudoku board with all probabilities
+}); //fill Sudoku board with all probabilities 1..9
 
 //set path to traverse Sudoku 
 var path = [];
@@ -181,8 +184,101 @@ document.getElementById("body").onkeydown = keyinput;
 		}
 	}
   
+ //let result = RemoveACell();
+  
+  var ttt = 8;
 }
 document.getElementById("body").onload = Main;
+
+function RemoveACell(){ 
+  let d = new Date();
+  let time = d.getTime();
+  let finished = time + (1000 * 5 ); //5 sec max
+  let one_value;
+  
+  while( (d.getTime() < finished) ) {
+  //save array status
+  let backup_sudoku_array = JSON.stringify(sudoku);
+    
+  //random choose a cell that has one possible value
+  let bx,by,lx,ly;
+  do{
+  bx = getRandomInt(3);
+  by = getRandomInt(3);
+  lx = getRandomInt(3);
+  ly = getRandomInt(3);
+  one_value = false;
+  if( Object.keys(sudoku[bx][by][lx][ly]).length == 1 ){
+    one_value = true;
+    }    
+}while(! one_value);
+ 
+  //remove value
+  let values = Object.keys(sudoku[bx][by][lx][ly]);
+  let value = values.pop();
+  delete sudoku[bx][by][lx][ly][value];
+  
+  let possible_sudoku = JSON.stringify(sudoku);
+   //try to solve sudoku array. Solve me mangles global sudoku array!
+  if( Solve_Me() ){ //success : save 
+    sudoku = JSON.parse(possible_sudoku); //restore board
+  }
+  else{ //fail : restore
+    sudoku = JSON.parse(backup_sudoku_array); //restore board
+  }
+  
+   d = new Date();
+  } //end while
+  
+}
+
+function Solve_Me() { //mangles sudoku. so calling routines must accomodate
+	let sudoku_array_no_probabilities;
+	let progress; //true if we made any progress
+
+	do {
+		for (let cell_count = 0; cell_count < 81; cell_count++) {
+			let next_square = path[cell_count];
+			let bigx = next_square[0];
+			let bigy = next_square[1];
+			let littlex = next_square[2];
+			let littley = next_square[3];
+
+      sudoku_array_no_probabilities = JSON.stringify(sudoku);
+      
+      
+			//calculate probabilities for entire board
+			//solved = Calculate_Probabilities(test_array);
+			//return  false = filled in probabilities : true = cells all single probabilities therefore solved
+
+			//ns
+      
+      
+			if (solved) {
+				//sudoku = JSON.parse(backup_sudoku_array); //restore board
+				return true;
+			}
+		}
+
+    
+	} while (progress); //true if we made any progress
+
+	//no more progress and we never solved it
+	//sudoku = JSON.parse(backup_sudoku_array); //restore board 
+	return false;
+
+}
+
+function Calculate_Probabilities(){
+  let backup_sudoku_array = JSON.stringify(sudoku);
+  
+  
+  sudoku = JSON.parse(backup_sudoku_array); //restore board 
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
 
 function SetNextSquare(path) { //recursive
 	if (path.length == 0) {
