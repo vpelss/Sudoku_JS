@@ -128,19 +128,9 @@ font-size: 6vmin;
   
 <SCRIPT TYPE="text/javascript">
 
-// sudoku[BigX][BigY][LittleX][LittleY] = {} 1..9 values can be true,false,static
+// sudoku[BigX][BigY][LittleX][LittleY] = [] 1..9
 // to choose a column, we need a static BigX and LittleX
-var sudoku = DIM([3, 3, 3, 3], {
-	1: true,
-	2: true,
-	3: true,
-	4: true,
-	5: true,
-	6: true,
-	7: true,
-	8: true,
-	9: true
-}); //fill Sudoku board with all probabilities 1..9
+var sudoku = DIM( [3, 3, 3, 3] , [1,2,3,4,5,6,7,8,9] ); //fill Sudoku board with all probabilities 1..9
 
 //set path to traverse Sudoku 
 var path = [];
@@ -173,7 +163,7 @@ document.getElementById("body").onkeydown = keyinput;
 			for (let bx = 0; bx < 3; bx++) {
 				for (let lx = 0; lx < 3; lx++) {
 					let cellID = "cell_" + xx + "_" + yy;
-					let value = Object.keys(sudoku[bx][by][lx][ly])[0];
+					let value = sudoku[bx][by][lx][ly][0];
 					document.getElementById(cellID).innerHTML = value;
           document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
 					xx++;
@@ -300,16 +290,37 @@ function Calculate_Simple_Probabilities(){
       if(Object.keys(sudoku[bx][by][lx][ly]).length == 0){ //if cell has no values 
         //get all numbers from cells with SINGLE values in row,col,3x3
       
-      //3x3
-      probable_numbers_row_col_3 = Probable_Potential_Values([bigx, bigx, bigx], [bigy, bigy, bigy], [0, 1, 2], [0, 1, 2], bigx, bigy, littlex, littley);
+      //row
+      probable_numbers_row_col_3.push(... Probable_Potential_Values("row" , bigx, bigy, littlex, littley) );
+      //col
+      probable_numbers_row_col_3.push(... Probable_Potential_Values("col" , bigx, bigy, littlex, littley) );
+      //squ
+      probable_numbers_row_col_3.push(... Probable_Potential_Values("squ" , bigx, bigy, littlex, littley) );
 
-      }
-      //then this cell will have inverse of that list
       
+      }
+      //remove duplicates
+      /*
+      var temp = {};
+      probable_numbers_row_col_3.foreach( function( item ){
+          temp[item] = true;
+          }                            
+        );
+      probable_numbers_row_col_3 = Object.keys( temp );
+      */
+      
+      //difference of that list
+      let probable_numbers = Array_Difference( probable_numbers_row_col_3 , [1,2,3,4,5,6,7,8,9] );
+      
+      //needs to be object...
       
       
     }
 }
+
+function Probable_Potential_Values(region , bigx, bigy, littlex, littley){
+  
+ }
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
@@ -325,12 +336,13 @@ function SetNextSquare(path) { //recursive
 	let bigy = next_square[1];
 	let littlex = next_square[2];
 	let littley = next_square[3];
-	let potential_numbers = Object.keys(sudoku[bigx][bigy][littlex][littley]);
-	potential_numbers = shuffleArray(potential_numbers); //shuffle
+	let potential_numbers = sudoku[bigx][bigy][littlex][littley] ; //convert set to array
+	potential_numbers = Array_Shuffle(potential_numbers); //shuffle
 	while (potential_numbers.length > 0) { //if we still have potential numbers in this square try another one 
 		let chosen = potential_numbers.pop(); //pick a number
-		sudoku[bigx][bigy][littlex][littley] = {}; //erase old numbers
-		sudoku[bigx][bigy][littlex][littley][chosen] = true; //set chosen number
+		//sudoku[bigx][bigy][littlex][littley] = []; //erase old numbers
+    //sudoku[bigx][bigy][littlex][littley].clear(); //erase old numbers
+		sudoku[bigx][bigy][littlex][littley] = [chosen]; //set chosen number
 		let result = Remove_Potential_Values_Meta(bigx, bigy, littlex, littley, chosen); //remove chosen number from potential values in squ,col,row
 		if (result == false) { //a square ran out of potential numbers
 			sudoku = JSON.parse(backup_for_possible_fail); //restore board
@@ -353,24 +365,43 @@ function SetNextSquare(path) { //recursive
 
 function Remove_Potential_Values_Meta(bigx, bigy, littlex, littley, chosen) {
 	//remove from squ
-	let result = Remove_Potential_Values([bigx, bigx, bigx], [bigy, bigy, bigy], [0, 1, 2], [0, 1, 2], bigx, bigy, littlex, littley, chosen);
+	let result = Remove_Potential_Values("squ" , bigx, bigy, littlex, littley, chosen);
 	if (result == false) {
 		return false;
 	}
 	//remove from row
-	result = Remove_Potential_Values([0, 1, 2], [bigy, bigy, bigy], [0, 1, 2], [littley, littley, littley], bigx, bigy, littlex, littley, chosen);
+	result = Remove_Potential_Values("row" , bigx, bigy, littlex, littley, chosen);
 	if (result == false) {
 		return false;
 	}
 	//remove from col
-	result = Remove_Potential_Values([bigx, bigx, bigx], [0, 1, 2], [littlex, littlex, littlex], [0, 1, 2], bigx, bigy, littlex, littley, chosen);
+	result = Remove_Potential_Values("col" , bigx, bigy, littlex, littley, chosen);
 	if (result == false) {
 		return false;
 	}
 	return true;
 }
 
-function Remove_Potential_Values(bigxArray, bigyArray, littlexArray, littleyArray, bigx, bigy, littlex, littley, chosen) {
+//function Remove_Potential_Values(bigxArray, bigyArray, littlexArray, littleyArray, bigx, bigy, littlex, littley, chosen) {
+function Remove_Potential_Values(region , bigx, bigy, littlex, littley, chosen) {
+  if(region == "row"){
+   bigxArray = [0, 1, 2];
+   bigyArray = [bigy, bigy, bigy];
+   littlexArray = [0, 1, 2];
+   littleyArray = [littley, littley, littley];
+  }
+ if(region == "col"){
+  bigxArray = [bigx, bigx, bigx];
+   bigyArray = [0, 1, 2];
+   littlexArray = [littlex, littlex, littlex];
+   littleyArray = [0, 1, 2];   
+  }
+ if(region == "squ"){
+   bigxArray = [bigx, bigx, bigx];
+   bigyArray = [bigy, bigy, bigy];
+   littlexArray = [0, 1, 2];
+   littleyArray = [0, 1, 2];    
+  }
   let result = true;
 	bigxArray.forEach(function(bx) {
 		bigyArray.forEach(function(by) {
@@ -379,8 +410,11 @@ function Remove_Potential_Values(bigxArray, bigyArray, littlexArray, littleyArra
 					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
 						return true;
 					} //skip our cell
-					delete sudoku[bx][by][lx][ly][chosen];
-					if (Object.keys(sudoku[bx][by][lx][ly]).length == 0) {
+          sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly] , [chosen]);
+          //sudoku[bx][by][lx][ly] = [ new Set(sudoku[bx][by][lx][ly]).delete(chosen) ];
+					//delete sudoku[bx][by][lx][ly][chosen];
+					
+          if (sudoku[bx][by][lx][ly].length == 0) {
             return false; //really does not do much as it only returns up to previous anonymous function
             } //a cell has no more potential values. we have failed :(
 				}); 
@@ -390,7 +424,12 @@ function Remove_Potential_Values(bigxArray, bigyArray, littlexArray, littleyArra
 	return result;
 }
 
-function shuffleArray(array) {
+function Array_Difference(array1 , array2){
+  let difference = array1.filter((element) => !array2.includes(element));
+  return difference;
+}
+
+function Array_Shuffle(array) {
 	for (let i = array.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * (i + 1));
 		const temp = array[i];
