@@ -153,7 +153,8 @@ document.getElementById("clear_blank_cells").onclick = ClearUnlockedCells;
 document.getElementById("body").onkeydown = keyinput;
 
 	//start create full Sudoku board
-	SetNextSquare(path);
+  let path_temp =  JSON.parse( JSON.stringify(path) ); 
+	SetNextSquare(path_temp); //clears path
 
 	//place selections on board
 	let xx = 0;
@@ -174,17 +175,36 @@ document.getElementById("body").onkeydown = keyinput;
 		}
 	}
   
- //let result = RemoveACell();
-  
+ let result = RemoveCells();
+ 
+ xx = 0;
+	yy = 0;
+	for (let by = 0; by < 3; by++) {
+		for (let ly = 0; ly < 3; ly++) {
+			for (let bx = 0; bx < 3; bx++) {
+				for (let lx = 0; lx < 3; lx++) {
+					let cellID = "cell_" + xx + "_" + yy;
+					let value = sudoku[bx][by][lx][ly].toString();
+					document.getElementById(cellID).innerHTML = value;
+          //document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+					xx++;
+				}
+			}
+			yy++;
+			xx = 0;
+		}
+	}
+ 
   var ttt = 8;
 }
 document.getElementById("body").onload = Main;
 
-function RemoveACell(){ 
+function RemoveCells(){ 
   let d = new Date();
   let time = d.getTime();
   let finished = time + (1000 * 5 ); //5 sec max
   let one_value;
+  let possible_sudoku ;
   
   while( (d.getTime() < finished) ) {
   //save array status
@@ -198,17 +218,14 @@ function RemoveACell(){
   lx = getRandomInt(3);
   ly = getRandomInt(3);
   one_value = false;
-  if( Object.keys(sudoku[bx][by][lx][ly]).length == 1 ){
+  if( sudoku[bx][by][lx][ly].length == 1 ){
     one_value = true;
     }    
 }while(! one_value);
  
-  //remove value
-  let values = Object.keys(sudoku[bx][by][lx][ly]);
-  let value = values.pop();
-  delete sudoku[bx][by][lx][ly][value];
+  sudoku[bx][by][lx][ly] = []; //remove value
   
-  let possible_sudoku = JSON.stringify(sudoku);
+  possible_sudoku = JSON.stringify(sudoku);
    //try to solve sudoku array. Solve me mangles global sudoku array!
   if( Solve_Me() ){ //success : save 
     sudoku = JSON.parse(possible_sudoku); //restore board
@@ -219,17 +236,30 @@ function RemoveACell(){
   
    d = new Date();
   } //end while
-  
+ 
+ var tt = 9;
+ 
 }
 
 function Solve_Me() { //mangles sudoku. so calling routines must accomodate
-  //let sudoku_array_no_probabilities;
+	//let sudoku_array_no_probabilities;
 	let progress; //true if we made any progress
+	let solved = 0;
+	//start board off by calculating simple starting probabilities for blank cells in entire board
 
-  //start board off by calculating simple starting probabilities for blank cells in entire board
-	Calculate_Simple_Probabilities(); 
+	//maybe check ns here also and return true if we have a ns? maybe put in while loop?
+	//ISSUE NS is part of this implicityly
+	//solved = Calculate_Simple_Probabilities(); //?? need this one?
+	//return 1 if solved (all cells have 1)
+	//return 0 if ?
+	//return 2 if progress?
+	//note we ask Solve_me to fill in BLANK squares, but fill with probabilities and continue....
+	//logic???
+	//maybe this also checks if all cells have single probability (then it is solved)!!!!!
+	//Call it Calculate_Simple_Probabilities_and_check_solved 
+
 	//then try to reduce all probabilities to 1 value for each cell     
-       
+
 	do {
 		for (let cell_count = 0; cell_count < 81; cell_count++) {
 			let next_square = path[cell_count];
@@ -238,36 +268,36 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 			let littlex = next_square[2];
 			let littley = next_square[3];
 
-      //sudoku_array_no_probabilities = JSON.stringify(sudoku);
-      
-      
+			solved = Calculate_Simple_Probabilities();
+			//sudoku_array_no_probabilities = JSON.stringify(sudoku);
+
 			//calculate probabilities for entire board
-			//solved = Calculate_Probabilities(); 
+			//solved = Calculate_Probabilities(); if 
 			//return  false = filled in probabilities : true = cells all single probabilities therefore solved
 
-      
 			//ns solved=ns(); if all are ns!!!!
-       //return  false = filled in probabilities : true = cells all single probabilities therefore solved
-     
-     //hs
-     
-     //np
-     
-     //hp
-               
-      //ir does probabilities
-     
-     //xwing
-     
-     //ywing
-     
-			if (solved) {
+			//return  false = filled in probabilities : true = cells all single probabilities therefore solved
+			//hs 
+			//np
+			//hp      
+			//ir does probabilities
+			//xwing
+			//ywing
+
+			if (solved) { //solved if all cells have 1 probability
 				//sudoku = JSON.parse(backup_sudoku_array); //restore board
 				return true;
+			} else {
+
 			}
+
+			if (!progress) { //can't solve if we cannot move forward. ie: stuck
+				return false;
+			}
+
 		}
 
-    
+
 	} while (progress); //true if we made any progress
 
 	//no more progress and we never solved it
@@ -277,48 +307,89 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 }
 
 function Calculate_Simple_Probabilities(){
+ let solved = 1;
   	for (let cell_count = 0; cell_count < 81; cell_count++) {
 			let next_square = path[cell_count];
-			let bigx = next_square[0];
-			let bigy = next_square[1];
-			let littlex = next_square[2];
-			let littley = next_square[3];
+			let bx = next_square[0];
+			let by = next_square[1];
+			let lx = next_square[2];
+			let ly = next_square[3];
       
       let probable_numbers_row_col_3 = [];
       //if cell has no values get all numbers from cells with SINGLE values in row,col,3x3
       //then this cell will have inverse of that list
-      if(Object.keys(sudoku[bx][by][lx][ly]).length == 0){ //if cell has no values 
+      if(sudoku[bx][by][lx][ly].length == 0){ //if cell has no values 
         //get all numbers from cells with SINGLE values in row,col,3x3
       
       //row
-      probable_numbers_row_col_3.push(... Probable_Potential_Values("row" , bigx, bigy, littlex, littley) );
+      probable_numbers_row_col_3.push(... Probable_Potential_Values("row" , bx, by, lx, ly) );
       //col
-      probable_numbers_row_col_3.push(... Probable_Potential_Values("col" , bigx, bigy, littlex, littley) );
+      probable_numbers_row_col_3.push(... Probable_Potential_Values("col" , bx, by, lx, ly) );
       //squ
-      probable_numbers_row_col_3.push(... Probable_Potential_Values("squ" , bigx, bigy, littlex, littley) );
-
-      
-      }
-      //remove duplicates
-      /*
-      var temp = {};
-      probable_numbers_row_col_3.foreach( function( item ){
-          temp[item] = true;
-          }                            
-        );
-      probable_numbers_row_col_3 = Object.keys( temp );
-      */
+      probable_numbers_row_col_3.push(... Probable_Potential_Values("squ" , bx, by, lx, ly) );
       
       //difference of that list
-      let probable_numbers = Array_Difference( probable_numbers_row_col_3 , [1,2,3,4,5,6,7,8,9] );
+      let probable_numbers = Array_Difference( [1,2,3,4,5,6,7,8,9] , probable_numbers_row_col_3 );
+      sudoku[bx][by][lx][ly] = probable_numbers;
+      }
       
-      //needs to be object...
-      
-      
+     if(sudoku[bx][by][lx][ly].length != 1){//if even one cell does not contain exactly one probability
+      solved = 0;
+     }
+     
+     var tt = 9;
     }
+    return solved;
 }
 
 function Probable_Potential_Values(region , bigx, bigy, littlex, littley){
+
+  let accumulate_array = [];
+  
+  if(region == "row"){
+   bigxArray = [0, 1, 2];
+   bigyArray = [bigy, bigy, bigy];
+   littlexArray = [0, 1, 2];
+   littleyArray = [littley, littley, littley];
+  }
+ if(region == "col"){
+  bigxArray = [bigx, bigx, bigx];
+   bigyArray = [0, 1, 2];
+   littlexArray = [littlex, littlex, littlex];
+   littleyArray = [0, 1, 2];   
+  }
+ if(region == "squ"){
+   bigxArray = [bigx, bigx, bigx];
+   bigyArray = [bigy, bigy, bigy];
+   littlexArray = [0, 1, 2];
+   littleyArray = [0, 1, 2];    
+  }
+  //let result = true;
+	bigxArray.forEach(function(bx) {
+		bigyArray.forEach(function(by) {
+			littlexArray.forEach(function(lx) {
+				littleyArray.forEach( function(ly) {
+					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
+						return true;
+					} //skip our cell
+          if(sudoku[bx][by][lx][ly].length == 1){ //only look at set cells (1 probability)
+            accumulate_array.push( sudoku[bx][by][lx][ly][0] );
+          }
+          //= Array_Difference(sudoku[bx][by][lx][ly] , [chosen]);
+          //sudoku[bx][by][lx][ly] = [ new Set(sudoku[bx][by][lx][ly]).delete(chosen) ];
+					//delete sudoku[bx][by][lx][ly][chosen];
+					
+          //if (sudoku[bx][by][lx][ly].length == 0) {
+            //return false; //really does not do much as it only returns up to previous anonymous function
+            //} //a cell has no more potential values. we have failed :(
+				}); 
+			});
+		});
+	});
+  
+  //remove duplicates
+  accumulate_array = Array_Remove_Duplicates(accumulate_array);
+	return accumulate_array;
   
  }
 
@@ -410,10 +481,7 @@ function Remove_Potential_Values(region , bigx, bigy, littlex, littley, chosen) 
 					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
 						return true;
 					} //skip our cell
-          sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly] , [chosen]);
-          //sudoku[bx][by][lx][ly] = [ new Set(sudoku[bx][by][lx][ly]).delete(chosen) ];
-					//delete sudoku[bx][by][lx][ly][chosen];
-					
+          sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly] , [chosen]);			
           if (sudoku[bx][by][lx][ly].length == 0) {
             return false; //really does not do much as it only returns up to previous anonymous function
             } //a cell has no more potential values. we have failed :(
@@ -424,7 +492,13 @@ function Remove_Potential_Values(region , bigx, bigy, littlex, littley, chosen) 
 	return result;
 }
 
-function Array_Difference(array1 , array2){
+function Array_Remove_Duplicates(Array1){
+  let the_set = new Set(Array1);
+  let the_array = Array.from(the_set); 
+ return the_array;  
+}
+
+function Array_Difference(array1 , array2){ //array with all items first!
   let difference = array1.filter((element) => !array2.includes(element));
   return difference;
 }
