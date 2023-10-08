@@ -147,13 +147,28 @@ font-size: 6vmin;
   
 <SCRIPT TYPE="text/javascript">
 
-// sudoku[BigX][BigY][LittleX][LittleY] = [] 1..9
-// to choose a column, we need a static BigX and LittleX
-var sudoku = DIM( [3, 3, 3, 3] , [1,2,3,4,5,6,7,8,9] ); //fill Sudoku board with all probabilities 1..9
+var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [] 1..9
 
-//set path to traverse Sudoku 
-var path = [];
-for (let by = 0; by < 3; by++) {
+
+document.getElementById("body").onload = Main;
+function Main() {
+//set event functions  
+document.getElementById("how_to_play").onclick = Howtoplay;
+document.getElementById("statistics").onclick = Statistics;
+document.getElementById("solution").onclick = SolutionsDialog;
+document.getElementById("clear_blank_cells").onclick = ClearUnlockedCells;
+document.getElementById("body").onkeydown = keyinput;
+ 
+Diff[ document.getElementById("difficulty").value ](); //set difficulty based on default selection
+
+Create_Playable_Sudoku();
+}
+
+var path = Create_Path(); //set path to traverse Sudoku 
+function Create_Path(){
+  //initialize path to traverse Sudoku
+  let path = [];
+ for (let by = 0; by < 3; by++) {
 	for (let ly = 0; ly < 3; ly++) {
 		for (let bx = 0; bx < 3; bx++) {
 			for (let lx = 0; lx < 3; lx++) {
@@ -162,19 +177,14 @@ for (let by = 0; by < 3; by++) {
 		}
 	}
 }
+return path;
+}
 
-function Main() {
-//set event functions  
-document.getElementById("how_to_play").onclick = Howtoplay;
-document.getElementById("statistics").onclick = Statistics;
-document.getElementById("solution").onclick = SolutionsDialog;
-document.getElementById("clear_blank_cells").onclick = ClearUnlockedCells;
-document.getElementById("body").onkeydown = keyinput;
-
-	//start create full Sudoku board
-  let path_temp =  JSON.parse( JSON.stringify(path) ); 
+function Create_Full_Sudoku(){
+ sudoku = DIM( [3, 3, 3, 3] , [1,2,3,4,5,6,7,8,9] ); //fill Sudoku board with all probabilities 1..9
+ //start create full Sudoku board
+ let path_temp =  JSON.parse( JSON.stringify(path) ); //temp path as SetNextSquare() wipes it
 	SetNextSquare(path_temp); //clears path
-
 	//place selections on board
 	let xx = 0;
 	let yy = 0;
@@ -187,7 +197,7 @@ document.getElementById("body").onkeydown = keyinput;
 					let value = sudoku[bx][by][lx][ly][0];
 					document.getElementById(cellID).innerHTML = value;
      document.getElementById(solutionID).innerHTML = value; //set solution table
-     document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+     //document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
 					xx++;
 				}
 			}
@@ -195,7 +205,10 @@ document.getElementById("body").onkeydown = keyinput;
 			xx = 0;
 		}
 	}
-  
+}
+
+function Create_Playable_Sudoku(){
+ Create_Full_Sudoku();
  let result = RemoveCells();
  
  //set static cells
@@ -217,7 +230,7 @@ document.getElementById("body").onkeydown = keyinput;
       document.getElementById(cellID).innerHTML = value;
       jscalcpuzz = jscalcpuzz + "-";
      }
-     //document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+     document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
 					xx++;
 				}
 			}
@@ -228,13 +241,7 @@ document.getElementById("body").onkeydown = keyinput;
 	}
  document.getElementById("map").innerHTML = jscalcpuzz;
  start_cross( document.getElementById("Solution") );
- 
- 
- Diff[ document.getElementById("difficulty").value ](); //set difficulty based on default selection
- 
-  var ttt = 8;
 }
-document.getElementById("body").onload = Main;
 
 function RemoveCells(){ 
   let d = new Date();
@@ -273,9 +280,6 @@ function RemoveCells(){
   
    d = new Date();
   } //end while
- 
- var tt = 9;
- 
 }
 
 function Solve_Me() { //mangles sudoku. so calling routines must accomodate
@@ -305,7 +309,7 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 			let littlex = next_square[2];
 			let littley = next_square[3];
 
-			solved = Calculate_Simple_Probabilities();
+			solved = Calculate_Simple_Probabilities_or_Solved();
 			//sudoku_array_no_probabilities = JSON.stringify(sudoku);
 
 			//calculate probabilities for entire board
@@ -343,7 +347,8 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 
 }
 
-function Calculate_Simple_Probabilities(){
+function Calculate_Simple_Probabilities_or_Solved(){
+ //it also doubles as solved detector!!!!!!!!!!!!!!!!!
  let solved = 1;
   	for (let cell_count = 0; cell_count < 81; cell_count++) {
 			let next_square = path[cell_count];
@@ -373,16 +378,12 @@ function Calculate_Simple_Probabilities(){
      if(sudoku[bx][by][lx][ly].length != 1){//if even one cell does not contain exactly one probability
       solved = 0;
      }
-     
-     var tt = 9;
     }
     return solved;
 }
 
 function Probable_Potential_Values(region , bigx, bigy, littlex, littley){
-
   let accumulate_array = [];
-  
   if(region == "row"){
    bigxArray = [0, 1, 2];
    bigyArray = [bigy, bigy, bigy];
@@ -407,18 +408,11 @@ function Probable_Potential_Values(region , bigx, bigy, littlex, littley){
 			littlexArray.forEach(function(lx) {
 				littleyArray.forEach( function(ly) {
 					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
-						return true;
+						return true; //next loop. return value irrelevant
 					} //skip our cell
           if(sudoku[bx][by][lx][ly].length == 1){ //only look at set cells (1 probability)
             accumulate_array.push( sudoku[bx][by][lx][ly][0] );
           }
-          //= Array_Difference(sudoku[bx][by][lx][ly] , [chosen]);
-          //sudoku[bx][by][lx][ly] = [ new Set(sudoku[bx][by][lx][ly]).delete(chosen) ];
-					//delete sudoku[bx][by][lx][ly][chosen];
-					
-          //if (sudoku[bx][by][lx][ly].length == 0) {
-            //return false; //really does not do much as it only returns up to previous anonymous function
-            //} //a cell has no more potential values. we have failed :(
 				}); 
 			});
 		});
@@ -427,14 +421,13 @@ function Probable_Potential_Values(region , bigx, bigy, littlex, littley){
   //remove duplicates
   accumulate_array = Array_Remove_Duplicates(accumulate_array);
 	return accumulate_array;
-  
  }
 
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-function SetNextSquare(path) { //recursive
+function SetNextSquare(path) { //recursive routine
 	if (path.length == 0) {
 		return true;
 	} //made it to the end. done. trigger our journey back
@@ -448,8 +441,6 @@ function SetNextSquare(path) { //recursive
 	potential_numbers = Array_Shuffle(potential_numbers); //shuffle
 	while (potential_numbers.length > 0) { //if we still have potential numbers in this square try another one 
 		let chosen = potential_numbers.pop(); //pick a number
-		//sudoku[bigx][bigy][littlex][littley] = []; //erase old numbers
-    //sudoku[bigx][bigy][littlex][littley].clear(); //erase old numbers
 		sudoku[bigx][bigy][littlex][littley] = [chosen]; //set chosen number
 		let result = Remove_Potential_Values_Meta(bigx, bigy, littlex, littley, chosen); //remove chosen number from potential values in squ,col,row
 		if (result == false) { //a square ran out of potential numbers
@@ -457,7 +448,6 @@ function SetNextSquare(path) { //recursive
 			continue; //try another 
 		}
 		//success. lets try the next cell in the path 
-		// in correct spot?
 		result = SetNextSquare(path);
 		if (result == false) { //our recursive attempt failed. restore board and try another potential value from this cell
 			sudoku = JSON.parse(backup_for_possible_fail); //restore board
@@ -466,7 +456,6 @@ function SetNextSquare(path) { //recursive
 		}
 	}
 	//all potential numbers failed on this cell. return false. recurse back
-	//sudoku = JSON.parse(backup_for_possible_fail); //restore board
 	path.unshift(next_square); //must unshift if we want to come back here. and we do.
 	return false;
 }
@@ -621,11 +610,6 @@ function IsCellLockedID(cellID) {
 }
 
 function IsCellStaticID(cellID) {
-	//let xy = Array();
-	//xy = PositionFromID(cellID);
-	//let x = xy[0];
-	//let y = xy[1];
-
  let text = document.getElementById(cellID).innerHTML;
 	if ((text.indexOf('static', 0) > -1)) {
 		return 1;
