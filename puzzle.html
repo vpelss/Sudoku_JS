@@ -11,6 +11,10 @@
    
   <STYLE TYPE="text/css">
 
+  body{
+   text-align:center;
+  }
+  
 .cellnotselectedclass {
   background-color: white;
   text-align: center;
@@ -95,6 +99,16 @@
   border-left: 1pt Black solid;
 }
 
+#game_area{
+ border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+  background-color: white;
+display: inline-block;
+
+}
+
 .PadTable
 {
 
@@ -129,7 +143,7 @@ font-size: 6vmin;
    <SCRIPT SRC="./js/cookie.js"></SCRIPT>
   </HEAD>
   
-  <body id="body">
+  <body id="body" background="images/sudoku.gif">
   
 <SCRIPT TYPE="text/javascript">
 
@@ -169,9 +183,11 @@ document.getElementById("body").onkeydown = keyinput;
 			for (let bx = 0; bx < 3; bx++) {
 				for (let lx = 0; lx < 3; lx++) {
 					let cellID = "cell_" + xx + "_" + yy;
+     let solutionID = "solution_" + xx + "_" + yy;
 					let value = sudoku[bx][by][lx][ly][0];
 					document.getElementById(cellID).innerHTML = value;
-          document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+     document.getElementById(solutionID).innerHTML = value; //set solution table
+     document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
 					xx++;
 				}
 			}
@@ -182,6 +198,7 @@ document.getElementById("body").onkeydown = keyinput;
   
  let result = RemoveCells();
  
+ //set static cells
  xx = 0;
 	yy = 0;
 	for (let by = 0; by < 3; by++) {
@@ -190,8 +207,14 @@ document.getElementById("body").onkeydown = keyinput;
 				for (let lx = 0; lx < 3; lx++) {
 					let cellID = "cell_" + xx + "_" + yy;
 					let value = sudoku[bx][by][lx][ly].toString();
-					document.getElementById(cellID).innerHTML = value;
-          //document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+     if(value != ""){//static
+      document.getElementById(cellID).innerHTML = "<!--static-->" + value;
+      document.getElementById(cellID).className = "cellstaticclass";
+     }
+     else{//blank
+      document.getElementById(cellID).innerHTML = value;
+     }
+     //document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
 					xx++;
 				}
 			}
@@ -589,16 +612,19 @@ function IsCellLockedID(cellID) {
 }
 
 function IsCellStaticID(cellID) {
-	var xy = Array();
-	xy = PositionFromID(cellID);
-	var x = xy[0];
-	var y = xy[1];
+	//let xy = Array();
+	//xy = PositionFromID(cellID);
+	//let x = xy[0];
+	//let y = xy[1];
 
-	if (StaticArray[x][y] == 1) {
+ let text = document.getElementById(cellID).innerHTML;
+	if ((text.indexOf('static', 0) > -1)) {
 		return 1;
-	} else {
-		return 0;
 	}
+ else {
+  return 0;
+ }
+ 
 }
 
 function chooseOnClick() {
@@ -1073,6 +1099,7 @@ Diff[5] = function()
 	  </div>
   </div>
   
+  <div id="game_area">
 	 <table class="BigTable"cellspacing=" 0"cellpadding=" 0" onclick="intable = 1;" id="BigTable">
 		 <tr>
 			 <td>
@@ -1659,6 +1686,8 @@ Diff[5] = function()
 			 <td><img src="./images/otherlist.jpg" alt=" Archived puzzles " title=" Archived puzzles " width="200" height="200" border=" 0" onclick="if (confirm('Are you sure? Be sure to bookmark the current puzzle first.')) { window.open('/sudoku/', '_self'); } else {}" class="pad_button_numeric"></td>
 		 </tr>
 	 </table>
+  
+  </div>
 
 	 <DIV ID="dialog-message" TITLE="How do I play ?" CLASS="dialogs" STYLE="width:100%">
 		<P>Suduku Rules:</P>
