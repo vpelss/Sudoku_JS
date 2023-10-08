@@ -6,8 +6,10 @@
 	 <META NAME="DESCRIPTION"
 	  CONTENT="Sudoku : Infinite Free Sudoku Puzzle Generator Script to create Sudoku for prining">
 
-	 <TITLE>Sudoku Puzzle Generator by Emogic.com</TITLE><LINK REL="stylesheet"
-	 TYPE="text/css" HREF="./css/ncross.css"> <STYLE TYPE="text/css">
+	 <TITLE>Sudoku Puzzle Generator by Emogic.com</TITLE>
+  <LINK REL="stylesheet" TYPE="text/css" HREF="css/ncross.css">
+   
+  <STYLE TYPE="text/css">
 
 .cellnotselectedclass {
   background-color: white;
@@ -117,14 +119,17 @@ font-size: 6vmin;
 {
 	font-size: 2vmin;
 }
-</STYLE> <SCRIPT SRC="./js/ncross.js"></SCRIPT>
+</STYLE>
+  
+
 	 <LINK REL="stylesheet" HREF="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+   <SCRIPT SRC="./js/ncross.js"></SCRIPT>  
    <SCRIPT SRC="https://code.jquery.com/jquery-3.7.1.min.js"></SCRIPT>
    <SCRIPT SRC="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></SCRIPT>
    <SCRIPT SRC="./js/cookie.js"></SCRIPT>
   </HEAD>
   
-  <body id="body" CLASS="pad_button_numeric">
+  <body id="body">
   
 <SCRIPT TYPE="text/javascript">
 
@@ -202,7 +207,7 @@ document.getElementById("body").onload = Main;
 function RemoveCells(){ 
   let d = new Date();
   let time = d.getTime();
-  let finished = time + (1000 * 5 ); //5 sec max
+  let finished = time + (1000 * 1 ); //5 sec max
   let one_value;
   let possible_sudoku ;
   
@@ -930,7 +935,143 @@ function ClearUnlockedCells() {
 		}
 	}
 }
+
+$( function() {
+    $( "#accordion" ).accordion({
+      collapsible: true ,
+      active: false
+    });
+  } );
+
+  var Diff =[];
+
+Diff[1] = function()
+	{ 
+	document.getElementById('NS').checked = true;
+	document.getElementById('HS').checked = false;
+	document.getElementById('NP').checked = false;
+	document.getElementById('HP').checked = false;
+	document.getElementById('IR').checked = false;
+	document.getElementById('XW').checked = false;
+	document.getElementById('YW').checked = false;
+	};
+
+Diff[2] = function()
+	{ 
+	document.getElementById('NS').checked = true;
+	document.getElementById('HS').checked = true;
+	document.getElementById('NP').checked = false;
+	document.getElementById('HP').checked = false;
+	document.getElementById('IR').checked = false;
+	document.getElementById('XW').checked = false;
+	document.getElementById('YW').checked = false;
+	};
+
+Diff[3] = function()
+	{ 
+	document.getElementById('NS').checked = true;
+	document.getElementById('HS').checked = true;
+	document.getElementById('NP').checked = true;
+	document.getElementById('HP').checked = false;
+	document.getElementById('IR').checked = false;
+	document.getElementById('XW').checked = false;
+	document.getElementById('YW').checked = false;
+	};
+
+Diff[4] = function()
+	{ 
+	document.getElementById('NS').checked = true;
+	document.getElementById('HS').checked = true;
+	document.getElementById('NP').checked = true;
+	document.getElementById('HP').checked = true;
+	document.getElementById('IR').checked = false;
+	document.getElementById('XW').checked = false;
+	document.getElementById('YW').checked = false;
+	};
+
+Diff[5] = function()
+	{ 
+	document.getElementById('NS').checked = true;
+	document.getElementById('HS').checked = true;
+	document.getElementById('NP').checked = true;
+	document.getElementById('HP').checked = true;
+	document.getElementById('IR').checked = true;
+	document.getElementById('XW').checked = false;
+	document.getElementById('YW').checked = false;
+	};
+ 
+ Diff[6] = function()
+	{ 
+	document.getElementById('NS').checked = true;
+	document.getElementById('HS').checked = true;
+	document.getElementById('NP').checked = true;
+	document.getElementById('HP').checked = true;
+	document.getElementById('IR').checked = true;
+	document.getElementById('XW').checked = true;
+	document.getElementById('YW').checked = false;
+	};
+ 
+ Diff[7] = function()
+	{ 
+	document.getElementById('NS').checked = true;
+	document.getElementById('HS').checked = true;
+	document.getElementById('NP').checked = true;
+	document.getElementById('HP').checked = true;
+	document.getElementById('IR').checked = true;
+	document.getElementById('XW').checked = true;
+	document.getElementById('YW').checked = true;
+	};
+ 
 </SCRIPT>
+  
+  <div id="accordion">
+	  <h3>Create</h3>
+
+	  <div>
+		  <form action="/cgi/sudoku/sudoku.cgi" method="post" name="MyForm" id="MyForm">
+			  <p><input type="hidden" name="uid" id="uid"><input type="hidden" name="name" id="name"></p>
+
+			  <p><select onchange="Diff[this.value]();" size="1" name="h">
+				  <option value="1">
+					  Simple - NS
+				  </option>
+
+				  <option value="2">
+					  NS,HS
+				  </option>
+
+				  <option value="3" selected="selected">
+					  NS,HS,NP
+				  </option>
+
+				  <option value="4">
+					  NS,HS,NP,HP
+				  </option>
+
+				  <option value="5">
+					  NS,HS,NP,HP,IR
+				  </option>
+
+				  <option value="6">
+					  NS,HS,NP,HP,IR,XW
+				  </option>
+
+				  <option value="7">
+					  Killer - NS,HS,NP,HP,IR,XW,YW
+				  </option>
+			  </select></p>
+
+			  <p><input type="submit" name="Submit1" value="Generate Puzzle - Please wait" onclick='$( "#dialog-waiting" ).show();'></p>
+
+			  <p>Time to generate puzzle: <input type="text" name="TimeToTry" value="5" size="4" id="TimeToTry"></p>
+
+			  <p><a href="https://www.emogic.com/notes/programming_sudoku_algorithm_part_3_seven_basic_ways_solving_sudoku_stratagies" target="_blank">Solving metods</a>: <label for="NS">NS:</label> <input type="checkbox" name="NS" checked="checked" id="NS" value="1"> <label for="HS">HS:</label> <input type="checkbox" name="HS" checked="checked" id="HS" value="1"> <label for="NP">NP:</label> <input type="checkbox" name="NP" checked="checked" id="NP" value="1"> <label for="HP">HP:</label> <input type="checkbox" name="HP" checked="checked" id="HP" value="1"> <label for="IR">IR:</label> <input type="checkbox" name="IR" id="IR" value="1"> <label for="XW">XW:</label> <input type="checkbox" name="XW" value="1" id="XW"> <label for="YW">YW:</label> <input type="checkbox" name="YW" id="YW" value="1"></p>
+
+			  <p>Number of Blank Squares:<input type="text" name="NumberOfSquares" value="58" size="4" id="NumberOfSquares"><br>
+			  (55 is average. Higher numbers might not be reached.)</p>
+		  </form>
+	  </div>
+  </div>
   
 	 <table class="BigTable"cellspacing=" 0"cellpadding=" 0" onclick="intable = 1;" id="BigTable">
 		 <tr>
