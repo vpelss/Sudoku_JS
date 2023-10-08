@@ -1,112 +1,984 @@
 <!DOCTYPE HTML PUBLIC "-//SoftQuad Software//DTD HoTMetaL PRO 6.0::19990601::extensions to HTML 4.0//EN" "hmpro6.dtd">
-<HTML> 
-  <HEAD>
+<HTML>
+  <HEAD><META HTTP-EQUIV="Pragma" CONTENT="no-cache">
 	 <META NAME="KEYWORDS"
-	  CONTENT="Sudoku , Friends ,infinite , instant , unlimited , Sudoku , number, game, generator , puzzle , script , Sudoku, printable">
+	  CONTENT="Sudoku , infinite , instant , unlimited , Sudoku , cross, word, generator , puzzle , script , Sudoku, printable , free">
 	 <META NAME="DESCRIPTION"
-	  CONTENT="Sudoku of Death. Sudoku Puzzle Generator Script to create Sudoku for prining or saving for use in your web browser">
-	 <STYLE TYPE="text/css">
+	  CONTENT="Sudoku : Infinite Free Sudoku Puzzle Generator Script to create Sudoku for prining">
 
-*
-{
-font-size: 4vmin;
-}
+	 <TITLE>Sudoku Puzzle Generator by Emogic.com</TITLE>
+  <LINK REL="stylesheet" TYPE="text/css" HREF="css/ncross.css">
+   
+  <STYLE TYPE="text/css">
 
-#white_box
-{
-background-color: white;	
-}
-
-#dialog-waiting /*center spinner*/  
-{  
-position: fixed;  
-top: 50%;  
-left: 50%;  
-transform: translate(-50%, -50%);  
-z-index: 999;  
-}
-
-</STYLE> 
-	 <TITLE>Sudoku of Death - JS. Puzzle Generator by Emogic.com</TITLE>
+  body{
+   text-align:center;
+  }
   
+.cellnotselectedclass {
+  background-color: white;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+		font-weight: bold;
+  font-size: 2vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.cellselectedclass {
+  background-color: yellow;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+		font-weight: bold;
+  font-size: 2vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.cellstaticclass {
+  background-color: #CCFFFF;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+  font-weight: bold;
+		font-size: 6vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.celllockedclass {
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+  font-weight: bold;
+  font-size: 6vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.cellgrayclass {
+  background-color: gray;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+  font-weight: bold;
+  font-size: 6vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.cellredclass {
+  background-color: red;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+  font-size: 6vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.BigTable
+{
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+#game_area{
+ border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+  background-color: white;
+display: inline-block;
+
+}
+
+.PadTable
+{
+
+}
+
+.subtable{
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.pad_button_numeric
+{
+  height: 8vmin;
+  width: 8vmin;
+border-radius: 3pt;
+font-size: 6vmin;
+}
+
+.dialogs
+{
+	font-size: 2vmin;
+}
+</STYLE>
+  
+
 	 <LINK REL="stylesheet" HREF="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+   <SCRIPT SRC="./js/ncross.js"></SCRIPT>  
    <SCRIPT SRC="https://code.jquery.com/jquery-3.7.1.min.js"></SCRIPT>
    <SCRIPT SRC="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></SCRIPT>
+   <SCRIPT SRC="./js/cookie.js"></SCRIPT>
+  </HEAD>
   
-  <SCRIPT SRC="js/cookie.js"></SCRIPT>
+  <body id="body" background="./images/sudoku.gif">
   
-  </HEAD> 
-  <BODY BACKGROUND="images/sudoku.gif">
-   
-   
-  <SCRIPT TYPE="text/javascript"> 		
+<SCRIPT TYPE="text/javascript">
 
-function gup( name )
-{
-  name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-  var regexS = "[\\?&]"+name+"=([^&#]*)";
-  var regex = new RegExp( regexS );
-  var results = regex.exec( window.location.href );
-  if( results === null )
-    return "";
-  else
-    return results[1];
+// sudoku[BigX][BigY][LittleX][LittleY] = [] 1..9
+// to choose a column, we need a static BigX and LittleX
+var sudoku = DIM( [3, 3, 3, 3] , [1,2,3,4,5,6,7,8,9] ); //fill Sudoku board with all probabilities 1..9
+
+//set path to traverse Sudoku 
+var path = [];
+for (let by = 0; by < 3; by++) {
+	for (let ly = 0; ly < 3; ly++) {
+		for (let bx = 0; bx < 3; bx++) {
+			for (let lx = 0; lx < 3; lx++) {
+				path.push([bx, by, lx, ly]);
+			}
+		}
+	}
 }
-</SCRIPT>
-  
-	 <DIV ID="white_box" STYLE="background-color: white" ALIGN="CENTER"> 
-		<H3 LANGUAGE="VBS">Sudoku of Death</H3> 
-		<FORM ACTION="/cgi/sudoku/sudoku.cgi" METHOD="POST" NAME="MyForm"> 
-		  <P><INPUT TYPE="HIDDEN" NAME="uid" ID="uid"><INPUT TYPE="HIDDEN"
-			 NAME="name" ID="name"></P> 
-		  <P> 
-			 <SELECT ONCHANGE="Diff[this.value]();" SIZE="1" NAME="h"> 
-				<OPTION VALUE="1">Simple - NS</OPTION> 
-				<OPTION VALUE="2">NS,HS</OPTION> 
-				<OPTION VALUE="3" SELECTED="SELECTED">NS,HS,NP</OPTION> 
-				<OPTION VALUE="4">NS,HS,NP,HP</OPTION> 
-				<OPTION VALUE="5">NS,HS,NP,HP,IR</OPTION> 
-				<OPTION VALUE="6">NS,HS,NP,HP,IR,XW</OPTION> 
-				<OPTION VALUE="7">Killer - NS,HS,NP,HP,IR,XW,YW</OPTION> 
-			 </SELECT></P>
-    
- 
-		  <P><INPUT TYPE="SUBMIT" NAME="Submit1"
-			 VALUE="Generate Puzzle - Please wait"
-			 ONCLICK='$( "#dialog-waiting" ).show();'></P> 
-		  <P>Time to generate puzzle:
-			 <INPUT TYPE="TEXT" NAME="TimeToTry" VALUE="5" SIZE="4" ID="TimeToTry"></P> 
-		  <P><A
-			 HREF="https://www.emogic.com/notes/programming_sudoku_algorithm_part_3_seven_basic_ways_solving_sudoku_stratagies"
-			 TARGET="_blank">Solving metods</A>:
-    
-    <label for="NS">NS: </label><INPUT TYPE="CHECKBOX" NAME="NS" CHECKED="CHECKED" ID="NS" VALUE="1">
-    <label for="HS">HS: </label><INPUT TYPE="CHECKBOX" NAME="HS" CHECKED="CHECKED" ID="HS" VALUE="1">
-     <label for="NP">NP: </label><INPUT TYPE="CHECKBOX" NAME="NP" CHECKED="CHECKED" ID="NP" VALUE="1">
-    <label for="HP">HP: </label><INPUT TYPE="CHECKBOX" NAME="HP" CHECKED="CHECKED" ID="HP" VALUE="1">
-     <label for="IR">IR: </label><INPUT TYPE="CHECKBOX" NAME="IR" ID="IR" VALUE="1">
-   <label for="XW">XW: </label> <INPUT TYPE="CHECKBOX" NAME="XW" VALUE="1" ID="XW">
-     <label for="YW">YW: </label><INPUT TYPE="CHECKBOX" NAME="YW" ID="YW" VALUE="1">
-   
-    </P> 
-		  <P>Number of Blank Squares:<INPUT TYPE="TEXT" NAME="NumberOfSquares"
-			 VALUE="58" SIZE="4" ID="NumberOfSquares"><BR>(55 is average. Higher numbers
-			 might not be reached.)</P> 
 
-		</FORM> 
-		
-  <P><A HREF="/sudoku/">Sudoku Puzzle Archive</A></P> 
-  
-		<P><A HREF="/cgi/sudoku/WeWarnYouOnce.wav" TARGET="_blank">Why Sudoku of
-		  Death?</A> </P>
-  
-		<DIV ID="dialog-waiting"><IMG SRC="./images/flash.gif"></DIV>
- 
-	 </DIV>
-  
-     <SCRIPT>
+function Main() {
+//set event functions  
+document.getElementById("how_to_play").onclick = Howtoplay;
+document.getElementById("statistics").onclick = Statistics;
+document.getElementById("solution").onclick = SolutionsDialog;
+document.getElementById("clear_blank_cells").onclick = ClearUnlockedCells;
+document.getElementById("body").onkeydown = keyinput;
 
-var Diff =[];
+	//start create full Sudoku board
+  let path_temp =  JSON.parse( JSON.stringify(path) ); 
+	SetNextSquare(path_temp); //clears path
+
+	//place selections on board
+	let xx = 0;
+	let yy = 0;
+	for (let by = 0; by < 3; by++) {
+		for (let ly = 0; ly < 3; ly++) {
+			for (let bx = 0; bx < 3; bx++) {
+				for (let lx = 0; lx < 3; lx++) {
+					let cellID = "cell_" + xx + "_" + yy;
+     let solutionID = "solution_" + xx + "_" + yy;
+					let value = sudoku[bx][by][lx][ly][0];
+					document.getElementById(cellID).innerHTML = value;
+     document.getElementById(solutionID).innerHTML = value; //set solution table
+     document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+					xx++;
+				}
+			}
+			yy++;
+			xx = 0;
+		}
+	}
+  
+ let result = RemoveCells();
+ 
+ //set static cells
+ xx = 0;
+	yy = 0;
+ let jscalcpuzz = ""; //the sudoku tester
+	for (let by = 0; by < 3; by++) {
+		for (let ly = 0; ly < 3; ly++) {
+			for (let bx = 0; bx < 3; bx++) {
+				for (let lx = 0; lx < 3; lx++) {
+					let cellID = "cell_" + xx + "_" + yy;
+					let value = sudoku[bx][by][lx][ly].toString();
+     if(value != ""){//static
+      document.getElementById(cellID).innerHTML = "<!--static-->" + value;
+      document.getElementById(cellID).className = "cellstaticclass";
+      jscalcpuzz = jscalcpuzz + value;
+     }
+     else{//blank
+      document.getElementById(cellID).innerHTML = value;
+      jscalcpuzz = jscalcpuzz + "-";
+     }
+     //document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+					xx++;
+				}
+			}
+   jscalcpuzz = jscalcpuzz + "\r\n";
+			yy++;
+			xx = 0;
+		}
+	}
+ document.getElementById("map").innerHTML = jscalcpuzz;
+ start_cross( document.getElementById("Solution") );
+ 
+ 
+ Diff[ document.getElementById("difficulty").value ](); //set difficulty based on default selection
+ 
+  var ttt = 8;
+}
+document.getElementById("body").onload = Main;
+
+function RemoveCells(){ 
+  let d = new Date();
+  let time = d.getTime();
+  let finished = time + (1000 * 1 ); //5 sec max
+  let one_value;
+  let possible_sudoku ;
+  
+  while( (d.getTime() < finished) ) {
+  //save array status
+  let backup_sudoku_array = JSON.stringify(sudoku);
+    
+  //random choose a cell that has one possible value
+  let bx,by,lx,ly;
+  do{
+  bx = getRandomInt(3);
+  by = getRandomInt(3);
+  lx = getRandomInt(3);
+  ly = getRandomInt(3);
+  one_value = false;
+  if( sudoku[bx][by][lx][ly].length == 1 ){
+    one_value = true;
+    }    
+}while(! one_value);
+ 
+  sudoku[bx][by][lx][ly] = []; //remove value
+  
+  possible_sudoku = JSON.stringify(sudoku);
+   //try to solve sudoku array. Solve me mangles global sudoku array!
+  if( Solve_Me() ){ //success : save 
+    sudoku = JSON.parse(possible_sudoku); //restore board
+  }
+  else{ //fail : restore
+    sudoku = JSON.parse(backup_sudoku_array); //restore board
+  }
+  
+   d = new Date();
+  } //end while
+ 
+ var tt = 9;
+ 
+}
+
+function Solve_Me() { //mangles sudoku. so calling routines must accomodate
+	//let sudoku_array_no_probabilities;
+	let progress; //true if we made any progress
+	let solved = 0;
+	//start board off by calculating simple starting probabilities for blank cells in entire board
+
+	//maybe check ns here also and return true if we have a ns? maybe put in while loop?
+	//ISSUE NS is part of this implicityly
+	//solved = Calculate_Simple_Probabilities(); //?? need this one?
+	//return 1 if solved (all cells have 1)
+	//return 0 if ?
+	//return 2 if progress?
+	//note we ask Solve_me to fill in BLANK squares, but fill with probabilities and continue....
+	//logic???
+	//maybe this also checks if all cells have single probability (then it is solved)!!!!!
+	//Call it Calculate_Simple_Probabilities_and_check_solved 
+
+	//then try to reduce all probabilities to 1 value for each cell     
+
+	do {
+		for (let cell_count = 0; cell_count < 81; cell_count++) {
+			let next_square = path[cell_count];
+			let bigx = next_square[0];
+			let bigy = next_square[1];
+			let littlex = next_square[2];
+			let littley = next_square[3];
+
+			solved = Calculate_Simple_Probabilities();
+			//sudoku_array_no_probabilities = JSON.stringify(sudoku);
+
+			//calculate probabilities for entire board
+			//solved = Calculate_Probabilities(); if 
+			//return  false = filled in probabilities : true = cells all single probabilities therefore solved
+
+			//ns solved=ns(); if all are ns!!!!
+			//return  false = filled in probabilities : true = cells all single probabilities therefore solved
+			//hs 
+			//np
+			//hp      
+			//ir does probabilities
+			//xwing
+			//ywing
+
+			if (solved) { //solved if all cells have 1 probability
+				//sudoku = JSON.parse(backup_sudoku_array); //restore board
+				return true;
+			} else {
+
+			}
+
+			if (!progress) { //can't solve if we cannot move forward. ie: stuck
+				return false;
+			}
+
+		}
+
+
+	} while (progress); //true if we made any progress
+
+	//no more progress and we never solved it
+	//sudoku = JSON.parse(backup_sudoku_array); //restore board 
+	return false;
+
+}
+
+function Calculate_Simple_Probabilities(){
+ let solved = 1;
+  	for (let cell_count = 0; cell_count < 81; cell_count++) {
+			let next_square = path[cell_count];
+			let bx = next_square[0];
+			let by = next_square[1];
+			let lx = next_square[2];
+			let ly = next_square[3];
+      
+      let probable_numbers_row_col_3 = [];
+      //if cell has no values get all numbers from cells with SINGLE values in row,col,3x3
+      //then this cell will have inverse of that list
+      if(sudoku[bx][by][lx][ly].length == 0){ //if cell has no values 
+        //get all numbers from cells with SINGLE values in row,col,3x3
+      
+      //row
+      probable_numbers_row_col_3.push(... Probable_Potential_Values("row" , bx, by, lx, ly) );
+      //col
+      probable_numbers_row_col_3.push(... Probable_Potential_Values("col" , bx, by, lx, ly) );
+      //squ
+      probable_numbers_row_col_3.push(... Probable_Potential_Values("squ" , bx, by, lx, ly) );
+      
+      //difference of that list
+      let probable_numbers = Array_Difference( [1,2,3,4,5,6,7,8,9] , probable_numbers_row_col_3 );
+      sudoku[bx][by][lx][ly] = probable_numbers;
+      }
+      
+     if(sudoku[bx][by][lx][ly].length != 1){//if even one cell does not contain exactly one probability
+      solved = 0;
+     }
+     
+     var tt = 9;
+    }
+    return solved;
+}
+
+function Probable_Potential_Values(region , bigx, bigy, littlex, littley){
+
+  let accumulate_array = [];
+  
+  if(region == "row"){
+   bigxArray = [0, 1, 2];
+   bigyArray = [bigy, bigy, bigy];
+   littlexArray = [0, 1, 2];
+   littleyArray = [littley, littley, littley];
+  }
+ if(region == "col"){
+  bigxArray = [bigx, bigx, bigx];
+   bigyArray = [0, 1, 2];
+   littlexArray = [littlex, littlex, littlex];
+   littleyArray = [0, 1, 2];   
+  }
+ if(region == "squ"){
+   bigxArray = [bigx, bigx, bigx];
+   bigyArray = [bigy, bigy, bigy];
+   littlexArray = [0, 1, 2];
+   littleyArray = [0, 1, 2];    
+  }
+  //let result = true;
+	bigxArray.forEach(function(bx) {
+		bigyArray.forEach(function(by) {
+			littlexArray.forEach(function(lx) {
+				littleyArray.forEach( function(ly) {
+					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
+						return true;
+					} //skip our cell
+          if(sudoku[bx][by][lx][ly].length == 1){ //only look at set cells (1 probability)
+            accumulate_array.push( sudoku[bx][by][lx][ly][0] );
+          }
+          //= Array_Difference(sudoku[bx][by][lx][ly] , [chosen]);
+          //sudoku[bx][by][lx][ly] = [ new Set(sudoku[bx][by][lx][ly]).delete(chosen) ];
+					//delete sudoku[bx][by][lx][ly][chosen];
+					
+          //if (sudoku[bx][by][lx][ly].length == 0) {
+            //return false; //really does not do much as it only returns up to previous anonymous function
+            //} //a cell has no more potential values. we have failed :(
+				}); 
+			});
+		});
+	});
+  
+  //remove duplicates
+  accumulate_array = Array_Remove_Duplicates(accumulate_array);
+	return accumulate_array;
+  
+ }
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
+function SetNextSquare(path) { //recursive
+	if (path.length == 0) {
+		return true;
+	} //made it to the end. done. trigger our journey back
+	let backup_for_possible_fail = JSON.stringify(sudoku);
+	let next_square = path.shift();
+	let bigx = next_square[0];
+	let bigy = next_square[1];
+	let littlex = next_square[2];
+	let littley = next_square[3];
+	let potential_numbers = sudoku[bigx][bigy][littlex][littley] ; //convert set to array
+	potential_numbers = Array_Shuffle(potential_numbers); //shuffle
+	while (potential_numbers.length > 0) { //if we still have potential numbers in this square try another one 
+		let chosen = potential_numbers.pop(); //pick a number
+		//sudoku[bigx][bigy][littlex][littley] = []; //erase old numbers
+    //sudoku[bigx][bigy][littlex][littley].clear(); //erase old numbers
+		sudoku[bigx][bigy][littlex][littley] = [chosen]; //set chosen number
+		let result = Remove_Potential_Values_Meta(bigx, bigy, littlex, littley, chosen); //remove chosen number from potential values in squ,col,row
+		if (result == false) { //a square ran out of potential numbers
+			sudoku = JSON.parse(backup_for_possible_fail); //restore board
+			continue; //try another 
+		}
+		//success. lets try the next cell in the path 
+		// in correct spot?
+		result = SetNextSquare(path);
+		if (result == false) { //our recursive attempt failed. restore board and try another potential value from this cell
+			sudoku = JSON.parse(backup_for_possible_fail); //restore board
+		} else {
+			return true; //making our way back home
+		}
+	}
+	//all potential numbers failed on this cell. return false. recurse back
+	//sudoku = JSON.parse(backup_for_possible_fail); //restore board
+	path.unshift(next_square); //must unshift if we want to come back here. and we do.
+	return false;
+}
+
+function Remove_Potential_Values_Meta(bigx, bigy, littlex, littley, chosen) {
+	//remove from squ
+	let result = Remove_Potential_Values("squ" , bigx, bigy, littlex, littley, chosen);
+	if (result == false) {
+		return false;
+	}
+	//remove from row
+	result = Remove_Potential_Values("row" , bigx, bigy, littlex, littley, chosen);
+	if (result == false) {
+		return false;
+	}
+	//remove from col
+	result = Remove_Potential_Values("col" , bigx, bigy, littlex, littley, chosen);
+	if (result == false) {
+		return false;
+	}
+	return true;
+}
+
+//function Remove_Potential_Values(bigxArray, bigyArray, littlexArray, littleyArray, bigx, bigy, littlex, littley, chosen) {
+function Remove_Potential_Values(region , bigx, bigy, littlex, littley, chosen) {
+  if(region == "row"){
+   bigxArray = [0, 1, 2];
+   bigyArray = [bigy, bigy, bigy];
+   littlexArray = [0, 1, 2];
+   littleyArray = [littley, littley, littley];
+  }
+ if(region == "col"){
+  bigxArray = [bigx, bigx, bigx];
+   bigyArray = [0, 1, 2];
+   littlexArray = [littlex, littlex, littlex];
+   littleyArray = [0, 1, 2];   
+  }
+ if(region == "squ"){
+   bigxArray = [bigx, bigx, bigx];
+   bigyArray = [bigy, bigy, bigy];
+   littlexArray = [0, 1, 2];
+   littleyArray = [0, 1, 2];    
+  }
+  let result = true;
+	bigxArray.forEach(function(bx) {
+		bigyArray.forEach(function(by) {
+			littlexArray.forEach(function(lx) {
+				littleyArray.forEach( function(ly) {
+					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
+						return true;
+					} //skip our cell
+          sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly] , [chosen]);			
+          if (sudoku[bx][by][lx][ly].length == 0) {
+            return false; //really does not do much as it only returns up to previous anonymous function
+            } //a cell has no more potential values. we have failed :(
+				}); 
+			});
+		});
+	});
+	return result;
+}
+
+function Array_Remove_Duplicates(Array1){
+  let the_set = new Set(Array1);
+  let the_array = Array.from(the_set); 
+ return the_array;  
+}
+
+function Array_Difference(array1 , array2){ //array with all items first!
+  let difference = array1.filter((element) => !array2.includes(element));
+  return difference;
+}
+
+function Array_Shuffle(array) {
+	for (let i = array.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		const temp = array[i];
+		array[i] = array[j];
+		array[j] = temp;
+	}
+	return array;
+}
+
+function DIM(arrayOfDimensions, theValue) { //like the BASIC DIM : var multiDimensionalArray = DIM([7,8,9],{jj:9 , kk:8})
+	let localArrayOfDimensions = arrayOfDimensions.slice(); //must copy array as scope for arrayofdimensions is global 
+	let returnArray = [];
+	if (localArrayOfDimensions.length === 0) //no more dimensions
+	{
+		return JSON.parse(JSON.stringify(theValue)); //copy the value, not the pointer
+		//return theValue;
+	}
+	let arraySize = localArrayOfDimensions.shift(); // size of current dimension
+	for (let arrayPointer = 0; arrayPointer < arraySize; arrayPointer++) { //for each array pointer in this array dimension, recursively call DIM, and return and assign the value
+		returnArray[arrayPointer] = DIM(localArrayOfDimensions, theValue);
+	}
+	return returnArray; //return here if there are still more array dimensions
+}
+
+//start dialogs and turn off
+$(function() {
+	$(".dialogs").dialog({
+		autoOpen: false,
+		modal: true,
+		buttons: {
+			Ok: function() {
+				$(this).dialog("close");
+			}
+		}
+	});
+});
+
+var forever = new Date('October 17, 2030 03:24:00'); // use in cookies
+var count = 0;
+
+function gup(name) {
+	//this routine looks for 'name' value in the url string ?name=value
+	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+	var regexS = "[\\?&]" + name + "=([^&#]*)";
+	var regex = new RegExp(regexS);
+	var results = regex.exec(window.location.href);
+	if (results == null)
+		return "";
+	else
+		return results[1];
+}
+
+var LastCursorID = "cell_0_0";
+//var StaticArray = DIM([9,9] , 0);
+
+var blanksquares = "%blanksquares%";
+var intable = 1;
+
+function PositionFromID(cellID) {
+	var gridID = cellID.slice(5, 9999); //strip Grid_
+	var LocationOfCell = Array();
+	LocationOfCell = gridID.split('_'); //split 1_2 part
+	var x = LocationOfCell[0];
+	var y = LocationOfCell[1];
+
+	return new Array(x, y);
+}
+
+function IsCellLockedID(cellID) {
+	var text = document.getElementById(cellID).innerHTML;
+	if ((text.indexOf('locked', 0) > -1) || (text.indexOf('LOCKED', 0) > -1)) {
+		return 1;
+	}
+	//if ((text.indexOf('</B>' , 0) > -1 ) || (text.indexOf('</b>' , 0) > -1 )) {return 1}
+	else {
+		return 0;
+	}
+}
+
+function IsCellStaticID(cellID) {
+	//let xy = Array();
+	//xy = PositionFromID(cellID);
+	//let x = xy[0];
+	//let y = xy[1];
+
+ let text = document.getElementById(cellID).innerHTML;
+	if ((text.indexOf('static', 0) > -1)) {
+		return 1;
+	}
+ else {
+  return 0;
+ }
+ 
+}
+
+function chooseOnClick() {
+  cellID = this.id;
+	choose(cellID);
+}
+
+function choose(cellID) {
+	//take care of last cursor cell
+	//if (LastCursorClass == '') {LastCursorClass = document.getElementById(cellID).className} //so we don't pooch the starting square
+	//else {document.getElementById(LastCursorID).className = LastCursorClass;} //restore last selected square
+
+	document.getElementById(LastCursorID).className = 'cellnotselectedclass'; //selected square back to white
+	if (IsCellLockedID(LastCursorID) == 1) {
+		document.getElementById(LastCursorID).className = 'celllockedclass';
+	}
+	if (IsCellStaticID(LastCursorID) == 1) {
+		document.getElementById(LastCursorID).className = 'cellstaticclass'; //selected square back to gray
+	}
+
+	//take care of new cell
+	//LastCursorClass = document.getElementById(cellID).className; //remember the last cursor color
+	LastCursorID = cellID; //remember the last cursor cell
+
+	//asumption
+	document.getElementById(cellID).className = 'cellselectedclass'; //selected square back to yellow
+	if (IsCellLockedID(cellID) == 1) {
+		document.getElementById(cellID).className = 'cellgrayclass';
+		//LastCursorID = "celllockedclass";
+	}
+	if (IsCellStaticID(cellID) == 1) {
+		document.getElementById(cellID).className = 'cellgrayclass'; //selected square back to gray
+	}
+}
+
+function keyinput() {
+  var keyCode = event.key;
+  let cellID = LastCursorID;
+  
+	var xy = Array();
+	xy = PositionFromID(cellID);
+	var x = xy[0];
+	var y = xy[1];
+
+	if (intable == 0) {
+		return 0;
+	} //we are not typing in the table. ignore
+
+	//if (keyCode == 37) {
+	if (keyCode == "ArrowLeft") {
+		if (x <= 0) {
+			x = 8;
+		} else {
+			x--;
+		}
+		choose('cell_' + x + '_' + y);
+	} //left
+	if (keyCode == "ArrowUp") {
+	//if (keyCode == 38) {
+		if (y <= 0) {
+			y = 8;
+		} else {
+			y--;
+		}
+		choose('cell_' + x + '_' + y);
+	} //up
+	if (keyCode == "ArrowRight") {
+	//if (keyCode == 39) {
+		if (x >= 8) {
+			x = 0;
+		} else {
+			x++;
+		}
+		choose('cell_' + x + '_' + y);
+	} //right
+	if (keyCode == "ArrowDown") {
+	//if (keyCode == 40) {
+		if (y >= 8) {
+			y = 0;
+		} else {
+			y++;
+		}
+		choose('cell_' + x + '_' + y);
+	} //down
+
+	if (keyCode == "c") //c - clear - clear current cell, if not locked
+	{
+		if (IsAnEditCellID(cellID) == 1) {
+			document.getElementById(cellID).innerHTML = "";
+			send_cell_update(document.getElementById(cellID).innerHTML);
+		}
+	}
+
+	if (keyCode == "h") //h - how - check how we are doing status and send to chat box
+	{
+		var textmsg = 'Numbers selected:' + CountLocked() + ' Correct:' + CountCorrectLocked('how') + '\n\r\n\rNote: this only counts locked numbers.';
+		//send_chat(textmsg);
+		alert(textmsg);
+		//send_chat('Numbers selected:' + CountLocked() + '    Correct:' + CountCorrectLocked('how'));
+	}
+
+	if (keyCode == "r") //r - reveal - check how we are doing status and send to chat box
+	{
+		let textmsg = 'Numbers selected:' + CountLocked() + '    Correct:' + CountCorrectLocked('reveal') + '\n\r\n\rNote: this only counts locked numbers.';
+		//send_chat(textmsg);
+		alert(textmsg);
+	}
+
+	if (IsCellStaticID(cellID) == 1) {
+		return 0;
+	} //static cells can't be modified
+
+	//lock - unlock function
+	if (keyCode == "s") //s - save
+	{
+		var numberlist = document.getElementById(cellID).innerHTML;
+		//remove all but numbers
+		numberlist = numberlist.replace(/\D/g, '');
+		if (IsCellLockedID(cellID) == 1) {
+			//unlock this square
+			document.getElementById(cellID).innerHTML = numberlist;
+			document.getElementById(cellID).className = 'cellnotselectedclass';
+			LastCursorClass = document.getElementById(cellID).className;
+			document.getElementById(cellID).className = 'cellselectedclass';
+			send_cell_update(document.getElementById(cellID).innerHTML);
+		} else {
+			//lock the square
+			if (numberlist.length == 1) {
+				//lock this square
+				document.getElementById(cellID).innerHTML = numberlist + '<!--locked-->';
+				document.getElementById(cellID).className = 'celllockedclass';
+				LastCursorClass = document.getElementById(cellID).className;
+				document.getElementById(cellID).className = 'cellgrayclass';
+				send_cell_update(document.getElementById(cellID).innerHTML);
+				//did we win!
+				if (blanksquares == CountCorrectLocked(count)) {	//send_chat('You win!');
+					IWin();
+				}
+			} else {
+				window.alert("You can only lock squares with one number");
+			}
+		}
+		return 0;
+	}
+
+	if (IsCellLockedID(cellID) == 1) {
+		return 0;
+	} //can't edit a locked cell
+
+    if (keyCode >= 1 && keyCode <= 9) //number keys pressed 1 - 9
+	{
+		let numberlist = document.getElementById(cellID).innerHTML;
+		numberlist = numberlist.replace(/\D/g, ''); //remove all but numbers
+		var keychar = keyCode;
+		var founditindex = numberlist.indexOf(keychar, 0);
+		if (founditindex > -1) { //remove number from string
+			var re = new RegExp(keychar, 'g');
+			numberlist = numberlist.replace(re, '');
+		} else {
+			numberlist = numberlist + keychar;
+		}
+		//sort our number list
+		var t = numberlist.split('');
+		t = t.sort();
+		t1 = t.slice(0, 3);
+		t2 = t.slice(3, 6);
+		t3 = t.slice(6, 9);
+		numberlist = t1.join('') + '<br>' + t2.join('') + '<br>' + t3.join('');
+		//put numbers back on board
+		document.getElementById(cellID).innerHTML = numberlist;
+		send_cell_update(document.getElementById(cellID).innerHTML);
+	}
+}
+
+function IsAnEditCellID(cellID) {
+	if ((IsCellStaticID(cellID) == 1) || (IsCellLockedID(cellID) == 1)) {
+		return 0;
+	} else {
+		return 1;
+	}
+}
+
+function CountCorrectLocked(mode) {
+	var CorrectCount = 0;
+	for (var x = 0; x <= 8; x++) {
+		for (var y = 0; y <= 8; y++) {
+			var CellID = 'cell_' + x + '_' + y;
+			var SolutionID = 'solution_' + x + '_' + y;
+			if (IsCellLockedID(CellID) == 1) {
+				var cellresult = document.getElementById(CellID).innerHTML;
+				cellresult = cellresult.replace(/\D/g, '');
+				var solutionresult = document.getElementById(SolutionID).innerHTML;
+				solutionresult = solutionresult.replace(/\D/g, '');
+				if (cellresult == solutionresult) {
+					CorrectCount++;
+				} else {
+					if (mode == 'reveal') {
+						document.getElementById(CellID).className = 'cellredclass';
+					}
+				}
+			}
+		}
+	}
+	return (CorrectCount);
+}
+
+function CountLocked() {
+	var LockedCount = 0;
+	for (var x = 0; x <= 8; x++) {
+		for (var y = 0; y <= 8; y++) {
+			var CellID = 'cell_' + x + '_' + y;
+			if (IsCellLockedID(CellID) == 1) {
+				LockedCount++;
+			}
+		}
+	}
+	return (LockedCount);
+}
+
+function send_cell_update(k)
+	{
+	var letter = k;
+ setCookie( LastCursorID , letter , forever , '' , '' , ''); //LastCursorID = cell_x_y
+	}
+
+function SetCellsFromCookies()
+{
+var cookieNames = listCookies();
+for (var i = 0 ; i < cookieNames.length ; i++) {
+		if (cookieNames[i].indexOf("cell") != -1) {
+			var thecell = cookieNames[i];
+			thecell = thecell.trim();
+			var theletter = getCookie(cookieNames[i]);
+			theletter = theletter.trim();
+			document.getElementById(thecell).innerHTML = theletter;
+			if (IsCellLockedID(thecell) == 1) {
+				document.getElementById(thecell).className = 'celllockedclass';
+				}
+			}
+		}
+}
+
+function get_sudoku_updates(){
+	SetCellsFromCookies();
+	} 
+
+var fivesec = 0;
+function IWin()
+{
+var winstate;
+if (fivesec > 100) {winstate = 'up';}
+if (fivesec > 200) {winstate = 'down';}
+if (fivesec > 300) {winstate = 'done';}
+
+fivesec++;
+
+var trig = 0;
+while (trig == 0)
+			{
+			var x = Math.floor(Math.random() * 9);
+			var y = Math.floor(Math.random() * 9);
+			var CellID = 'cell_' + x + '_' + y;
+			if (IsCellStaticID(CellID) == 0)
+				{
+				trig = 1;
+				var red = Math.floor(Math.random() * 255);
+				var green = Math.floor(Math.random() * 255);
+				var blue = Math.floor(Math.random() * 255);
+				if (winstate == 'up') {document.getElementById(CellID).style.backgroundColor = 'rgb('+red+','+green+','+blue+')';}
+				if (winstate == 'down') {document.getElementById(CellID).style.backgroundColor = '';}
+				}
+			}
+
+var IWinLoop;
+if (winstate != 'done')
+	{
+	IWinLoop = setTimeout(IWin(),10);
+	}
+
+if (winstate == 'done')
+	{
+	clearTimeout(IWinLoop);
+	fivesec = 0;
+	for (let x = 0 ; x <= 8; x++)
+		{
+		for (let y = 0 ; y <= 8; y++)
+			{
+			let CellID = 'cell_' + x + '_' + y;
+			document.getElementById(CellID).style.backgroundColor = '';
+			}
+		}
+	} //showID('win');
+ }
+
+function SimulateKey( key_pushed ){
+  const kbEvent = new KeyboardEvent('keydown', {
+    bubbles: true,
+    cancelable: true,
+    key: key_pushed,
+  });
+  document.body.dispatchEvent(kbEvent);
+}
+SimulateKey();
+
+function Howtoplay() {
+	$('#dialog-message').dialog("open");
+	$("#dialog-message").dialog("option", "width", 800);
+}
+
+function Statistics() {
+	$('#Statistics').dialog("open");
+	$("#Statistics").dialog("option", "width", 800);
+}
+
+function SolutionsDialog() {
+	$('#SolutionDialog').dialog("open");
+	$("#SolutionDialog").dialog("option", "width", 800);
+}
+
+function ClearUnlockedCells() {
+	if (!confirm('Are you sure? This will clear the board of all numbers that are not locked.')) {
+		return false;
+	}
+
+	for (var x = 0; x <= 8; x++) {
+		for (var y = 0; y <= 8; y++) {
+			var cellID = 'cell_' + x + '_' + y;
+			//document.getElementById(CellID).style.backgroundColor = '';
+			if (IsAnEditCellID(cellID) == 1) {
+				document.getElementById(cellID).innerHTML = "";
+				//send_cell_update(document.getElementById(cellID).innerHTML);
+				deleteCookie(cellID);
+			}
+		}
+	}
+}
+
+$( function() {
+    $( "#accordion" ).accordion({
+      collapsible: true ,
+      active: false
+    });
+  } );
+
+  var Diff =[];
 
 Diff[1] = function()
 	{ 
@@ -134,7 +1006,7 @@ Diff[3] = function()
 	{ 
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = false;
+	document.getElementById('NP').checked = true;
 	document.getElementById('HP').checked = false;
 	document.getElementById('IR').checked = false;
 	document.getElementById('XW').checked = false;
@@ -145,8 +1017,8 @@ Diff[4] = function()
 	{ 
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = false;
-	document.getElementById('HP').checked = false;
+	document.getElementById('NP').checked = true;
+	document.getElementById('HP').checked = true;
 	document.getElementById('IR').checked = false;
 	document.getElementById('XW').checked = false;
 	document.getElementById('YW').checked = false;
@@ -156,9 +1028,9 @@ Diff[5] = function()
 	{ 
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = false;
-	document.getElementById('HP').checked = false;
-	document.getElementById('IR').checked = false;
+	document.getElementById('NP').checked = true;
+	document.getElementById('HP').checked = true;
+	document.getElementById('IR').checked = true;
 	document.getElementById('XW').checked = false;
 	document.getElementById('YW').checked = false;
 	};
@@ -167,10 +1039,10 @@ Diff[5] = function()
 	{ 
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = false;
-	document.getElementById('HP').checked = false;
-	document.getElementById('IR').checked = false;
-	document.getElementById('XW').checked = false;
+	document.getElementById('NP').checked = true;
+	document.getElementById('HP').checked = true;
+	document.getElementById('IR').checked = true;
+	document.getElementById('XW').checked = true;
 	document.getElementById('YW').checked = false;
 	};
  
@@ -178,16 +1050,1297 @@ Diff[5] = function()
 	{ 
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = false;
-	document.getElementById('HP').checked = false;
-	document.getElementById('IR').checked = false;
-	document.getElementById('XW').checked = false;
-	document.getElementById('YW').checked = false;
+	document.getElementById('NP').checked = true;
+	document.getElementById('HP').checked = true;
+	document.getElementById('IR').checked = true;
+	document.getElementById('XW').checked = true;
+	document.getElementById('YW').checked = true;
 	};
+ 
+</SCRIPT>
+  
+  <div id="accordion">
+	  <h3>Create</h3>
 
-</SCRIPT> 
+	  <div>
+		  <form action="/cgi/sudoku/sudoku.cgi" method="post" name="MyForm" id="MyForm">
+
+			  <p><select id="difficulty" onchange="Diff[this.value]();" size="1" name="h">
+				  <option value="1">
+					  Simple - NS
+				  </option>
+
+				  <option value="2">
+					  NS,HS
+				  </option>
+
+				  <option value="3" selected="selected">
+					  NS,HS,NP
+				  </option>
+
+				  <option value="4">
+					  NS,HS,NP,HP
+				  </option>
+
+				  <option value="5">
+					  NS,HS,NP,HP,IR
+				  </option>
+
+				  <option value="6">
+					  NS,HS,NP,HP,IR,XW
+				  </option>
+
+				  <option value="7">
+					  Killer - NS,HS,NP,HP,IR,XW,YW
+				  </option>
+			  </select></p>
+
+			  <p><input type="submit" name="Submit1" value="Generate Puzzle - Please wait" onclick='$( "#dialog-waiting" ).show();'></p>
+
+			  <p>Time to generate puzzle: <input type="text" name="TimeToTry" value="5" size="4" id="TimeToTry"></p>
+
+			  <p><a href="https://www.emogic.com/notes/programming_sudoku_algorithm_part_3_seven_basic_ways_solving_sudoku_stratagies" target="_blank">Solving metods</a>: <label for="NS">NS:</label> <input type="checkbox" name="NS" checked="checked" id="NS" value="1"> <label for="HS">HS:</label> <input type="checkbox" name="HS" checked="checked" id="HS" value="1"> <label for="NP">NP:</label> <input type="checkbox" name="NP" checked="checked" id="NP" value="1"> <label for="HP">HP:</label> <input type="checkbox" name="HP" checked="checked" id="HP" value="1"> <label for="IR">IR:</label> <input type="checkbox" name="IR" id="IR" value="1"> <label for="XW">XW:</label> <input type="checkbox" name="XW" value="1" id="XW"> <label for="YW">YW:</label> <input type="checkbox" name="YW" id="YW" value="1"></p>
+
+			  <p>Number of Blank Squares:<input type="text" name="NumberOfSquares" value="58" size="4" id="NumberOfSquares"><br>
+			  (55 is average. Higher numbers might not be reached.)</p>
+		  </form>
+	  </div>
+  </div>
   
- <SCRIPT>$( "#dialog-waiting" ).hide();</SCRIPT>
+  <div id="game_area">
+	 <table class="BigTable"cellspacing=" 0"cellpadding=" 0" onclick="intable = 1;" id="BigTable">
+		 <tr>
+			 <td>
+				 <table class="subtable"cellspacing=" 0"cellpadding=" 0">
+					 <tr>
+						 <td height="25">
+							 <div class="cellnotselectedclass" id="cell_0_0">
+							 </div>
+						 </td>
+
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_1_0">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_2_0">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_0_1">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_1_1">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_2_1">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_0_2">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_1_2">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_2_2">
+							 </div>
+						 </td>
+					 </tr>
+				 </table>
+			 </td>
+
+			 <td>
+				 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+					 <tr>
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_3_0">
+							 </div>
+						 </td>
+
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_4_0">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_5_0">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_3_1">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_4_1">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_5_1">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_3_2">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_4_2">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_5_2">
+							 </div>
+						 </td>
+					 </tr>
+				 </table>
+			 </td>
+
+			 <td>
+				 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+					 <tr>
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_6_0">
+							 </div>
+						 </td>
+
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_7_0">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_8_0">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_6_1">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_7_1">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_8_1">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_6_2">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_7_2">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_8_2">
+							 </div>
+						 </td>
+					 </tr>
+				 </table>
+			 </td>
+
+			 <td><img src="./images/lock.jpg" alt=" Lock / Unlock " width=" 113" height=" 136" border=" 0" onclick="SimulateKey('s');" class=" pad_button_numeric" title=" Lock / Unlock "></td>
+		 </tr>
+
+		 <tr>
+			 <td>
+				 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+					 <tr>
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_0_3">
+							 </div>
+						 </td>
+
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_1_3">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_2_3">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_0_4">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_1_4">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_2_4">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_0_5">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_1_5">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_2_5">
+							 </div>
+						 </td>
+					 </tr>
+				 </table>
+			 </td>
+
+			 <td>
+				 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+					 <tr>
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_3_3">
+							 </div>
+						 </td>
+
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_4_3">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_5_3">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_3_4">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_4_4">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_5_4">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_3_5">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_4_5">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_5_5">
+							 </div>
+						 </td>
+					 </tr>
+				 </table>
+			 </td>
+
+			 <td>
+				 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+					 <tr>
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_6_3">
+							 </div>
+						 </td>
+
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_7_3">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_8_3">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_6_4">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_7_4">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_8_4">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_6_5">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_7_5">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_8_5">
+							 </div>
+						 </td>
+					 </tr>
+				 </table>
+			 </td>
+
+			 <td><img src="./images/clearcell.jpg" alt=" Clear Cell " title=" Clear Cell " width=" 200" height=" 200" border=" 0" onclick="SimulateKey('c');" class=" pad_button_numeric"></td>
+		 </tr>
+
+		 <tr>
+			 <td>
+				 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+					 <tr>
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_0_6">
+							 </div>
+						 </td>
+
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_1_6">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_2_6">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_0_7">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_1_7">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_2_7">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_0_8">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_1_8">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_2_8">
+							 </div>
+						 </td>
+					 </tr>
+				 </table>
+			 </td>
+
+			 <td>
+				 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+					 <tr>
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_3_6">
+							 </div>
+						 </td>
+
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_4_6">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_5_6">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_3_7">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_4_7">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_5_7">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_3_8">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_4_8">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_5_8">
+							 </div>
+						 </td>
+					 </tr>
+				 </table>
+			 </td>
+
+			 <td>
+				 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+					 <tr>
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_6_6">
+							 </div>
+						 </td>
+
+						 <td height=" 25">
+							 <div class="cellnotselectedclass" id="cell_7_6">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_8_6">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_6_7">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_7_7">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_8_7">
+							 </div>
+						 </td>
+					 </tr>
+
+					 <tr>
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_6_8">
+							 </div>
+						 </td>
+
+						 <td>
+							 <div class="cellnotselectedclass" id="cell_7_8">
+							 </div>
+						 </td>
+
+						 <td width=" 25">
+							 <div class="cellnotselectedclass" id="cell_8_8">
+							 </div>
+						 </td>
+					 </tr>
+				 </table>
+			 </td>
+
+			 <td><img src="./images/clearunlockedcells.jpg" alt="Clear blank cells" title="Clear blank cells" id="clear_blank_cells" border=" 0" width=" 200" height=" 200" class=" pad_button_numeric"></td>
+		 </tr>
+	 </table>
   
-  </BODY>
-</HTML>
+	 <table cellpadding=" 5">
+		 <tr>
+			 <td>
+				 <form style="display: inline;">
+					 <input type="button" name="Button1" value=" 1 " onclick="SimulateKey('1');" class="pad_button_numeric">
+				 </form>
+			 </td>
+
+			 <td>
+				 <form style="display: inline;">
+					 <input type="button" name="Button1" value=" 2 " onclick="SimulateKey('2');" class="pad_button_numeric">
+				 </form>
+			 </td>
+
+			 <td>
+				 <form style="display: inline;">
+					 <input type="button" name="Button1" value=" 3 " onclick="SimulateKey('3');" class="pad_button_numeric">
+				 </form>
+			 </td>
+
+			 <td>
+				 <form style="display: inline;">
+					 <input type="button" name="Button1" value=" 4 " onclick="SimulateKey('4');" class="pad_button_numeric">
+				 </form>
+			 </td>
+
+			 <td>
+				 <form style="display: inline;">
+					 <input type="button" name="Button1" value=" 5 " onclick="SimulateKey('5');" class="pad_button_numeric">
+				 </form>
+			 </td>
+
+			 <td>
+				 <form style="display: inline;">
+					 <input type="button" name="Button1" value=" 6 " onclick="SimulateKey('6');" class="pad_button_numeric">
+				 </form>
+			 </td>
+
+			 <td>
+				 <form style="display: inline;">
+					 <input type="button" name="Button1" value=" 7 " onclick="SimulateKey('7');" class="pad_button_numeric">
+				 </form>
+			 </td>
+
+			 <td>
+				 <form style="display: inline;">
+					 <input type="button" name="Button1" value=" 8 " onclick="SimulateKey('8');" class="pad_button_numeric">
+				 </form>
+			 </td>
+
+			 <td>
+				 <form style="display: inline;">
+					 <input type="button" name="Button1" value=" 9 " onclick="SimulateKey('9');" class="pad_button_numeric">
+				 </form>
+			 </td>
+		 </tr>
+	 </table>
+  
+	 <table class="subtable" style="border-top: 1px solid; border-right: 1px solid; border-bottom: 1px solid; border-left: 1px solid"cellpadding="5">
+		 <tr>
+			 <td><img src="./images/help.gif" alt=" How do I play " title=" How do I play" id="how_to_play" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
+
+			 <td><img src="./images/check.jpg" alt=" How am I doing " title=" How am I doing " width="200" height="200" border=" 0" onclick="SimulateKey('h');" class="pad_button_numeric"></td>
+
+			 <td><img src="./images/badchoices.jpg" alt=" Reveal bad choices " title=" Reveal bad choices " width="200" height="200" border=" 0" onclick="SimulateKey('r');" class="pad_button_numeric"></td>
+
+			 <td><img src="./images/statistics.png" alt=" Puzzle statistics " title=" Puzzle statistics " id="statistics" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
+
+			 <td><img src="./images/solution.jpg" alt=" Puzzle solution " title="Puzzle solution" id="solution" width="200" height="200" border=" 0" onclick="SolutionsDialog();" class="pad_button_numeric"></td>
+
+			 <td><img src="./images/restart.jpg" alt=" Restart puzzle " title=" Restart puzzle " width="200" height="200" border=" 0" onclick="if (confirm('Are you sure? This will clear the board of all numbers.')) { DeleteCookies(); location.reload(); }" class="pad_button_numeric"></td>
+
+			 <td><img src="./images/new.jpg" alt=" New puzzle " title=" New puzzle " width="200" height="200" border=" 0" onclick="if (confirm('Are you sure? Be sure to bookmark the current puzzle first.')) { window.open('%scripturl%/', '_self'); } else {}" class="pad_button_numeric"></td>
+
+			 <td><img src="./images/otherlist.jpg" alt=" Archived puzzles " title=" Archived puzzles " width="200" height="200" border=" 0" onclick="if (confirm('Are you sure? Be sure to bookmark the current puzzle first.')) { window.open('/sudoku/', '_self'); } else {}" class="pad_button_numeric"></td>
+		 </tr>
+	 </table>
+  
+  </div>
+
+	 <DIV ID="dialog-message" TITLE="How do I play ?" CLASS="dialogs" STYLE="width:100%">
+		<P>Suduku Rules:</P>
+		<UL>
+		  <LI>Every row must contain the numbers 1 through 9.</LI>
+		  <LI> Every column must contain the numbers 1 through 9.</LI>
+		  <LI> Every one of the 9 smaller squares (3 x 3) must contain the
+			 numbers 1 through 9.</LI>
+		</UL>
+		<P>How to Play:</P>
+		<UL>
+		  <LI>To see what an icon does, hover the mouse over it (PC/Laptop) or
+			 push and hold it (tablets).</LI>
+		  <LI>Use arrow keys to move cursor (PC/Laptop) or tap the cell to select
+			 (tablets).</LI>
+		  <LI>Use number keys to add number(s).</LI>
+		  <LI>Note that you can add multiple numbers to use as a scratch
+			 pad.</LI>
+		  <LI>To remove a number, hit that number again. 'C' (icon: rectangle
+			 with x) will clear the current cell of all numbers, if unlocked.</LI>
+		  <LI>When you are sure you have a correct number, hit 'S' (icon: lock)
+			 to Save or unSave it.</LI>
+		  <LI>Hit 'H' (icon: green check) to see How you are doing. The result
+			 will show in the chat box.</LI>
+		  <LI>Hit 'R' (icon: red x) to Reveal the incorrect locked
+			 positions.</LI>
+		  <LI>It is advisable to turn on your Num Lock is on and use the
+			 keypad.</LI>
+		  <LI>If you accidentaly hit F5, your browser will refresh.</LI>
+		  <LI>Add to Favorites to complete it at a later time.</LI>
+		  <LI>If you print it, you may want to Show Answers (icon: light bulb) at
+			 the bottom of this page first.</LI>
+		</UL> </DIV>
+	 <DIV ID="Statistics" TITLE="Statistics" CLASS="dialogs"> Difficulty: <B><A	HREF="#"	TITLE="This rating is based on algorithms used to generate this puzzle and may not be reflected in actual gameplay.">%difficulty%</A></B>
+		%globalstring%</DIV>
+  
+	 <div id="SolutionDialog" style="" class="dialogs" title="Solution">
+		 <table class="bigtable" cellspacing="0" cellpadding="0" align="center">
+			 <tr>
+				 <td>
+					 <table class="subtable"cellspacing=" 0"cellpadding=" 0">
+						 <tr>
+							 <td height="25">
+								 <div class="cellnotselectedclass" id="solution_0_0">
+									 <%solution_0_0%>
+								 </div>
+							 </td>
+
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_1_0">
+									 <%solution_1_0%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_2_0">
+									 <%solution_2_0%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_0_1">
+									 <%solution_0_1%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_1_1">
+									 <%solution_1_1%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_2_1">
+									 <%solution_2_1%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_0_2">
+									 <%solution_0_2%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_1_2">
+									 <%solution_1_2%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_2_2">
+									 <%solution_2_2%>
+								 </div>
+							 </td>
+						 </tr>
+					 </table>
+				 </td>
+
+				 <td>
+					 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+						 <tr>
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_3_0">
+									 <%solution_3_0%>
+								 </div>
+							 </td>
+
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_4_0">
+									 <%solution_4_0%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_5_0">
+									 <%solution_5_0%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_3_1">
+									 <%solution_3_1%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_4_1">
+									 <%solution_4_1%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_5_1">
+									 <%solution_5_1%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_3_2">
+									 <%solution_3_2%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_4_2">
+									 <%solution_4_2%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_5_2">
+									 <%solution_5_2%>
+								 </div>
+							 </td>
+						 </tr>
+					 </table>
+				 </td>
+
+				 <td>
+					 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+						 <tr>
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_6_0">
+									 <%solution_6_0%>
+								 </div>
+							 </td>
+
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_7_0">
+									 <%solution_7_0%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_8_0">
+									 <%solution_8_0%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_6_1">
+									 <%solution_6_1%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_7_1">
+									 <%solution_7_1%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_8_1">
+									 <%solution_8_1%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_6_2">
+									 <%solution_6_2%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_7_2">
+									 <%solution_7_2%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_8_2">
+									 <%solution_8_2%>
+								 </div>
+							 </td>
+						 </tr>
+					 </table>
+				 </td>
+			 </tr>
+
+			 <tr>
+				 <td>
+					 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+						 <tr>
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_0_3">
+									 <%solution_0_3%>
+								 </div>
+							 </td>
+
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_1_3">
+									 <%solution_1_3%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_2_3">
+									 <%solution_2_3%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_0_4">
+									 <%solution_0_4%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_1_4">
+									 <%solution_1_4%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_2_4">
+									 <%solution_2_4%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_0_5">
+									 <%solution_0_5%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_1_5">
+									 <%solution_1_5%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_2_5">
+									 <%solution_2_5%>
+								 </div>
+							 </td>
+						 </tr>
+					 </table>
+				 </td>
+
+				 <td>
+					 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+						 <tr>
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_3_3">
+									 <%solution_3_3%>
+								 </div>
+							 </td>
+
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_4_3">
+									 <%solution_4_3%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_5_3">
+									 <%solution_5_3%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_3_4">
+									 <%solution_3_4%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_4_4">
+									 <%solution_4_4%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_5_4">
+									 <%solution_5_4%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_3_5">
+									 <%solution_3_5%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_4_5">
+									 <%solution_4_5%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_5_5">
+									 <%solution_5_5%>
+								 </div>
+							 </td>
+						 </tr>
+					 </table>
+				 </td>
+
+				 <td>
+					 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+						 <tr>
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_6_3">
+									 <%solution_6_3%>
+								 </div>
+							 </td>
+
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_7_3">
+									 <%solution_7_3%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_8_3">
+									 <%solution_8_3%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_6_4">
+									 <%solution_6_4%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_7_4">
+									 <%solution_7_4%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_8_4">
+									 <%solution_8_4%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_6_5">
+									 <%solution_6_5%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_7_5">
+									 <%solution_7_5%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_8_5">
+									 <%solution_8_5%>
+								 </div>
+							 </td>
+						 </tr>
+					 </table>
+				 </td>
+			 </tr>
+
+			 <tr>
+				 <td>
+					 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+						 <tr>
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_0_6">
+									 <%solution_0_6%>
+								 </div>
+							 </td>
+
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_1_6">
+									 <%solution_1_6%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_2_6">
+									 <%solution_2_6%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_0_7">
+									 <%solution_0_7%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_1_7">
+									 <%solution_1_7%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_2_7">
+									 <%solution_2_7%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_0_8">
+									 <%solution_0_8%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_1_8">
+									 <%solution_1_8%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_2_8">
+									 <%solution_2_8%>
+								 </div>
+							 </td>
+						 </tr>
+					 </table>
+				 </td>
+
+				 <td>
+					 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+						 <tr>
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_3_6">
+									 <%solution_3_6%>
+								 </div>
+							 </td>
+
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_4_6">
+									 <%solution_4_6%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_5_6">
+									 <%solution_5_6%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_3_7">
+									 <%solution_3_7%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_4_7">
+									 <%solution_4_7%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_5_7">
+									 <%solution_5_7%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_3_8">
+									 <%solution_3_8%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_4_8">
+									 <%solution_4_8%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_5_8">
+									 <%solution_5_8%>
+								 </div>
+							 </td>
+						 </tr>
+					 </table>
+				 </td>
+
+				 <td>
+					 <table class=" subtable"cellspacing=" 0"cellpadding=" 0">
+						 <tr>
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_6_6">
+									 <%solution_6_6%>
+								 </div>
+							 </td>
+
+							 <td height=" 25">
+								 <div class="cellnotselectedclass" id="solution_7_6">
+									 <%solution_7_6%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_8_6">
+									 <%solution_8_6%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_6_7">
+									 <%solution_6_7%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_7_7">
+									 <%solution_7_7%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_8_7">
+									 <%solution_8_7%>
+								 </div>
+							 </td>
+						 </tr>
+
+						 <tr>
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_6_8">
+									 <%solution_6_8%>
+								 </div>
+							 </td>
+
+							 <td>
+								 <div class="cellnotselectedclass" id="solution_7_8">
+									 <%solution_7_8%>
+								 </div>
+							 </td>
+
+							 <td width=" 25">
+								 <div class="cellnotselectedclass" id="solution_8_8">
+									 <%solution_8_8%>
+								 </div>
+							 </td>
+						 </tr>
+					 </table>
+				 </td>
+			 </tr>
+		 </table>
+
+		 <div align="center">
+			 <form id="Solution" name="Solution">
+				 <table align="center"></table>
+
+				 <table>
+					 <tbody>
+						 <tr valign="middle">
+							 <td valign="middle" align="center" colspan=" 3">Sudoku Solver</td>
+						 </tr>
+
+						 <tr valign=" middle">
+							 <td valign="middle" align="left" colspan="3">If the grid below is not complete, the puzzle is not solvable and there is a bug in our program.. Please notify us.at <a href="http:%20//www.emogic.com/contact" target="_blank">http: //www.emogic.com/contact</a></td>
+						 </tr>
+
+						 <tr valign="middle">
+							 <td align="right"><input type="button" onclick="start_cross(this.form);" value="Calculate Answer" id="answerbutton"><br>
+							 <textarea id="map" name="map" onkeyup="start_cross(this.form);" onchange="start_cross(this.form);" rows="10" cols="10">%jscalcpuzz%</textarea>
+        </td>
+							 <td id="result_here" class="num_cross" colspan="2" align="left">&nbsp;</td>
+						 </tr>
+					 </tbody>
+				 </table>
+			 </form>
+		 </div>
+	 </div>
+   
+</body>
