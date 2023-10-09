@@ -176,12 +176,11 @@ Diff[ document.getElementById("difficulty").value ](); //set difficulty based on
 
 //remember last save_slot
 let slot = getCookie("save_slot");
-if(slot == ""){
+if(slot == null){
  slot = 1;
 }
 document.getElementById("save_slot").value = slot;
 Load_Sudoku(); //previous save
-//Create_Playable_Sudoku();
 }
 
 function Create_Path(){
@@ -213,12 +212,30 @@ function XY_To_BL( xy ){
  return [bx,by,lx,ly];
 }
 
+function Save_Sudoku(){
+ let save_array = [];
+ path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetNextSquare() wipes it
+	path_temp.forEach(function(cell) {
+		let bx, by, lx, ly, x, y;
+		[bx, by, lx, ly] = cell;
+		[x, y] = BL_To_XY(cell);
+		let cellID = "cell_" + x + "_" + y;
+		let solutionID = "solution_" + x + "_" + y;
+		let cell_text, solution_text;
+  cell_text = document.getElementById(cellID).innerHTML;
+  solution_text = document.getElementById(solutionID).innerHTML; //set solution table 
+		save_array.push([cell_text,solution_text]);
+	});
+ //save created sudoku
+ localStorage.setItem( document.getElementById("save_slot").value , JSON.stringify(save_array) );
+}
+
 function Load_Sudoku() {
 	let slot = document.getElementById("save_slot").value;
- setCookie( "save_slot" , slot , forever , '' , '' , ''); 
+	setCookie("save_slot", slot, forever, '', '', '');
 	let save_text = localStorage.getItem(slot);
- let empty = false;
-	if (save_text == null) {//nothing saved. fail
+	let empty = false;
+	if (save_text == null) { //nothing saved. fail
 		empty = true;
 	}
 	let save_array = JSON.parse(save_text);
@@ -232,16 +249,16 @@ function Load_Sudoku() {
 		let cellID = "cell_" + x + "_" + y;
 		let solutionID = "solution_" + x + "_" + y;
 		let cell_text, solution_text;
-		if(empty){
-   [cell_text, solution_text] = ["",""];
-  }
-  else{ [cell_text, solution_text] = save_array.shift();
-   }
+		if (empty) {
+			[cell_text, solution_text] = ["", ""];
+		} else {
+			[cell_text, solution_text] = save_array.shift();
+		}
 		document.getElementById(cellID).innerHTML = cell_text;
 		document.getElementById(solutionID).innerHTML = solution_text; //set solution table
 
-  //set class and tester string
-		let numberlist = cell_text.replace(/\D/g, ''); 	//remove all but numbers
+		//set class and tester string
+		let numberlist = cell_text.replace(/\D/g, ''); //remove all but numbers
 		let value = "-";
 		if (numberlist.length == 1) {
 			value = numberlist;
@@ -249,7 +266,11 @@ function Load_Sudoku() {
 		if (IsCellStaticID(cellID)) { //static
 			document.getElementById(cellID).className = "cellstaticclass";
 			jscalcpuzz = jscalcpuzz + value;
-		} else { //blank
+		}
+		if (IsCellLockedID(cellID)) {
+			document.getElementById(cellID).className = "celllockedclass";
+		}
+		if (IsAnEditCellID(cellID)) { //blank
 			document.getElementById(cellID).className = "cellnotselectedclass";
 			jscalcpuzz = jscalcpuzz + value;
 		}
@@ -310,7 +331,7 @@ function Create_Playable_Sudoku() {
   $( "#dialog-waiting" ).show();
 	Create_Full_Sudoku();
 	let result = RemoveCells();
-let save_array = [];
+//let save_array = [];
  
 	//set static cells
 	let jscalcpuzz = ""; //the sudoku tester
@@ -321,7 +342,7 @@ let save_array = [];
 			for (let bx = 0; bx < 3; bx++) {
 				for (let lx = 0; lx < 3; lx++) {
 					let cellID = "cell_" + x + "_" + y;
-     let solutionID = "solution_" + x + "_" + y;
+     //let solutionID = "solution_" + x + "_" + y;
 					let value = sudoku[bx][by][lx][ly].toString();
 					if (value != "") { //static
 						cell_text = "<!--static-->" + value;
@@ -335,8 +356,8 @@ let save_array = [];
 					document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
 					x++;
     document.getElementById(cellID).innerHTML = cell_text;
-    let soution_text =  document.getElementById(solutionID).innerHTML
-    save_array.push([cell_text,soution_text]);
+    //let solution_text =  document.getElementById(solutionID).innerHTML;
+    //save_array.push([cell_text,solution_text]);
 				}
 			}
 			jscalcpuzz = jscalcpuzz + "\r\n";
@@ -348,7 +369,8 @@ let save_array = [];
 	start_cross(document.getElementById("Solution"));
  
  //save created sudoku
- localStorage.setItem( document.getElementById("save_slot").value , JSON.stringify(save_array) );
+ Save_Sudoku();
+ //localStorage.setItem( document.getElementById("save_slot").value , JSON.stringify(save_array) );
  
  	$( "#dialog-waiting" ).hide();
 }
@@ -360,8 +382,9 @@ function RemoveCells() {
 	let finished = time + (1000 * try_time); //5 sec max
 	let one_value;
 	let possible_sudoku;
-
-	while ((d.getTime() < finished)) {
+ let blank_cells = 0;
+ 
+	while ( (d.getTime() < finished) && (blank_cells < document.getElementById("number_of_blank_squares").value) ){
 		//save array status
 		let backup_sudoku_array = JSON.stringify(sudoku);
 
@@ -384,6 +407,7 @@ function RemoveCells() {
 		//try to solve sudoku array. Solve me mangles global sudoku array!
 		if (Solve_Me()) { //success : save 
 			sudoku = JSON.parse(possible_sudoku); //restore board
+   blank_cells++;
 		} else { //fail : restore
 			sudoku = JSON.parse(backup_sudoku_array); //restore board
 		}
@@ -675,20 +699,8 @@ $(function() {
 	});
 });
 
-var forever = new Date('October 17, 2030 03:24:00'); // use in cookies
+var forever = new Date('October 17, 2050 03:24:00'); // use in cookies
 var count = 0;
-
-function gup(name) {
-	//this routine looks for 'name' value in the url string ?name=value
-	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-	var regexS = "[\\?&]" + name + "=([^&#]*)";
-	var regex = new RegExp(regexS);
-	var results = regex.exec(window.location.href);
-	if (results == null)
-		return "";
-	else
-		return results[1];
-}
 
 var LastCursorID = "cell_0_0";
 //var StaticArray = DIM([9,9] , 0);
@@ -724,8 +736,15 @@ function IsCellStaticID(cellID) {
 	}
  else {
   return 0;
- }
- 
+ } 
+}
+
+function IsAnEditCellID(cellID) {
+	if ((IsCellStaticID(cellID) == 1) || (IsCellLockedID(cellID) == 1)) {
+		return 0;
+	} else {
+		return 1;
+	}
 }
 
 function chooseOnClick() {
@@ -762,9 +781,9 @@ function choose(cellID) {
 }
 
 function keyinput() {
-  var keyCode = event.key;
-  let cellID = LastCursorID;
-  
+	var keyCode = event.key;
+	let cellID = LastCursorID;
+
 	var xy = Array();
 	xy = PositionFromID(cellID);
 	var x = xy[0];
@@ -774,7 +793,6 @@ function keyinput() {
 		return 0;
 	} //we are not typing in the table. ignore
 
-	//if (keyCode == 37) {
 	if (keyCode == "ArrowLeft") {
 		if (x <= 0) {
 			x = 8;
@@ -784,7 +802,6 @@ function keyinput() {
 		choose('cell_' + x + '_' + y);
 	} //left
 	if (keyCode == "ArrowUp") {
-	//if (keyCode == 38) {
 		if (y <= 0) {
 			y = 8;
 		} else {
@@ -793,7 +810,6 @@ function keyinput() {
 		choose('cell_' + x + '_' + y);
 	} //up
 	if (keyCode == "ArrowRight") {
-	//if (keyCode == 39) {
 		if (x >= 8) {
 			x = 0;
 		} else {
@@ -802,7 +818,6 @@ function keyinput() {
 		choose('cell_' + x + '_' + y);
 	} //right
 	if (keyCode == "ArrowDown") {
-	//if (keyCode == 40) {
 		if (y >= 8) {
 			y = 0;
 		} else {
@@ -811,24 +826,22 @@ function keyinput() {
 		choose('cell_' + x + '_' + y);
 	} //down
 
-	if (keyCode == "c") //c - clear - clear current cell, if not locked
-	{
+	if (keyCode == "c") { //c - clear - clear current cell, if not locked
 		if (IsAnEditCellID(cellID) == 1) {
 			document.getElementById(cellID).innerHTML = "";
 			send_cell_update(document.getElementById(cellID).innerHTML);
 		}
 	}
 
-	if (keyCode == "h") //h - how - check how we are doing status and send to chat box
-	{
+	if (keyCode == "h") { //h - how - check how we are doing status and send to chat box
+
 		var textmsg = 'Numbers selected:' + CountLocked() + ' Correct:' + CountCorrectLocked('how') + '\n\r\n\rNote: this only counts locked numbers.';
 		//send_chat(textmsg);
 		alert(textmsg);
 		//send_chat('Numbers selected:' + CountLocked() + '    Correct:' + CountCorrectLocked('how'));
 	}
 
-	if (keyCode == "r") //r - reveal - check how we are doing status and send to chat box
-	{
+	if (keyCode == "r") { //r - reveal - check how we are doing status and send to chat box
 		let textmsg = 'Numbers selected:' + CountLocked() + '    Correct:' + CountCorrectLocked('reveal') + '\n\r\n\rNote: this only counts locked numbers.';
 		//send_chat(textmsg);
 		alert(textmsg);
@@ -839,8 +852,7 @@ function keyinput() {
 	} //static cells can't be modified
 
 	//lock - unlock function
-	if (keyCode == "s") //s - save
-	{
+	if (keyCode == "s") { //s - save
 		var numberlist = document.getElementById(cellID).innerHTML;
 		//remove all but numbers
 		numberlist = numberlist.replace(/\D/g, '');
@@ -861,22 +873,21 @@ function keyinput() {
 				document.getElementById(cellID).className = 'cellgrayclass';
 				send_cell_update(document.getElementById(cellID).innerHTML);
 				//did we win!
-				if (blanksquares == CountCorrectLocked(count)) {	//send_chat('You win!');
+				if (blanksquares == CountCorrectLocked(count)) { //send_chat('You win!');
 					IWin();
 				}
 			} else {
 				window.alert("You can only lock squares with one number");
 			}
 		}
-		return 0;
+		//return 0;
 	}
 
-	if (IsCellLockedID(cellID) == 1) {
-		return 0;
-	} //can't edit a locked cell
+//	if (IsCellLockedID(cellID) == 1) {
+//		return 0;
+	//} //can't edit a locked cell
 
-    if (keyCode >= 1 && keyCode <= 9) //number keys pressed 1 - 9
-	{
+	if( (keyCode >= 1 && keyCode <= 9) && (IsCellLockedID(cellID) != 1) ){ //number keys pressed 1 - 9
 		let numberlist = document.getElementById(cellID).innerHTML;
 		numberlist = numberlist.replace(/\D/g, ''); //remove all but numbers
 		var keychar = keyCode;
@@ -898,14 +909,8 @@ function keyinput() {
 		document.getElementById(cellID).innerHTML = numberlist;
 		send_cell_update(document.getElementById(cellID).innerHTML);
 	}
-}
 
-function IsAnEditCellID(cellID) {
-	if ((IsCellStaticID(cellID) == 1) || (IsCellLockedID(cellID) == 1)) {
-		return 0;
-	} else {
-		return 1;
-	}
+	Save_Sudoku(); //after each keystroke
 }
 
 function CountCorrectLocked(mode) {
@@ -950,27 +955,6 @@ function send_cell_update(k)
 	var letter = k;
  setCookie( LastCursorID , letter , forever , '' , '' , ''); //LastCursorID = cell_x_y
 	}
-
-function SetCellsFromCookies()
-{
-var cookieNames = listCookies();
-for (var i = 0 ; i < cookieNames.length ; i++) {
-		if (cookieNames[i].indexOf("cell") != -1) {
-			var thecell = cookieNames[i];
-			thecell = thecell.trim();
-			var theletter = getCookie(cookieNames[i]);
-			theletter = theletter.trim();
-			document.getElementById(thecell).innerHTML = theletter;
-			if (IsCellLockedID(thecell) == 1) {
-				document.getElementById(thecell).className = 'celllockedclass';
-				}
-			}
-		}
-}
-
-function get_sudoku_updates(){
-	SetCellsFromCookies();
-	} 
 
 var fivesec = 0;
 function IWin()
@@ -1196,13 +1180,13 @@ Diff[5] = function()
 
 			  <p><a href="https://www.emogic.com/notes/programming_sudoku_algorithm_part_3_seven_basic_ways_solving_sudoku_stratagies" target="_blank">Solving metods</a>: <label for="NS">NS:</label> <input type="checkbox" name="NS" checked="checked" id="NS" value="1"> <label for="HS">HS:</label> <input type="checkbox" name="HS" checked="checked" id="HS" value="1"> <label for="NP">NP:</label> <input type="checkbox" name="NP" checked="checked" id="NP" value="1"> <label for="HP">HP:</label> <input type="checkbox" name="HP" checked="checked" id="HP" value="1"> <label for="IR">IR:</label> <input type="checkbox" name="IR" id="IR" value="1"> <label for="XW">XW:</label> <input type="checkbox" name="XW" value="1" id="XW"> <label for="YW">YW:</label> <input type="checkbox" name="YW" id="YW" value="1"></p>
 
-			  <p>Number of Blank Squares:<input type="text" name="NumberOfSquares" value="58" size="4" id="NumberOfSquares"><br>
+			  <p>Number of Blank Squares:<input type="text" name="number_of_blank_squares" value="58" size="4" id="number_of_blank_squares"><br>
 			  (55 is average. Higher numbers might not be reached.)</p>
      
      <p>
        <label for="save_slot">Save Slot: </label>
-       <select id="save_slot" onchange="" size="1" name="save_slot">
-				  <option value="1">
+       <select id="save_slot" size="1" style="width:50px;" name="save_slot">
+				  <option value="1"  selected="selected">
 					  1
 				  </option>
 
@@ -1210,7 +1194,7 @@ Diff[5] = function()
 					  2
 				  </option>
 
-				  <option value="3" selected="selected">
+				  <option value="3">
 					  3
 				  </option>
 
@@ -1815,7 +1799,7 @@ Diff[5] = function()
 
 			 <td><img src="./images/solution.jpg" alt=" Puzzle solution " title="Puzzle solution" id="solution" width="200" height="200" border=" 0" onclick="SolutionsDialog();" class="pad_button_numeric"></td>
 
-			 <td><img src="./images/restart.jpg" alt=" Restart puzzle " title=" Restart puzzle " width="200" height="200" border=" 0" onclick="if (confirm('Are you sure? This will clear the board of all numbers.')) { DeleteCookies(); location.reload(); }" class="pad_button_numeric"></td>
+			 <td><img src="./images/restart.jpg" alt=" Restart puzzle " title=" Restart puzzle " width="200" height="200" border=" 0" onclick="if (confirm('Restart Puzzle? Are you sure? This will clear the board of ALL numbers.')) {  localStorage.removeItem( document.getElementById('save_slot').value ); location.reload(); }" class="pad_button_numeric"></td>
 
 			 <td><img src="./images/new.jpg" alt=" New puzzle " title=" New puzzle " width="200" height="200" border=" 0" onclick="if (confirm('Are you sure? Be sure to bookmark the current puzzle first.')) { window.open('%scripturl%/', '_self'); } else {}" class="pad_button_numeric"></td>
 
