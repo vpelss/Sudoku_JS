@@ -133,6 +133,15 @@ font-size: 6vmin;
 {
 	font-size: 2vmin;
 }
+
+#dialog-waiting /*center spinner*/  
+{  
+position: fixed;  
+top: 50%;  
+left: 50%;  
+transform: translate(-50%, -50%);  
+z-index: 999;  
+}
 </STYLE>
   
 
@@ -148,10 +157,12 @@ font-size: 6vmin;
 <SCRIPT TYPE="text/javascript">
 
 var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [] 1..9
-
+var path =[];
 
 document.getElementById("body").onload = Main;
 function Main() {
+ 	$( "#dialog-waiting" ).hide();
+path = Create_Path(); //set path to traverse Sudoku recursively
 //set event functions  
 document.getElementById("how_to_play").onclick = Howtoplay;
 document.getElementById("statistics").onclick = Statistics;
@@ -159,13 +170,20 @@ document.getElementById("solution").onclick = SolutionsDialog;
 document.getElementById("clear_blank_cells").onclick = ClearUnlockedCells;
 document.getElementById("body").onkeydown = keyinput;
 document.getElementById("create_sudoku").onclick = Create_Playable_Sudoku;
+document.getElementById("save_slot").onchange = Load_Sudoku;
  
 Diff[ document.getElementById("difficulty").value ](); //set difficulty based on default selection
 
+//remember last save_slot
+let slot = getCookie("save_slot");
+if(slot == ""){
+ slot = 1;
+}
+document.getElementById("save_slot").value = slot;
+Load_Sudoku(); //previous save
 //Create_Playable_Sudoku();
 }
 
-var path = Create_Path(); //set path to traverse Sudoku recursively
 function Create_Path(){
   //initialize path to traverse Sudoku
   let path = [];
@@ -188,11 +206,59 @@ function BL_To_XY( bl ){
 }
 
 function XY_To_BL( xy ){
- let bx = Math.floor(bl[0] / 3);
- let by = Math.floor(bl[1] / 3);
- let lx = bl[0] % 3;
- let ly =  bl[1] % 3;
+ let bx = Math.floor(xy[0] / 3);
+ let by = Math.floor(xy[1] / 3);
+ let lx = xy[0] % 3;
+ let ly =  xy[1] % 3;
  return [bx,by,lx,ly];
+}
+
+function Load_Sudoku() {
+	let slot = document.getElementById("save_slot").value;
+ setCookie( "save_slot" , slot , forever , '' , '' , ''); 
+	let save_text = localStorage.getItem(slot);
+ let empty = false;
+	if (save_text == null) {//nothing saved. fail
+		empty = true;
+	}
+	let save_array = JSON.parse(save_text);
+	jscalcpuzz = "";
+
+	path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetNextSquare() wipes it
+	path_temp.forEach(function(cell) {
+		let bx, by, lx, ly, x, y;
+		[bx, by, lx, ly] = cell;
+		[x, y] = BL_To_XY(cell);
+		let cellID = "cell_" + x + "_" + y;
+		let solutionID = "solution_" + x + "_" + y;
+		let cell_text, solution_text;
+		if(empty){
+   [cell_text, solution_text] = ["",""];
+  }
+  else{ [cell_text, solution_text] = save_array.shift();
+   }
+		document.getElementById(cellID).innerHTML = cell_text;
+		document.getElementById(solutionID).innerHTML = solution_text; //set solution table
+
+  //set class and tester string
+		let numberlist = cell_text.replace(/\D/g, ''); 	//remove all but numbers
+		let value = "-";
+		if (numberlist.length == 1) {
+			value = numberlist;
+		}
+		if (IsCellStaticID(cellID)) { //static
+			document.getElementById(cellID).className = "cellstaticclass";
+			jscalcpuzz = jscalcpuzz + value;
+		} else { //blank
+			document.getElementById(cellID).className = "cellnotselectedclass";
+			jscalcpuzz = jscalcpuzz + value;
+		}
+		document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+	});
+
+	document.getElementById("map").innerHTML = jscalcpuzz;
+	start_cross(document.getElementById("Solution"));
+	return true;
 }
 
 function Create_Full_Sudoku(){
@@ -235,13 +301,17 @@ function Create_Full_Sudoku(){
 		}
 	}
 	*/
-	
+ 
+
+
 }
 
 function Create_Playable_Sudoku() {
+  $( "#dialog-waiting" ).show();
 	Create_Full_Sudoku();
 	let result = RemoveCells();
-
+let save_array = [];
+ 
 	//set static cells
 	let jscalcpuzz = ""; //the sudoku tester
 	let x = 0;
@@ -251,17 +321,22 @@ function Create_Playable_Sudoku() {
 			for (let bx = 0; bx < 3; bx++) {
 				for (let lx = 0; lx < 3; lx++) {
 					let cellID = "cell_" + x + "_" + y;
+     let solutionID = "solution_" + x + "_" + y;
 					let value = sudoku[bx][by][lx][ly].toString();
 					if (value != "") { //static
-						document.getElementById(cellID).innerHTML = "<!--static-->" + value;
+						cell_text = "<!--static-->" + value;
 						document.getElementById(cellID).className = "cellstaticclass";
 						jscalcpuzz = jscalcpuzz + value;
 					} else { //blank
-						document.getElementById(cellID).innerHTML = value;
+						cell_text = value;
+      document.getElementById(cellID).className = "cellnotselectedclass";
 						jscalcpuzz = jscalcpuzz + "-";
 					}
 					document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
 					x++;
+    document.getElementById(cellID).innerHTML = cell_text;
+    let soution_text =  document.getElementById(solutionID).innerHTML
+    save_array.push([cell_text,soution_text]);
 				}
 			}
 			jscalcpuzz = jscalcpuzz + "\r\n";
@@ -271,45 +346,50 @@ function Create_Playable_Sudoku() {
 	}
 	document.getElementById("map").innerHTML = jscalcpuzz;
 	start_cross(document.getElementById("Solution"));
+ 
+ //save created sudoku
+ localStorage.setItem( document.getElementById("save_slot").value , JSON.stringify(save_array) );
+ 
+ 	$( "#dialog-waiting" ).hide();
 }
 
-function RemoveCells(){ 
-  let d = new Date();
-  let time = d.getTime();
-  let finished = time + (1000 * 1 ); //5 sec max
-  let one_value;
-  let possible_sudoku ;
-  
-  while( (d.getTime() < finished) ) {
-  //save array status
-  let backup_sudoku_array = JSON.stringify(sudoku);
-    
-  //random choose a cell that has one possible value
-  let bx,by,lx,ly;
-  do{
-  bx = getRandomInt(3);
-  by = getRandomInt(3);
-  lx = getRandomInt(3);
-  ly = getRandomInt(3);
-  one_value = false;
-  if( sudoku[bx][by][lx][ly].length == 1 ){
-    one_value = true;
-    }    
-}while(! one_value);
- 
-  sudoku[bx][by][lx][ly] = []; //remove value
-  
-  possible_sudoku = JSON.stringify(sudoku);
-   //try to solve sudoku array. Solve me mangles global sudoku array!
-  if( Solve_Me() ){ //success : save 
-    sudoku = JSON.parse(possible_sudoku); //restore board
-  }
-  else{ //fail : restore
-    sudoku = JSON.parse(backup_sudoku_array); //restore board
-  }
-  
-   d = new Date();
-  } //end while
+function RemoveCells() {
+	let d = new Date();
+	let time = d.getTime();
+ let try_time = document.getElementById("TimeToTry").value;
+	let finished = time + (1000 * try_time); //5 sec max
+	let one_value;
+	let possible_sudoku;
+
+	while ((d.getTime() < finished)) {
+		//save array status
+		let backup_sudoku_array = JSON.stringify(sudoku);
+
+		//random choose a cell that has one possible value
+		let bx, by, lx, ly;
+		do {
+			bx = getRandomInt(3);
+			by = getRandomInt(3);
+			lx = getRandomInt(3);
+			ly = getRandomInt(3);
+			one_value = false;
+			if (sudoku[bx][by][lx][ly].length == 1) {
+				one_value = true;
+			}
+		} while (!one_value);
+
+		sudoku[bx][by][lx][ly] = []; //remove value
+
+		possible_sudoku = JSON.stringify(sudoku);
+		//try to solve sudoku array. Solve me mangles global sudoku array!
+		if (Solve_Me()) { //success : save 
+			sudoku = JSON.parse(possible_sudoku); //restore board
+		} else { //fail : restore
+			sudoku = JSON.parse(backup_sudoku_array); //restore board
+		}
+
+		d = new Date();
+	} //end while
 }
 
 function Solve_Me() { //mangles sudoku. so calling routines must accomodate
@@ -358,9 +438,7 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 			if (solved) { //solved if all cells have 1 probability
 				//sudoku = JSON.parse(backup_sudoku_array); //restore board
 				return true;
-			} else {
-
-			}
+			} else {}
 
 			if (!progress) { //can't solve if we cannot move forward. ie: stuck
 				return false;
@@ -1072,13 +1150,17 @@ Diff[5] = function()
  
 </SCRIPT>
   
+  		<DIV ID="dialog-waiting"><IMG SRC="./images/flash.gif"></DIV>
+    
   <div id="accordion">
-	  <h3>Create</h3>
+	  <h3>Create - click to open/close</h3>
 
 	  <div>
 		  <form action="return false;" method="post" name="MyForm" id="MyForm">
 
-			  <p><select id="difficulty" onchange="Diff[this.value]();" size="1" name="h">
+			  <p>
+      <label for="difficulty">Difficulty: </label>
+      <select id="difficulty" onchange="Diff[this.value]();" size="1" name="h">
 				  <option value="1">
 					  Simple - NS
 				  </option>
@@ -1108,14 +1190,47 @@ Diff[5] = function()
 				  </option>
 			  </select></p>
 
-			  <p><input type="button" id="create_sudoku" name="create_sudoku" value="Generate Puzzle - Please wait" onclick='$( "#dialog-waiting" ).show();'></p>
+			  <p><input type="button" id="create_sudoku" name="create_sudoku" value="Generate Puzzle - Please wait"></p>
 
-			  <p>Time to generate puzzle: <input type="text" name="TimeToTry" value="5" size="4" id="TimeToTry"></p>
+			  <p>Time to generate puzzle: <input type="text" name="TimeToTry" value="1" size="4" id="TimeToTry"></p>
 
 			  <p><a href="https://www.emogic.com/notes/programming_sudoku_algorithm_part_3_seven_basic_ways_solving_sudoku_stratagies" target="_blank">Solving metods</a>: <label for="NS">NS:</label> <input type="checkbox" name="NS" checked="checked" id="NS" value="1"> <label for="HS">HS:</label> <input type="checkbox" name="HS" checked="checked" id="HS" value="1"> <label for="NP">NP:</label> <input type="checkbox" name="NP" checked="checked" id="NP" value="1"> <label for="HP">HP:</label> <input type="checkbox" name="HP" checked="checked" id="HP" value="1"> <label for="IR">IR:</label> <input type="checkbox" name="IR" id="IR" value="1"> <label for="XW">XW:</label> <input type="checkbox" name="XW" value="1" id="XW"> <label for="YW">YW:</label> <input type="checkbox" name="YW" id="YW" value="1"></p>
 
 			  <p>Number of Blank Squares:<input type="text" name="NumberOfSquares" value="58" size="4" id="NumberOfSquares"><br>
 			  (55 is average. Higher numbers might not be reached.)</p>
+     
+     <p>
+       <label for="save_slot">Save Slot: </label>
+       <select id="save_slot" onchange="" size="1" name="save_slot">
+				  <option value="1">
+					  1
+				  </option>
+
+				  <option value="2">
+					  2
+				  </option>
+
+				  <option value="3" selected="selected">
+					  3
+				  </option>
+
+				  <option value="4">
+					 4
+				  </option>
+
+				  <option value="5">
+					  5
+				  </option>
+
+				  <option value="6">
+					  6
+				  </option>
+
+				  <option value="7">
+					  7
+				  </option>
+			  </select></p>
+     
 		  </form>
 	  </div>
   </div>
