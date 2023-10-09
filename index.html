@@ -158,13 +158,14 @@ document.getElementById("statistics").onclick = Statistics;
 document.getElementById("solution").onclick = SolutionsDialog;
 document.getElementById("clear_blank_cells").onclick = ClearUnlockedCells;
 document.getElementById("body").onkeydown = keyinput;
+document.getElementById("create_sudoku").onclick = Create_Playable_Sudoku;
  
 Diff[ document.getElementById("difficulty").value ](); //set difficulty based on default selection
 
-Create_Playable_Sudoku();
+//Create_Playable_Sudoku();
 }
 
-var path = Create_Path(); //set path to traverse Sudoku 
+var path = Create_Path(); //set path to traverse Sudoku recursively
 function Create_Path(){
   //initialize path to traverse Sudoku
   let path = [];
@@ -180,12 +181,40 @@ function Create_Path(){
 return path;
 }
 
+function BL_To_XY( bl ){
+ let x = bl[0] * 3 + bl[2];
+ let y = bl[1] * 3 + bl[3];
+ return [x,y];
+}
+
+function XY_To_BL( xy ){
+ let bx = Math.floor(bl[0] / 3);
+ let by = Math.floor(bl[1] / 3);
+ let lx = bl[0] % 3;
+ let ly =  bl[1] % 3;
+ return [bx,by,lx,ly];
+}
+
 function Create_Full_Sudoku(){
  sudoku = DIM( [3, 3, 3, 3] , [1,2,3,4,5,6,7,8,9] ); //fill Sudoku board with all probabilities 1..9
  //start create full Sudoku board
  let path_temp =  JSON.parse( JSON.stringify(path) ); //temp path as SetNextSquare() wipes it
 	SetNextSquare(path_temp); //clears path
+ 
 	//place selections on board
+ path_temp =  JSON.parse( JSON.stringify(path) ); //temp path as SetNextSquare() wipes it
+ path_temp.forEach(function(cell){
+  let bx , by , lx , ly , x , y;
+  [bx , by , lx , ly] = cell;
+     [x,y] = BL_To_XY(cell);
+      let cellID = "cell_" + x + "_" + y;
+     let solutionID = "solution_" + x + "_" + y;
+					let value = sudoku[bx][by][lx][ly][0];
+					document.getElementById(cellID).innerHTML = value;
+     document.getElementById(solutionID).innerHTML = value; //set solution table
+  });
+ 
+ /*
 	let xx = 0;
 	let yy = 0;
 	for (let by = 0; by < 3; by++) {
@@ -205,42 +234,43 @@ function Create_Full_Sudoku(){
 			xx = 0;
 		}
 	}
+	*/
+	
 }
 
-function Create_Playable_Sudoku(){
- Create_Full_Sudoku();
- let result = RemoveCells();
- 
- //set static cells
- xx = 0;
-	yy = 0;
- let jscalcpuzz = ""; //the sudoku tester
+function Create_Playable_Sudoku() {
+	Create_Full_Sudoku();
+	let result = RemoveCells();
+
+	//set static cells
+	let jscalcpuzz = ""; //the sudoku tester
+	let x = 0;
+ let y = 0;
 	for (let by = 0; by < 3; by++) {
 		for (let ly = 0; ly < 3; ly++) {
 			for (let bx = 0; bx < 3; bx++) {
 				for (let lx = 0; lx < 3; lx++) {
-					let cellID = "cell_" + xx + "_" + yy;
+					let cellID = "cell_" + x + "_" + y;
 					let value = sudoku[bx][by][lx][ly].toString();
-     if(value != ""){//static
-      document.getElementById(cellID).innerHTML = "<!--static-->" + value;
-      document.getElementById(cellID).className = "cellstaticclass";
-      jscalcpuzz = jscalcpuzz + value;
-     }
-     else{//blank
-      document.getElementById(cellID).innerHTML = value;
-      jscalcpuzz = jscalcpuzz + "-";
-     }
-     document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
-					xx++;
+					if (value != "") { //static
+						document.getElementById(cellID).innerHTML = "<!--static-->" + value;
+						document.getElementById(cellID).className = "cellstaticclass";
+						jscalcpuzz = jscalcpuzz + value;
+					} else { //blank
+						document.getElementById(cellID).innerHTML = value;
+						jscalcpuzz = jscalcpuzz + "-";
+					}
+					document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+					x++;
 				}
 			}
-   jscalcpuzz = jscalcpuzz + "\r\n";
-			yy++;
-			xx = 0;
+			jscalcpuzz = jscalcpuzz + "\r\n";
+			y++;
+			x = 0;
 		}
 	}
- document.getElementById("map").innerHTML = jscalcpuzz;
- start_cross( document.getElementById("Solution") );
+	document.getElementById("map").innerHTML = jscalcpuzz;
+	start_cross(document.getElementById("Solution"));
 }
 
 function RemoveCells(){ 
@@ -962,8 +992,7 @@ $( function() {
     });
   } );
 
-  var Diff =[];
-
+var Diff =[];
 Diff[1] = function()
 	{ 
 	document.getElementById('NS').checked = true;
@@ -1047,7 +1076,7 @@ Diff[5] = function()
 	  <h3>Create</h3>
 
 	  <div>
-		  <form action="/cgi/sudoku/sudoku.cgi" method="post" name="MyForm" id="MyForm">
+		  <form action="return false;" method="post" name="MyForm" id="MyForm">
 
 			  <p><select id="difficulty" onchange="Diff[this.value]();" size="1" name="h">
 				  <option value="1">
@@ -1079,7 +1108,7 @@ Diff[5] = function()
 				  </option>
 			  </select></p>
 
-			  <p><input type="submit" name="Submit1" value="Generate Puzzle - Please wait" onclick='$( "#dialog-waiting" ).show();'></p>
+			  <p><input type="button" id="create_sudoku" name="create_sudoku" value="Generate Puzzle - Please wait" onclick='$( "#dialog-waiting" ).show();'></p>
 
 			  <p>Time to generate puzzle: <input type="text" name="TimeToTry" value="5" size="4" id="TimeToTry"></p>
 
