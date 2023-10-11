@@ -583,25 +583,21 @@ function SetNextSquare(path) { //recursive routine
 }
 
 function Remove_Potential_Values_Meta(bigx, bigy, littlex, littley, chosen) {
-	//remove from squ
-	let result = Remove_Potential_Values("squ" , bigx, bigy, littlex, littley, chosen);
+	let result = Remove_Potential_Values("squ" , bigx, bigy, littlex, littley, chosen); //remove from squ
+	if (result == false) { //false indicates that there is a cell with no potential values. Not solvable
+		return false;
+	}
+	result = Remove_Potential_Values("row" , bigx, bigy, littlex, littley, chosen); //remove from row
 	if (result == false) {
 		return false;
 	}
-	//remove from row
-	result = Remove_Potential_Values("row" , bigx, bigy, littlex, littley, chosen);
-	if (result == false) {
-		return false;
-	}
-	//remove from col
-	result = Remove_Potential_Values("col" , bigx, bigy, littlex, littley, chosen);
+	result = Remove_Potential_Values("col" , bigx, bigy, littlex, littley, chosen); 	//remove from col
 	if (result == false) {
 		return false;
 	}
 	return true;
 }
 
-//function Remove_Potential_Values(bigxArray, bigyArray, littlexArray, littleyArray, bigx, bigy, littlex, littley, chosen) {
 function Remove_Potential_Values(region , bigx, bigy, littlex, littley, chosen) {
   if(region == "row"){
    bigxArray = [0, 1, 2];
@@ -667,7 +663,6 @@ function DIM(arrayOfDimensions, theValue) { //like the BASIC DIM : var multiDime
 	if (localArrayOfDimensions.length === 0) //no more dimensions
 	{
 		return JSON.parse(JSON.stringify(theValue)); //copy the value, not the pointer
-		//return theValue;
 	}
 	let arraySize = localArrayOfDimensions.shift(); // size of current dimension
 	for (let arrayPointer = 0; arrayPointer < arraySize; arrayPointer++) { //for each array pointer in this array dimension, recursively call DIM, and return and assign the value
@@ -682,7 +677,6 @@ function PositionFromID(cellID) {
 	LocationOfCell = gridID.split('_'); //split 1_2 part
 	var x = LocationOfCell[0];
 	var y = LocationOfCell[1];
-
 	return new Array(x, y);
 }
 
@@ -691,7 +685,6 @@ function IsCellLockedID(cellID) {
 	if ((text.indexOf('locked', 0) > -1) || (text.indexOf('LOCKED', 0) > -1)) {
 		return 1;
 	}
-	//if ((text.indexOf('</B>' , 0) > -1 ) || (text.indexOf('</b>' , 0) > -1 )) {return 1}
 	else {
 		return 0;
 	}
@@ -741,7 +734,6 @@ function choose(cellID) {
 	document.getElementById(cellID).className = 'cellselectedclass'; //selected square back to yellow
 	if (IsCellLockedID(cellID) == 1) {
 		document.getElementById(cellID).className = 'cellgrayclass';
-		//LastCursorID = "celllockedclass";
 	}
 	if (IsCellStaticID(cellID) == 1) {
 		document.getElementById(cellID).className = 'cellgrayclass'; //selected square back to gray
@@ -823,8 +815,7 @@ function keyinput() {
 	if (keyCode == "s") { //s - save
 		var numberlist = document.getElementById(cellID).innerHTML;
 		numberlist = numberlist.replace(/\D/g, ''); //remove all but numbers
-		if (IsCellLockedID(cellID) == 1) {
-			//unlock this square
+		if (IsCellLockedID(cellID) == 1) { //unlock this square
 			document.getElementById(cellID).innerHTML = numberlist;
 			document.getElementById(cellID).className = 'cellnotselectedclass';
 			LastCursorClass = document.getElementById(cellID).className;
@@ -837,8 +828,7 @@ function keyinput() {
 				LastCursorClass = document.getElementById(cellID).className;
 				document.getElementById(cellID).className = 'cellgrayclass';
 				send_cell_update(document.getElementById(cellID).innerHTML);
-				//did we win!
-				if (blanksquares == CountCorrectLocked(count)) { //send_chat('You win!');
+				if (blanksquares == CountCorrectLocked(count)) { //did we win?
 					IWin();
 				}
 			} else {
@@ -850,39 +840,37 @@ function keyinput() {
 	if( (keyCode >= 1 && keyCode <= 9) && (IsCellLockedID(cellID) != 1) ){ //number keys pressed 1 - 9
 		let numberlist = document.getElementById(cellID).innerHTML;
 		numberlist = numberlist.replace(/\D/g, ''); //remove all but numbers
-		var keychar = keyCode;
-		var founditindex = numberlist.indexOf(keychar, 0);
+		let keychar = keyCode;
+		let founditindex = numberlist.indexOf(keychar, 0);
 		if (founditindex > -1) { //remove number from string
-			var re = new RegExp(keychar, 'g');
+			let re = new RegExp(keychar, 'g');
 			numberlist = numberlist.replace(re, '');
 		} else {
 			numberlist = numberlist + keychar;
 		}
-		//sort our number list
-		var t = numberlist.split('');
+		//sort our number list for display
+		let t = numberlist.split('');
 		t = t.sort();
-		t1 = t.slice(0, 3);
-		t2 = t.slice(3, 6);
-		t3 = t.slice(6, 9);
+		let t1 = t.slice(0, 3);
+		let t2 = t.slice(3, 6);
+		let t3 = t.slice(6, 9);
 		numberlist = t1.join('') + '<br>' + t2.join('') + '<br>' + t3.join('');
-		//put numbers back on board
-		document.getElementById(cellID).innerHTML = numberlist;
+		document.getElementById(cellID).innerHTML = numberlist; //put numbers back on board
 		send_cell_update(document.getElementById(cellID).innerHTML);
 	}
-
-	Save_Sudoku(); //after each keystroke
+ Save_Sudoku(); //after each keystroke
 }
 
 function CountCorrectLocked(mode) {
-	var CorrectCount = 0;
-	for (var x = 0; x <= 8; x++) {
-		for (var y = 0; y <= 8; y++) {
-			var CellID = 'cell_' + x + '_' + y;
-			var SolutionID = 'solution_' + x + '_' + y;
+	let CorrectCount = 0;
+	for (let x = 0; x <= 8; x++) {
+		for (let y = 0; y <= 8; y++) {
+			let CellID = 'cell_' + x + '_' + y;
+			let SolutionID = 'solution_' + x + '_' + y;
 			if (IsCellLockedID(CellID) == 1) {
-				var cellresult = document.getElementById(CellID).innerHTML;
+				let cellresult = document.getElementById(CellID).innerHTML;
 				cellresult = cellresult.replace(/\D/g, '');
-				var solutionresult = document.getElementById(SolutionID).innerHTML;
+				let solutionresult = document.getElementById(SolutionID).innerHTML;
 				solutionresult = solutionresult.replace(/\D/g, '');
 				if (cellresult == solutionresult) {
 					CorrectCount++;
@@ -961,7 +949,7 @@ if (winstate == 'done')
 			document.getElementById(CellID).style.backgroundColor = '';
 			}
 		}
-	} //showID('win');
+	} 
  }
 
 function SimulateKey( key_pushed ){
@@ -972,7 +960,7 @@ function SimulateKey( key_pushed ){
   });
   document.body.dispatchEvent(kbEvent);
 }
-SimulateKey();
+SimulateKey(); //just to get rid of false not used error
 
 function Howtoplay() {
 	$('#dialog-message').dialog("open");
