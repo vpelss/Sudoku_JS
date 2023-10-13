@@ -157,10 +157,10 @@ z-index: 999;
   
   <body id="body" background="./images/sudoku.gif">
   
-<SCRIPT TYPE="text/javascript">
+<SCRIPT TYPE = "text/javascript">
 
 var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [] 1..9
-var path =[];
+var path = [];
 var forever = new Date('October 17, 2050 03:24:00'); // use in cookies
 var count = 0;
 
@@ -169,6 +169,7 @@ var blanksquares = "%blanksquares%";
 var intable = 1;
 
 document.getElementById("body").onload = Main;
+
 function Main() {
 	$("#dialog-waiting").hide();
 	path = Create_Path(); //set path to traverse Sudoku recursively
@@ -247,9 +248,9 @@ function Load_Sudoku() {
 	return true;
 }
 
-function Save_Sudoku(){
- let save_array = [];
- path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetNextSquare() wipes it
+function Save_Sudoku() {
+	let save_array = [];
+	path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetNextSquare() wipes it
 	path_temp.forEach(function(cell) {
 		let bx, by, lx, ly, x, y;
 		[bx, by, lx, ly] = cell;
@@ -257,12 +258,12 @@ function Save_Sudoku(){
 		let cellID = "cell_" + x + "_" + y;
 		let solutionID = "solution_" + x + "_" + y;
 		let cell_text, solution_text;
-  cell_text = document.getElementById(cellID).innerHTML;
-  solution_text = document.getElementById(solutionID).innerHTML; //set solution table 
-		save_array.push([cell_text,solution_text]);
+		cell_text = document.getElementById(cellID).innerHTML;
+		solution_text = document.getElementById(solutionID).innerHTML; //set solution table 
+		save_array.push([cell_text, solution_text]);
 	});
- //save created sudoku
- localStorage.setItem( document.getElementById("save_slot").value , JSON.stringify(save_array) );
+	//save created sudoku
+	localStorage.setItem(document.getElementById("save_slot").value, JSON.stringify(save_array));
 }
 
 
@@ -279,53 +280,53 @@ function Set_Archive() {
 	location.reload();
 }
 
-function Create_Path(){
-  //initialize path to traverse Sudoku
-  let path = [];
- for (let by = 0; by < 3; by++) {
-	for (let ly = 0; ly < 3; ly++) {
-		for (let bx = 0; bx < 3; bx++) {
-			for (let lx = 0; lx < 3; lx++) {
-				path.push([bx, by, lx, ly]);
+function Create_Path() {
+	//initialize path to traverse Sudoku
+	let path = [];
+	for (let by = 0; by < 3; by++) {
+		for (let ly = 0; ly < 3; ly++) {
+			for (let bx = 0; bx < 3; bx++) {
+				for (let lx = 0; lx < 3; lx++) {
+					path.push([bx, by, lx, ly]);
+				}
 			}
 		}
 	}
-}
-return path;
-}
-
-function BL_To_XY( bl ){
- let x = bl[0] * 3 + bl[2];
- let y = bl[1] * 3 + bl[3];
- return [x,y];
+	return path;
 }
 
-function XY_To_BL( xy ){
- let bx = Math.floor(xy[0] / 3);
- let by = Math.floor(xy[1] / 3);
- let lx = xy[0] % 3;
- let ly =  xy[1] % 3;
- return [bx,by,lx,ly];
+function BL_To_XY(bl) {
+	let x = bl[0] * 3 + bl[2];
+	let y = bl[1] * 3 + bl[3];
+	return [x, y];
 }
 
-function Create_Full_Sudoku(){
- sudoku = DIM( [3, 3, 3, 3] , [1,2,3,4,5,6,7,8,9] ); //fill Sudoku board with all probabilities 1..9
- //start create full Sudoku board
- let path_temp =  JSON.parse( JSON.stringify(path) ); //temp path as SetNextSquare() wipes it
+function XY_To_BL(xy) {
+	let bx = Math.floor(xy[0] / 3);
+	let by = Math.floor(xy[1] / 3);
+	let lx = xy[0] % 3;
+	let ly = xy[1] % 3;
+	return [bx, by, lx, ly];
+}
+
+function Create_Full_Sudoku() {
+	sudoku = DIM([3, 3, 3, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9]); //fill Sudoku board with all probabilities 1..9
+	//start create full Sudoku board
+	let path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetNextSquare() wipes it
 	SetNextSquare(path_temp); //clears path
- 
+
 	//place selections on board
- path_temp =  JSON.parse( JSON.stringify(path) ); //temp path as SetNextSquare() wipes it
- path_temp.forEach(function(cell){
-  let bx , by , lx , ly , x , y;
-  [bx , by , lx , ly] = cell;
-     [x,y] = BL_To_XY(cell);
-      let cellID = "cell_" + x + "_" + y;
-     let solutionID = "solution_" + x + "_" + y;
-					let value = sudoku[bx][by][lx][ly][0];
-					document.getElementById(cellID).innerHTML = value;
-     document.getElementById(solutionID).innerHTML = value; //set solution table
-  });
+	path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetNextSquare() wipes it
+	path_temp.forEach(function(cell) {
+		let bx, by, lx, ly, x, y;
+		[bx, by, lx, ly] = cell;
+		[x, y] = BL_To_XY(cell);
+		let cellID = "cell_" + x + "_" + y;
+		let solutionID = "solution_" + x + "_" + y;
+		let value = sudoku[bx][by][lx][ly][0];
+		document.getElementById(cellID).innerHTML = value;
+		document.getElementById(solutionID).innerHTML = value; //set solution table
+	});
 }
 
 function Create_Playable_Sudoku() {
@@ -368,13 +369,13 @@ function Create_Playable_Sudoku() {
 function RemoveCells() {
 	let d = new Date();
 	let time = d.getTime();
- let try_time = document.getElementById("TimeToTry").value;
+	let try_time = document.getElementById("TimeToTry").value;
 	let finished = time + (1000 * try_time); //5 sec max
 	let one_value;
 	let possible_sudoku;
- let blank_cells = 0;
- 
-	while ( (d.getTime() < finished) && (blank_cells < document.getElementById("number_of_blank_squares").value) ){
+	let blank_cells = 0;
+
+	while ((d.getTime() < finished) && (blank_cells < document.getElementById("number_of_blank_squares").value)) {
 		//save array status
 		let backup_sudoku_array = JSON.stringify(sudoku);
 
@@ -397,7 +398,7 @@ function RemoveCells() {
 		//try to solve sudoku array. Solve me mangles global sudoku array!
 		if (Solve_Me()) { //success : save 
 			sudoku = JSON.parse(possible_sudoku); //restore board
-   blank_cells++;
+			blank_cells++;
 		} else { //fail : restore
 			sudoku = JSON.parse(backup_sudoku_array); //restore board
 		}
@@ -469,84 +470,84 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 
 }
 
-function Calculate_Simple_Probabilities_or_Solved(){
- //it also doubles as solved detector!!!!!!!!!!!!!!!!!
- let solved = 1;
-  	for (let cell_count = 0; cell_count < 81; cell_count++) {
-			let next_square = path[cell_count];
-			let bx = next_square[0];
-			let by = next_square[1];
-			let lx = next_square[2];
-			let ly = next_square[3];
-      
-      let probable_numbers_row_col_3 = [];
-      //if cell has no values get all numbers from cells with SINGLE values in row,col,3x3
-      //then this cell will have inverse of that list
-      if(sudoku[bx][by][lx][ly].length == 0){ //if cell has no values 
-        //get all numbers from cells with SINGLE values in row,col,3x3
-      
-      //row
-      probable_numbers_row_col_3.push(... Probable_Potential_Values("row" , bx, by, lx, ly) );
-      //col
-      probable_numbers_row_col_3.push(... Probable_Potential_Values("col" , bx, by, lx, ly) );
-      //squ
-      probable_numbers_row_col_3.push(... Probable_Potential_Values("squ" , bx, by, lx, ly) );
-      
-      //difference of that list
-      let probable_numbers = Array_Difference( [1,2,3,4,5,6,7,8,9] , probable_numbers_row_col_3 );
-      sudoku[bx][by][lx][ly] = probable_numbers;
-      }
-      
-     if(sudoku[bx][by][lx][ly].length != 1){//if even one cell does not contain exactly one probability
-      solved = 0;
-     }
-    }
-    return solved;
+function Calculate_Simple_Probabilities_or_Solved() {
+	//it also doubles as solved detector!!!!!!!!!!!!!!!!!
+	let solved = 1;
+	for (let cell_count = 0; cell_count < 81; cell_count++) {
+		let next_square = path[cell_count];
+		let bx = next_square[0];
+		let by = next_square[1];
+		let lx = next_square[2];
+		let ly = next_square[3];
+
+		let probable_numbers_row_col_3 = [];
+		//if cell has no values get all numbers from cells with SINGLE values in row,col,3x3
+		//then this cell will have inverse of that list
+		if (sudoku[bx][by][lx][ly].length == 0) { //if cell has no values 
+			//get all numbers from cells with SINGLE values in row,col,3x3
+
+			//row
+			probable_numbers_row_col_3.push(...Probable_Potential_Values("row", bx, by, lx, ly));
+			//col
+			probable_numbers_row_col_3.push(...Probable_Potential_Values("col", bx, by, lx, ly));
+			//squ
+			probable_numbers_row_col_3.push(...Probable_Potential_Values("squ", bx, by, lx, ly));
+
+			//difference of that list
+			let probable_numbers = Array_Difference([1, 2, 3, 4, 5, 6, 7, 8, 9], probable_numbers_row_col_3);
+			sudoku[bx][by][lx][ly] = probable_numbers;
+		}
+
+		if (sudoku[bx][by][lx][ly].length != 1) { //if even one cell does not contain exactly one probability
+			solved = 0;
+		}
+	}
+	return solved;
 }
 
-function Probable_Potential_Values(region , bigx, bigy, littlex, littley){
-  let accumulate_array = [];
-  if(region == "row"){
-   bigxArray = [0, 1, 2];
-   bigyArray = [bigy, bigy, bigy];
-   littlexArray = [0, 1, 2];
-   littleyArray = [littley, littley, littley];
-  }
- if(region == "col"){
-  bigxArray = [bigx, bigx, bigx];
-   bigyArray = [0, 1, 2];
-   littlexArray = [littlex, littlex, littlex];
-   littleyArray = [0, 1, 2];   
-  }
- if(region == "squ"){
-   bigxArray = [bigx, bigx, bigx];
-   bigyArray = [bigy, bigy, bigy];
-   littlexArray = [0, 1, 2];
-   littleyArray = [0, 1, 2];    
-  }
-  //let result = true;
+function Probable_Potential_Values(region, bigx, bigy, littlex, littley) {
+	let accumulate_array = [];
+	if (region == "row") {
+		bigxArray = [0, 1, 2];
+		bigyArray = [bigy, bigy, bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [littley, littley, littley];
+	}
+	if (region == "col") {
+		bigxArray = [bigx, bigx, bigx];
+		bigyArray = [0, 1, 2];
+		littlexArray = [littlex, littlex, littlex];
+		littleyArray = [0, 1, 2];
+	}
+	if (region == "squ") {
+		bigxArray = [bigx, bigx, bigx];
+		bigyArray = [bigy, bigy, bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [0, 1, 2];
+	}
+	//let result = true;
 	bigxArray.forEach(function(bx) {
 		bigyArray.forEach(function(by) {
 			littlexArray.forEach(function(lx) {
-				littleyArray.forEach( function(ly) {
+				littleyArray.forEach(function(ly) {
 					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
 						return true; //next loop. return value irrelevant
 					} //skip our cell
-          if(sudoku[bx][by][lx][ly].length == 1){ //only look at set cells (1 probability)
-            accumulate_array.push( sudoku[bx][by][lx][ly][0] );
-          }
-				}); 
+					if (sudoku[bx][by][lx][ly].length == 1) { //only look at set cells (1 probability)
+						accumulate_array.push(sudoku[bx][by][lx][ly][0]);
+					}
+				});
 			});
 		});
 	});
-  
-  //remove duplicates
-  accumulate_array = Array_Remove_Duplicates(accumulate_array);
+
+	//remove duplicates
+	accumulate_array = Array_Remove_Duplicates(accumulate_array);
 	return accumulate_array;
- }
+}
 
 function getRandomInt(max) {
-  return Math.floor(Math.random() * max);
+	return Math.floor(Math.random() * max);
 }
 
 function SetNextSquare(path) { //recursive routine
@@ -559,7 +560,7 @@ function SetNextSquare(path) { //recursive routine
 	let bigy = next_square[1];
 	let littlex = next_square[2];
 	let littley = next_square[3];
-	let potential_numbers = sudoku[bigx][bigy][littlex][littley] ; //convert set to array
+	let potential_numbers = sudoku[bigx][bigy][littlex][littley]; //convert set to array
 	potential_numbers = Array_Shuffle(potential_numbers); //shuffle
 	while (potential_numbers.length > 0) { //if we still have potential numbers in this square try another one 
 		let chosen = potential_numbers.pop(); //pick a number
@@ -583,68 +584,71 @@ function SetNextSquare(path) { //recursive routine
 }
 
 function Remove_Potential_Values_Meta(bigx, bigy, littlex, littley, chosen) {
-	let result = Remove_Potential_Values("squ" , bigx, bigy, littlex, littley, chosen); //remove from squ
+	let result = Remove_Potential_Values("squ", bigx, bigy, littlex, littley, chosen); //remove from squ
 	if (result == false) { //false indicates that there is a cell with no potential values. Not solvable
 		return false;
 	}
-	result = Remove_Potential_Values("row" , bigx, bigy, littlex, littley, chosen); //remove from row
+	result = Remove_Potential_Values("row", bigx, bigy, littlex, littley, chosen); //remove from row
 	if (result == false) {
 		return false;
 	}
-	result = Remove_Potential_Values("col" , bigx, bigy, littlex, littley, chosen); 	//remove from col
+	result = Remove_Potential_Values("col", bigx, bigy, littlex, littley, chosen); //remove from col
 	if (result == false) {
 		return false;
 	}
 	return true;
 }
 
-function Remove_Potential_Values(region , bigx, bigy, littlex, littley, chosen) {
-  if(region == "row"){
-   bigxArray = [0, 1, 2];
-   bigyArray = [bigy, bigy, bigy];
-   littlexArray = [0, 1, 2];
-   littleyArray = [littley, littley, littley];
-  }
- if(region == "col"){
-  bigxArray = [bigx, bigx, bigx];
-   bigyArray = [0, 1, 2];
-   littlexArray = [littlex, littlex, littlex];
-   littleyArray = [0, 1, 2];   
-  }
- if(region == "squ"){
-   bigxArray = [bigx, bigx, bigx];
-   bigyArray = [bigy, bigy, bigy];
-   littlexArray = [0, 1, 2];
-   littleyArray = [0, 1, 2];    
-  }
-  let result = true;
+function Remove_Potential_Values(region, bigx, bigy, littlex, littley, chosen) {
+	if (region == "row") {
+		bigxArray = [0, 1, 2];
+		bigyArray = [bigy, bigy, bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [littley, littley, littley];
+	}
+	if (region == "col") {
+		bigxArray = [bigx, bigx, bigx];
+		bigyArray = [0, 1, 2];
+		littlexArray = [littlex, littlex, littlex];
+		littleyArray = [0, 1, 2];
+	}
+	if (region == "squ") {
+		bigxArray = [bigx, bigx, bigx];
+		bigyArray = [bigy, bigy, bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [0, 1, 2];
+	}
+	let result = true;
 	bigxArray.forEach(function(bx) {
 		bigyArray.forEach(function(by) {
 			littlexArray.forEach(function(lx) {
-				littleyArray.forEach( function(ly) {
+				littleyArray.forEach(function(ly) {
 					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
 						return true;
 					} //skip our cell
-          sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly] , [chosen]);			
-          if (sudoku[bx][by][lx][ly].length == 0) {
-            return false; //really does not do much as it only returns up to previous anonymous function
-            } //a cell has no more potential values. we have failed :(
-				}); 
+					sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], [chosen]);
+					if (sudoku[bx][by][lx][ly].length == 0) {
+						return false; //really does not do much as it only returns up to previous anonymous function
+					} //a cell has no more potential values. we have failed :(
+				});
 			});
 		});
 	});
 	return result;
 }
 
-function Array_Remove_Duplicates(Array1){
-  let the_set = new Set(Array1);
-  let the_array = Array.from(the_set); 
- return the_array;  
+function Array_Remove_Duplicates(Array1) {
+	let the_set = new Set(Array1);
+	let the_array = Array.from(the_set);
+	return the_array;
 }
 
-function Array_Difference(array1 , array2){ //array with all items first!
-  let difference = array1.filter((element) => !array2.includes(element));
-  return difference;
+function Array_Difference(array1, array2) { //array with all items is array1. array2 should have lesser items (not less quantity, less values)
+	//let difference = array1.filter((element) => !array2.includes(element));
+	let difference = array1.filter(function(element){
+		return !array2.includes(element);
+	});
+	return difference;
 }
 
 function Array_Shuffle(array) {
@@ -684,20 +688,18 @@ function IsCellLockedID(cellID) {
 	var text = document.getElementById(cellID).innerHTML;
 	if ((text.indexOf('locked', 0) > -1) || (text.indexOf('LOCKED', 0) > -1)) {
 		return 1;
-	}
-	else {
+	} else {
 		return 0;
 	}
 }
 
 function IsCellStaticID(cellID) {
- let text = document.getElementById(cellID).innerHTML;
+	let text = document.getElementById(cellID).innerHTML;
 	if ((text.indexOf('static', 0) > -1)) {
 		return 1;
+	} else {
+		return 0;
 	}
- else {
-  return 0;
- } 
 }
 
 function IsAnEditCellID(cellID) {
@@ -709,7 +711,7 @@ function IsAnEditCellID(cellID) {
 }
 
 function chooseOnClick() {
-  cellID = this.id;
+	cellID = this.id;
 	choose(cellID);
 }
 
@@ -821,14 +823,15 @@ function keyinput() {
 			LastCursorClass = document.getElementById(cellID).className;
 			document.getElementById(cellID).className = 'cellselectedclass';
 			send_cell_update(document.getElementById(cellID).innerHTML);
-		} else {	//lock the square
-			if (numberlist.length == 1) {		//lock this square
+		} else { //lock the square
+			if (numberlist.length == 1) { //lock this square
 				document.getElementById(cellID).innerHTML = numberlist + '<!--locked-->';
 				document.getElementById(cellID).className = 'celllockedclass';
 				LastCursorClass = document.getElementById(cellID).className;
 				document.getElementById(cellID).className = 'cellgrayclass';
 				send_cell_update(document.getElementById(cellID).innerHTML);
-				if (blanksquares == CountCorrectLocked(count)) { //did we win?
+				//if (blanksquares == CountCorrectLocked(count)) { //did we win?
+     if( Did_We_Win() ){ //did we win?
 					IWin();
 				}
 			} else {
@@ -837,7 +840,7 @@ function keyinput() {
 		}
 	}
 
-	if( (keyCode >= 1 && keyCode <= 9) && (IsCellLockedID(cellID) != 1) ){ //number keys pressed 1 - 9
+	if ((keyCode >= 1 && keyCode <= 9) && (IsCellLockedID(cellID) != 1)) { //number keys pressed 1 - 9
 		let numberlist = document.getElementById(cellID).innerHTML;
 		numberlist = numberlist.replace(/\D/g, ''); //remove all but numbers
 		let keychar = keyCode;
@@ -858,7 +861,7 @@ function keyinput() {
 		document.getElementById(cellID).innerHTML = numberlist; //put numbers back on board
 		send_cell_update(document.getElementById(cellID).innerHTML);
 	}
- Save_Sudoku(); //after each keystroke
+	Save_Sudoku(); //after each keystroke
 }
 
 function CountCorrectLocked(mode) {
@@ -886,10 +889,10 @@ function CountCorrectLocked(mode) {
 }
 
 function CountLocked() {
-	var LockedCount = 0;
-	for (var x = 0; x <= 8; x++) {
-		for (var y = 0; y <= 8; y++) {
-			var CellID = 'cell_' + x + '_' + y;
+	let LockedCount = 0;
+	for (let x = 0; x <= 8; x++) {
+		for (let y = 0; y <= 8; y++) {
+			let CellID = 'cell_' + x + '_' + y;
 			if (IsCellLockedID(CellID) == 1) {
 				LockedCount++;
 			}
@@ -898,67 +901,68 @@ function CountLocked() {
 	return (LockedCount);
 }
 
-function send_cell_update(k)
-	{
-	var letter = k;
- setCookie( LastCursorID , letter , forever , '' , '' , ''); //LastCursorID = cell_x_y
-	}
+function send_cell_update(k) {
+	let letter = k;
+	setCookie(LastCursorID, letter, forever, '', '', ''); //LastCursorID = cell_x_y
+}
 
-var fivesec = 0;
-function IWin()
-{
-var winstate;
-if (fivesec > 100) {winstate = 'up';}
-if (fivesec > 200) {winstate = 'down';}
-if (fivesec > 300) {winstate = 'done';}
-
-fivesec++;
-
-var trig = 0;
-while (trig == 0)
-			{
-			var x = Math.floor(Math.random() * 9);
-			var y = Math.floor(Math.random() * 9);
-			var CellID = 'cell_' + x + '_' + y;
-			if (IsCellStaticID(CellID) == 0)
-				{
-				trig = 1;
-				var red = Math.floor(Math.random() * 255);
-				var green = Math.floor(Math.random() * 255);
-				var blue = Math.floor(Math.random() * 255);
-				if (winstate == 'up') {document.getElementById(CellID).style.backgroundColor = 'rgb('+red+','+green+','+blue+')';}
-				if (winstate == 'down') {document.getElementById(CellID).style.backgroundColor = '';}
-				}
-			}
-
-var IWinLoop;
-if (winstate != 'done')
-	{
-	IWinLoop = setTimeout(IWin(),10);
-	}
-
-if (winstate == 'done')
-	{
-	clearTimeout(IWinLoop);
-	fivesec = 0;
-	for (let x = 0 ; x <= 8; x++)
-		{
-		for (let y = 0 ; y <= 8; y++)
-			{
+function Did_We_Win(){
+ let win = true;
+ for (let x = 0; x <= 8; x++) {
+		for (let y = 0; y <= 8; y++) {
 			let CellID = 'cell_' + x + '_' + y;
-			document.getElementById(CellID).style.backgroundColor = '';
+   let solutionID = "solution_" + x + "_" + y; 
+   let cell = document.getElementById(CellID).innerHTML;
+ 	cell = cell.replace(/\D/g, ''); //remove all but numbers
+  let solution = document.getElementById(solutionID).innerHTML;  
+			if (cell != solution) {
+    win = false;
 			}
 		}
-	} 
- }
+	}
+	return (win);
+}
 
-function SimulateKey( key_pushed ){
-  const kbEvent = new KeyboardEvent('keydown', {
-    bubbles: true,
-    cancelable: true,
-    key: key_pushed,
-  });
-  document.body.dispatchEvent(kbEvent);
+var wincount = 0;
+function IWin() {
+	let maxwincount = 200;
+	let x = Math.floor(Math.random() * 9);
+	let y = Math.floor(Math.random() * 9);
+	let CellID = 'cell_' + x + '_' + y;
+	let red = Math.floor(Math.random() * 255);
+	let green = Math.floor(Math.random() * 255);
+	let blue = Math.floor(Math.random() * 255);
+	if (wincount < 100 / 2) {
+		document.getElementById(CellID).style.backgroundColor = 'rgb(' + red + ',' + green + ',' + blue + ')';
+	} else {
+		document.getElementById(CellID).style.backgroundColor = '';
+	}
+ wincount++;
+	if (wincount < maxwincount / 2) {
+		window.requestAnimationFrame(IWin);
+	} else {
+		wincount = 0;
+		Win_Done();
+	}
+}
+
+function Win_Done(){
+ 		for (let x = 0; x <= 8; x++) {
+			for (let y = 0; y <= 8; y++) {
+				let CellID = 'cell_' + x + '_' + y;
+				document.getElementById(CellID).style.backgroundColor = '';
+			}
+		}
+  alert("You Win!");
+}
+
+function SimulateKey(key_pushed) {
+	const kbEvent = new KeyboardEvent('keydown', {
+		bubbles: true,
+		cancelable: true,
+		key: key_pushed,
+	});
+	document.body.dispatchEvent(kbEvent);
 }
 SimulateKey(); //just to get rid of false not used error
 
@@ -991,7 +995,7 @@ function ClearUnlockedCells() {
 			}
 		}
 	}
- Save_Sudoku();
+	Save_Sudoku();
 }
 
 function ResetSudoku() {
@@ -1007,7 +1011,7 @@ function ResetSudoku() {
 			}
 		}
 	}
- Save_Sudoku();
+	Save_Sudoku();
 }
 
 //start dialogs and turn off
@@ -1031,9 +1035,8 @@ $(function() {
 	});
 });
 
-var Diff =[];
-Diff[1] = function()
-	{ 
+var Diff = [];
+Diff[1] = function() {
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = false;
 	document.getElementById('NP').checked = false;
@@ -1041,10 +1044,9 @@ Diff[1] = function()
 	document.getElementById('IR').checked = false;
 	document.getElementById('XW').checked = false;
 	document.getElementById('YW').checked = false;
-	};
+};
 
-Diff[2] = function()
-	{ 
+Diff[2] = function() {
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
 	document.getElementById('NP').checked = false;
@@ -1052,10 +1054,9 @@ Diff[2] = function()
 	document.getElementById('IR').checked = false;
 	document.getElementById('XW').checked = false;
 	document.getElementById('YW').checked = false;
-	};
+};
 
-Diff[3] = function()
-	{ 
+Diff[3] = function() {
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
 	document.getElementById('NP').checked = true;
@@ -1063,10 +1064,9 @@ Diff[3] = function()
 	document.getElementById('IR').checked = false;
 	document.getElementById('XW').checked = false;
 	document.getElementById('YW').checked = false;
-	};
+};
 
-Diff[4] = function()
-	{ 
+Diff[4] = function() {
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
 	document.getElementById('NP').checked = true;
@@ -1074,10 +1074,9 @@ Diff[4] = function()
 	document.getElementById('IR').checked = false;
 	document.getElementById('XW').checked = false;
 	document.getElementById('YW').checked = false;
-	};
+};
 
-Diff[5] = function()
-	{ 
+Diff[5] = function() {
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
 	document.getElementById('NP').checked = true;
@@ -1085,10 +1084,9 @@ Diff[5] = function()
 	document.getElementById('IR').checked = true;
 	document.getElementById('XW').checked = false;
 	document.getElementById('YW').checked = false;
-	};
- 
- Diff[6] = function()
-	{ 
+};
+
+Diff[6] = function() {
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
 	document.getElementById('NP').checked = true;
@@ -1096,10 +1094,9 @@ Diff[5] = function()
 	document.getElementById('IR').checked = true;
 	document.getElementById('XW').checked = true;
 	document.getElementById('YW').checked = false;
-	};
- 
- Diff[7] = function()
-	{ 
+};
+
+Diff[7] = function() {
 	document.getElementById('NS').checked = true;
 	document.getElementById('HS').checked = true;
 	document.getElementById('NP').checked = true;
@@ -1107,8 +1104,8 @@ Diff[5] = function()
 	document.getElementById('IR').checked = true;
 	document.getElementById('XW').checked = true;
 	document.getElementById('YW').checked = true;
-	};
- 
+};
+
 </SCRIPT>
   
  <DIV ID="dialog-waiting"><IMG SRC="./images/flash.gif"></DIV>
