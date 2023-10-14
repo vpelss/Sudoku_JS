@@ -409,9 +409,9 @@ function RemoveCells() {
 
 function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 	//let sudoku_array_no_probabilities;
-	let progress; //true if we made any progress
+	let progress = 0; // > 0 if we made any progress
 	let solved = 0;
-	//start board off by calculating simple starting probabilities for blank cells in entire board
+	//start board off by calculating simple starting probabilities for blank cells in entire board. See NS below
 
 	//maybe check ns here also and return true if we have a ns? maybe put in while loop?
 	//ISSUE NS is part of this implicityly
@@ -433,17 +433,16 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 			let bigy = next_square[1];
 			let littlex = next_square[2];
 			let littley = next_square[3];
-
-			solved = Calculate_Simple_Probabilities_or_Solved();
-			//sudoku_array_no_probabilities = JSON.stringify(sudoku);
-
-			//calculate probabilities for entire board
-			//solved = Calculate_Probabilities(); if 
+   
+   //ns
+			solved = Calculate_Simple_Probabilities_NS_or_Solved(); //calculate probabilities for entire board
 			//return  false = filled in probabilities : true = cells all single probabilities therefore solved
-
-			//ns solved=ns(); if all are ns!!!!
+			// if all cells are ns puzzle is solved
 			//return  false = filled in probabilities : true = cells all single probabilities therefore solved
-			//hs 
+			
+   //hs
+   //progress = 0 + HS();
+   
 			//np
 			//hp      
 			//ir does probabilities
@@ -451,9 +450,9 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 			//ywing
 
 			if (solved) { //solved if all cells have 1 probability
-				//sudoku = JSON.parse(backup_sudoku_array); //restore board
 				return true;
-			} else {}
+			} else { //just keep going
+   }
 
 			if (!progress) { //can't solve if we cannot move forward. ie: stuck
 				return false;
@@ -470,9 +469,8 @@ function Solve_Me() { //mangles sudoku. so calling routines must accomodate
 
 }
 
-function Calculate_Simple_Probabilities_or_Solved() {
-	//it also doubles as solved detector!!!!!!!!!!!!!!!!!
-	let solved = 1;
+function HS(){
+	let progress = 0;
 	for (let cell_count = 0; cell_count < 81; cell_count++) {
 		let next_square = path[cell_count];
 		let bx = next_square[0];
@@ -480,21 +478,21 @@ function Calculate_Simple_Probabilities_or_Solved() {
 		let lx = next_square[2];
 		let ly = next_square[3];
 
-		let probable_numbers_row_col_3 = [];
+		let solved_numbers = [];
 		//if cell has no values get all numbers from cells with SINGLE values in row,col,3x3
 		//then this cell will have inverse of that list
 		if (sudoku[bx][by][lx][ly].length == 0) { //if cell has no values 
 			//get all numbers from cells with SINGLE values in row,col,3x3
 
 			//row
-			probable_numbers_row_col_3.push(...Probable_Potential_Values("row", bx, by, lx, ly));
+			solved_numbers.push(...Solved_Values("row", bx, by, lx, ly));
 			//col
-			probable_numbers_row_col_3.push(...Probable_Potential_Values("col", bx, by, lx, ly));
+			solved_numbers.push(...Solved_Values("col", bx, by, lx, ly));
 			//squ
-			probable_numbers_row_col_3.push(...Probable_Potential_Values("squ", bx, by, lx, ly));
+			solved_numbers.push(...Solved_Values("squ", bx, by, lx, ly));
 
 			//difference of that list
-			let probable_numbers = Array_Difference([1, 2, 3, 4, 5, 6, 7, 8, 9], probable_numbers_row_col_3);
+			let probable_numbers = Array_Difference([1, 2, 3, 4, 5, 6, 7, 8, 9] , solved_numbers);
 			sudoku[bx][by][lx][ly] = probable_numbers;
 		}
 
@@ -502,10 +500,41 @@ function Calculate_Simple_Probabilities_or_Solved() {
 			solved = 0;
 		}
 	}
+	return progress; 
+}
+
+function Calculate_Simple_Probabilities_NS_or_Solved() {
+ //on first run it calculates possible values for blank cells.
+ //other runs it is does NS and solve detector 
+	let solved = 1;
+	for (let cell_count = 0; cell_count < 81; cell_count++) {
+		let next_square = path[cell_count];
+		let bx = next_square[0];
+		let by = next_square[1];
+		let lx = next_square[2];
+		let ly = next_square[3];
+		let solved_numbers = [];
+		//if cell has no values, get all SINGLE (solved) values in row,col,3x3
+		//then this cell will contain the inverse of that list
+		if (sudoku[bx][by][lx][ly].length == 0) { //if cell has no values 
+			//get all numbers from cells with SINGLE (solved) values in row,col,3x3
+			solved_numbers.push(...Solved_Values("row", bx, by, lx, ly)); //row
+			solved_numbers.push(...Solved_Values("col", bx, by, lx, ly)); //col
+			solved_numbers.push(...Solved_Values("squ", bx, by, lx, ly)); //squ
+			let probable_numbers = Array_Difference([1, 2, 3, 4, 5, 6, 7, 8, 9], solved_numbers); //difference of that list
+			sudoku[bx][by][lx][ly] = probable_numbers; //used by hs,mp,hp,ir,xw,yw...
+		}
+		if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
+			let solved_value = sudoku[bx][by][lx][ly];
+			Remove_Potential_Values_Meta(bx, by, lx, ly, solved_value);
+		} else { //solve detector : check each cell. all cells must contain one value for solved sudoku
+			solved = 0;
+		}
+	}
 	return solved;
 }
 
-function Probable_Potential_Values(region, bigx, bigy, littlex, littley) {
+function Solved_Values(region, bigx, bigy, littlex, littley) { //given region and cell: find cells with one potential value (solved/known) and return all these values
 	let accumulate_array = [];
 	if (region == "row") {
 		bigxArray = [0, 1, 2];
