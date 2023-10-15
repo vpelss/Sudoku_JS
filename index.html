@@ -410,7 +410,7 @@ function Solve_Me() { //mangles sudoku. so calling routines must accommodate
 
 	//then try to reduce all probabilities to 1 value for each cell     
 
-	Calculate_Simple_Probabilities(); //for all empty cells
+	Calculate_Simple_Probabilities(); //fill probable values for all empty cells
 	do {
   progress = 0;
 		for (let cell_count = 0; cell_count < 81; cell_count++) {
@@ -423,8 +423,7 @@ function Solve_Me() { //mangles sudoku. so calling routines must accommodate
 			progress = progress + NS(bx, by, lx, ly); //ns
 
 			//hs
-			//for each cell, get all probabilities including cell for each region.
-			//if a region return has only one value (no doubles, etc) it is a hs
+	
 			//progress = 0 + HS();
 
 			//np
@@ -448,10 +447,7 @@ function Solve_Me() { //mangles sudoku. so calling routines must accommodate
 	return false;
 }
 
-function Calculate_Simple_Probabilities() {
- //on first run it calculates possible values for blank cells.
- //other runs it is does NS and solve detector 
-	//let solved = 1;
+function Calculate_Simple_Probabilities() { //calculates possible values for blank cells.
 	for (let cell_count = 0; cell_count < 81; cell_count++) {
 		let next_square = path[cell_count];
 		let bx = next_square[0];
@@ -459,27 +455,18 @@ function Calculate_Simple_Probabilities() {
 		let lx = next_square[2];
 		let ly = next_square[3];
 		let solved_numbers = [];
-
-		//if cell has no values, get all SINGLE (solved) values in row,col,3x3
-		//then this cell will contain the inverse of that list
-		if (sudoku[bx][by][lx][ly].length == 0) { //if cell has no values 
-			//get all numbers from cells with SINGLE (solved) values in row,col,3x3
-			solved_numbers.push(...Solved_Values("row", bx, by, lx, ly)); //row
-			solved_numbers.push(...Solved_Values("col", bx, by, lx, ly)); //col
-			solved_numbers.push(...Solved_Values("squ", bx, by, lx, ly)); //squ
+		if (sudoku[bx][by][lx][ly].length == 0) { 	//if cell has no values, get all SINGLE (solved) values in regions. then this cell will contain the inverse of that list
+			solved_numbers.push(...Solved_Values_From_Regions("row", bx, by, lx, ly)); //row
+			solved_numbers.push(...Solved_Values_From_Regions("col", bx, by, lx, ly)); //col
+			solved_numbers.push(...Solved_Values_From_Regions("squ", bx, by, lx, ly)); //squ
 			let probable_numbers = Array_Difference([1, 2, 3, 4, 5, 6, 7, 8, 9], solved_numbers); //difference of that list
-			sudoku[bx][by][lx][ly] = probable_numbers; //used by hs,mp,hp,ir,xw,yw...
-   
+			sudoku[bx][by][lx][ly] = probable_numbers; //used by hs,mp,hp,ir,xw,yw... 
 		}
-  //if (sudoku[bx][by][lx][ly].length != 1){//solve detector : All cells must contain only one value (NS) for solved sudoku. must be AFTER we check , and attempt to fill in, each cell
-    //solved = 0;
-   //}
 	}
-	//return solved;
 }
 
 function NS(bx, by, lx, ly){
- 	if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions. first as it wastes time if after ==0
+ 	if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
     	let value = sudoku[bx][by][lx][ly];
     	let removed = Remove_A_Potential_Value_From_Regions(bx, by, lx, ly, value);
      if(removed){//progress
@@ -491,7 +478,9 @@ function NS(bx, by, lx, ly){
     }
 }
 
-function HS(){
+function HS() {
+	//for each cell, get all probabilities including current cell for each region.
+	//if a a value in this cell has only one value (no doubles, etc) in a region, it is a hs. convert it to ns
 	let progress = 0;
 	for (let cell_count = 0; cell_count < 81; cell_count++) {
 		let next_square = path[cell_count];
@@ -500,31 +489,34 @@ function HS(){
 		let lx = next_square[2];
 		let ly = next_square[3];
 
-		let solved_numbers = [];
-		//if cell has no values get all numbers from cells with SINGLE values in row,col,3x3
-		//then this cell will have inverse of that list
-		if (sudoku[bx][by][lx][ly].length == 0) { //if cell has no values 
-			//get all numbers from cells with SINGLE values in row,col,3x3
-
-			//row
-			solved_numbers.push(...Solved_Values("row", bx, by, lx, ly));
-			//col
-			solved_numbers.push(...Solved_Values("col", bx, by, lx, ly));
-			//squ
-			solved_numbers.push(...Solved_Values("squ", bx, by, lx, ly));
-
-			//difference of that list
-			let probable_numbers = Array_Difference([1, 2, 3, 4, 5, 6, 7, 8, 9] , solved_numbers);
-			sudoku[bx][by][lx][ly] = probable_numbers;
+  if (sudoku[bx][by][lx][ly].length == 0) {
+			Error("Blank cell. How?");
 		}
-
-		if (sudoku[bx][by][lx][ly].length != 1) { //if even one cell does not contain exactly one probability
-			solved = 0;
-		}
+  
+  progress = progress + HS_By_Region( "row" , bx, by, lx, ly);
+  if(progress == 0){
+   progress = progress + HS_By_Region( "col" , bx, by, lx, ly);
+  }
+  if(progress == 0){
+  progress = progress + HS_By_Region( "squ" , bx, by, lx, ly);
+  }
 	}
-	return progress; 
+	return progress;
 }
 
+function HS_By_Region( region , bx, by, lx, ly){
+ let progress = 0;
+ 	let region_values = sudoku[bx][by][lx][ly]; //start with our cell
+		region_values.push(...All_Values_From_Region(region , bx, by, lx, ly));
+  for(let prob of sudoku[bx][by][lx][ly]){ //see if any of our cell values occurs once in this array
+   if(Array_Count_Value(region_values , prob) == 1){ //found a hs
+     sudoku[bx][by][lx][ly] = prob; //convert to ns
+     progress++;
+     break;
+    }
+  }
+ return progress;
+}
 
 function Solved() { //is sudoku solved?
 	let solved = 1;
@@ -555,7 +547,7 @@ function Blank_Cells() { //is sudoku valid
 	return false;
 }
 
-function Solved_Values(region, bigx, bigy, littlex, littley) { //given region and cell: find cells with one potential value (solved/known) and return all these values
+function Solved_Values_From_Regions(region, bigx, bigy, littlex, littley) { //given region and cell: find cells with one potential value (solved/known) and return all these values
 	let accumulate_array = [];
 	if (region == "row") {
 		bigxArray = [0, 1, 2];
@@ -596,8 +588,52 @@ function Solved_Values(region, bigx, bigy, littlex, littley) { //given region an
 	return accumulate_array;
 }
 
-function getRandomInt(max) {
-	return Math.floor(Math.random() * max);
+/*
+function All_Values_From_Regions(region, bigx, bigy, littlex, littley) { //given region and cell: return all values
+	let accumulate_array = [];
+ accumulate_array.push( All_Values_From_Region('squ', bigx, bigy, littlex, littley) );
+ accumulate_array.push( All_Values_From_Region('row', bigx, bigy, littlex, littley) );
+ accumulate_array.push( All_Values_From_Region('col', bigx, bigy, littlex, littley) );
+	return accumulate_array; 	//keep! duplicates
+}
+*/
+
+function All_Values_From_Region(region, bigx, bigy, littlex, littley) { //given region and cell: return all values
+	let accumulate_array = [];
+	if (region == "row") {
+		bigxArray = [0, 1, 2];
+		bigyArray = [bigy, bigy, bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [littley, littley, littley];
+	}
+	if (region == "col") {
+		bigxArray = [bigx, bigx, bigx];
+		bigyArray = [0, 1, 2];
+		littlexArray = [littlex, littlex, littlex];
+		littleyArray = [0, 1, 2];
+	}
+	if (region == "squ") {
+		bigxArray = [bigx, bigx, bigx];
+		bigyArray = [bigy, bigy, bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [0, 1, 2];
+	}
+	//let result = true;
+	bigxArray.forEach(function(bx) {
+		bigyArray.forEach(function(by) {
+			littlexArray.forEach(function(lx) {
+				littleyArray.forEach(function(ly) { //skip our cell
+					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
+						return accumulate_array; //next loop. return in case we are last cell
+					} 
+					//if (sudoku[bx][by][lx][ly].length == 1) { //only look at set cells (1 probability)
+						accumulate_array.push(sudoku[bx][by][lx][ly][0]);
+					//}
+				});
+			});
+		});
+	});
+	return accumulate_array; //keep duplicates
 }
 
 function SetNextSquare(path) { //recursive routine
@@ -684,6 +720,10 @@ function Remove_A_Potential_Value_From_A_Region(region, bigx, bigy, littlex, lit
 	return removed;
 }
 
+function getRandomInt(max) {
+	return Math.floor(Math.random() * max);
+}
+
 function BL_To_XY(bl) {
 	let x = bl[0] * 3 + bl[2];
 	let y = bl[1] * 3 + bl[3];
@@ -698,13 +738,30 @@ function XY_To_BL(xy) {
 	return [bx, by, lx, ly];
 }
 
+function Array_Count_Value(array1, value){
+ return array1.filter(function(x){ return x == value; }).length;
+}
+
+function Array_Values_Occur_Once(array1) {
+	for (let ele of array1) {
+		if (count[ele]) {
+			count[ele]++;
+		} else {
+			count[ele] = 1;
+		}
+	}
+	return Object.keys(ele).filter(function(key) { //filter elements with counts 1
+		return ele[key] == 1;
+	});
+}
+
 function Array_Remove_Duplicates(Array1) {
 	let the_set = new Set(Array1);
 	let the_array = Array.from(the_set);
 	return the_array;
 }
 
-function Array_Difference(array1, array2) { //array with all items is array1. array2 should have lesser items (not less quantity, less values)
+function Array_Difference(array1, array2) { //array with all items is array1. array2 should normally have lesser items (not less quantity, less values)
 	//let difference = array1.filter((element) => !array2.includes(element));
 	let difference = array1.filter(function(element){
 		return !array2.includes(element);
