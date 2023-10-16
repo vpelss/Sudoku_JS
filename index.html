@@ -421,10 +421,7 @@ function Solve_Me() { //mangles sudoku. so calling routines must accommodate
 			let ly = next_square[3];
 
 			progress = progress + NS(bx, by, lx, ly); //ns
-
-			//hs
-	
-			//progress = 0 + HS();
+			progress = progress + HS(); //hs
 
 			//np
 			//hp      
@@ -508,7 +505,7 @@ function HS_By_Region( region , bx, by, lx, ly){
  let progress = 0;
  	let region_values = sudoku[bx][by][lx][ly]; //start with our cell
 		region_values.push(...All_Values_From_Region(region , bx, by, lx, ly));
-  for(let prob of sudoku[bx][by][lx][ly]){ //see if any of our cell values occurs once in this array
+  for(let prob of sudoku[bx][by][lx][ly]){ //see if any of current cell values occurs once in this array
    if(Array_Count_Value(region_values , prob) == 1){ //found a hs
      sudoku[bx][by][lx][ly] = prob; //convert to ns
      progress++;
@@ -551,19 +548,19 @@ function Solved_Values_From_Regions(region, bigx, bigy, littlex, littley) { //gi
 	let accumulate_array = [];
 	if (region == "row") {
 		bigxArray = [0, 1, 2];
-		bigyArray = [bigy, bigy, bigy];
+		bigyArray = [bigy];
 		littlexArray = [0, 1, 2];
-		littleyArray = [littley, littley, littley];
+		littleyArray = [littley];
 	}
 	if (region == "col") {
-		bigxArray = [bigx, bigx, bigx];
+		bigxArray = [bigx];
 		bigyArray = [0, 1, 2];
-		littlexArray = [littlex, littlex, littlex];
+		littlexArray = [littlex];
 		littleyArray = [0, 1, 2];
 	}
 	if (region == "squ") {
-		bigxArray = [bigx, bigx, bigx];
-		bigyArray = [bigy, bigy, bigy];
+		bigxArray = [bigx];
+		bigyArray = [bigy];
 		littlexArray = [0, 1, 2];
 		littleyArray = [0, 1, 2];
 	}
@@ -602,19 +599,19 @@ function All_Values_From_Region(region, bigx, bigy, littlex, littley) { //given 
 	let accumulate_array = [];
 	if (region == "row") {
 		bigxArray = [0, 1, 2];
-		bigyArray = [bigy, bigy, bigy];
+		bigyArray = [bigy];
 		littlexArray = [0, 1, 2];
-		littleyArray = [littley, littley, littley];
+		littleyArray = [littley];
 	}
 	if (region == "col") {
-		bigxArray = [bigx, bigx, bigx];
+		bigxArray = [bigx];
 		bigyArray = [0, 1, 2];
-		littlexArray = [littlex, littlex, littlex];
+		littlexArray = [littlex];
 		littleyArray = [0, 1, 2];
 	}
 	if (region == "squ") {
-		bigxArray = [bigx, bigx, bigx];
-		bigyArray = [bigy, bigy, bigy];
+		bigxArray = [bigx];
+		bigyArray = [bigy];
 		littlexArray = [0, 1, 2];
 		littleyArray = [0, 1, 2];
 	}
@@ -627,7 +624,8 @@ function All_Values_From_Region(region, bigx, bigy, littlex, littley) { //given 
 						return accumulate_array; //next loop. return in case we are last cell
 					} 
 					//if (sudoku[bx][by][lx][ly].length == 1) { //only look at set cells (1 probability)
-						accumulate_array.push(sudoku[bx][by][lx][ly][0]);
+					//accumulate_array.push(...function(){return sudoku[bx][by][lx][ly];});
+					accumulate_array.push( ...sudoku[bx][by][lx][ly] );
 					//}
 				});
 			});
@@ -685,19 +683,19 @@ function Remove_A_Potential_Value_From_Regions(bigx, bigy, littlex, littley, val
 function Remove_A_Potential_Value_From_A_Region(region, bigx, bigy, littlex, littley, value) {//remove value from specific region. if one is removed, return number of values removed
 	if (region == "row") {
 		bigxArray = [0, 1, 2];
-		bigyArray = [bigy, bigy, bigy];
+		bigyArray = [bigy];
 		littlexArray = [0, 1, 2];
-		littleyArray = [littley, littley, littley];
+		littleyArray = [littley];
 	}
 	if (region == "col") {
-		bigxArray = [bigx, bigx, bigx];
+		bigxArray = [bigx];
 		bigyArray = [0, 1, 2];
-		littlexArray = [littlex, littlex, littlex];
+		littlexArray = [littlex];
 		littleyArray = [0, 1, 2];
 	}
 	if (region == "squ") {
-		bigxArray = [bigx, bigx, bigx];
-		bigyArray = [bigy, bigy, bigy];
+		bigxArray = [bigx];
+		bigyArray = [bigy];
 		littlexArray = [0, 1, 2];
 		littleyArray = [0, 1, 2];
 	}
