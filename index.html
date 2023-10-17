@@ -503,11 +503,12 @@ function HS() {
 
 function HS_By_Region( region , bx, by, lx, ly){
  let progress = 0;
- 	let region_values = sudoku[bx][by][lx][ly]; //start with our cell
+ if(sudoku[bx][by][lx][ly].length == 0){return false;}
+ 	let region_values = [...sudoku[bx][by][lx][ly]]; //start with our cell
 		region_values.push(...All_Values_From_Region(region , bx, by, lx, ly));
   for(let prob of sudoku[bx][by][lx][ly]){ //see if any of current cell values occurs once in this array
    if(Array_Count_Value(region_values , prob) == 1){ //found a hs
-     sudoku[bx][by][lx][ly] = prob; //convert to ns
+     sudoku[bx][by][lx][ly] = [prob]; //convert to ns. must be array!
      progress++;
      break;
     }
@@ -622,10 +623,12 @@ function All_Values_From_Region(region, bigx, bigy, littlex, littley) { //given 
 				littleyArray.forEach(function(ly) { //skip our cell
 					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
 						return accumulate_array; //next loop. return in case we are last cell
-					} 
-					//if (sudoku[bx][by][lx][ly].length == 1) { //only look at set cells (1 probability)
+					}
+     if(sudoku[bx][by][lx][ly].length == 0){return false;}
+					//if (sudoku[bx][by][lx][ly].length > 0) { //??? causes ... to fail, an empty cell will be caught at 
 					//accumulate_array.push(...function(){return sudoku[bx][by][lx][ly];});
-					accumulate_array.push( ...sudoku[bx][by][lx][ly] );
+					//accumulate_array.push( ...sudoku[bx][by][lx][ly] );
+     accumulate_array = [...accumulate_array , ...sudoku[bx][by][lx][ly]];
 					//}
 				});
 			});
