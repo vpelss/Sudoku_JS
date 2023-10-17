@@ -420,8 +420,13 @@ function Solve_Me() { //mangles sudoku. so calling routines must accommodate
 			let lx = next_square[2];
 			let ly = next_square[3];
 
-			progress = progress + NS(bx, by, lx, ly); //ns
-			progress = progress + HS(); //hs
+   //likely only useful on complex levels as Calculate_Simple_Probabilities fills in all squares on easy levels
+			if(document.getElementById('NS').checked == true){
+    progress = progress + NS(bx, by, lx, ly); //ns
+   }
+   if(document.getElementById('HS').checked == true){
+    progress = progress + HS(); //hs
+   }
 
 			//np
 			//hp      
@@ -432,7 +437,7 @@ function Solve_Me() { //mangles sudoku. so calling routines must accommodate
    if(sudoku[bx][by][lx][ly].length == 0){ //if any cell has no probabilities, fail
     return false;
    }
-   let solved = Solved(); //each cell we also check if we have solved it
+   let solved = Solved(); //if all cells have 1 value
 			if (solved) { //solved if all cells have 1 probability (ns)
 				return true;
 			} else { //just keep going
@@ -467,7 +472,11 @@ function NS(bx, by, lx, ly){
     	let value = sudoku[bx][by][lx][ly];
     	let removed = Remove_A_Potential_Value_From_Regions(bx, by, lx, ly, value);
      if(removed){//progress
+      console.log("NS at " + bx + by + lx + ly);
       return 1;
+     }
+     else{
+      return 0;
      }
     }
     else{ // no progress
@@ -504,15 +513,18 @@ function HS() {
 function HS_By_Region( region , bx, by, lx, ly){
  let progress = 0;
  if(sudoku[bx][by][lx][ly].length == 0){return false;}
+ if(sudoku[bx][by][lx][ly].length > 1){//hs only lloks at 2 or more possible values
  	let region_values = [...sudoku[bx][by][lx][ly]]; //start with our cell
 		region_values.push(...All_Values_From_Region(region , bx, by, lx, ly));
   for(let prob of sudoku[bx][by][lx][ly]){ //see if any of current cell values occurs once in this array
    if(Array_Count_Value(region_values , prob) == 1){ //found a hs
      sudoku[bx][by][lx][ly] = [prob]; //convert to ns. must be array!
+     console.log("HS at " + bx + by + lx + ly);
      progress++;
      break;
     }
   }
+ }
  return progress;
 }
 
