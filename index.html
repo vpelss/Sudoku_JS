@@ -244,7 +244,8 @@ function Load_Sudoku() {
 	});
 
 	document.getElementById("map").innerHTML = jscalcpuzz;
-	start_cross(document.getElementById("Solution"));
+	//start_cross(document.getElementById("Solution"));
+	start_cross(document.getElementById("map").value);
 	return true;
 }
 
@@ -348,7 +349,9 @@ function Create_Playable_Sudoku() {
 		count++;
 	});
 	document.getElementById("map").innerHTML = jscalcpuzz;
-	start_cross(document.getElementById("Solution"));
+	//start_cross(document.getElementById("Solution"));
+ 	start_cross(document.getElementById("map").value);
+
 	Save_Sudoku(); //save created sudoku
 	$("#dialog-waiting").hide();
 }
@@ -2604,8 +2607,8 @@ function DeleteCookies() {
 						 </tr>
 
 						 <tr valign="middle">
-							 <td align="right"><input type="button" onclick="start_cross(this.form);" value="Calculate Answer" id="answerbutton"><br>
-							 <textarea id="map" name="map" onkeyup="start_cross(this.form);" onchange="start_cross(this.form);" rows="10" cols="10">%jscalcpuzz%</textarea>
+							 <td align="right"><input type="button" onclick="start_cross(this.form.map.value);" value="Calculate Answer" id="answerbutton"><br>
+							 <textarea id="map" name="map" onkeyup="start_cross(this.form.map.value);" onchange="start_cross(this.form.map.value);" rows="10" cols="10">%jscalcpuzz%</textarea>
         </td>
 							 <td id="result_here" class="num_cross" colspan="2" align="left">&nbsp;</td>
 						 </tr>

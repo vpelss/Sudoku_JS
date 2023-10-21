@@ -1,21 +1,26 @@
+//code found author unknown
+//called ncross.js
+
 var dec2bit = [];
 var bit2dec = [];
-for (var d = 1, b = 1; d <= 9; d++, b <<= 1) {
+for (let d = 1, b = 1; d <= 9; d++, b <<= 1) {
 	dec2bit[d] = b;
 	bit2dec[b] = d;
 }
 
-var map = [];
+var mainmap = [];
 var nonflag = [];
 var prevmap = "";
+var cnt1 , cnt2 , cnt3 , cnt4 , cnt6 , cnt7 , cnt8;
 
 function start_cross(f) {
-	read_table(f.map.value);
+	//read_table(f.map.value);
+	read_table(f);
 
 	var curmap = "";
 	for (var y = 1; y <= 9; y++) {
 		for (var x = 1; x <= 9; x++) {
-			curmap += map[y][x] || "-";
+			curmap += mainmap[y][x] || "-";
 		}
 	}
 	//if ( curmap == prevmap ) return; //vinman always update
@@ -23,16 +28,16 @@ function start_cross(f) {
 
 	var qq = init_flag();
 	for (var i = 0; i < 10 && qq < 81; i++) {
-		var cnt1 = rule_shoukyo_hou();
-		var cnt2 = rule_line_kakutei();
-		var cnt3 = rule_box_kakutei();
+		cnt1 = rule_shoukyo_hou();
+		cnt2 = rule_line_kakutei();
+		cnt3 = rule_box_kakutei();
 		qq += cnt1 + cnt2 + cnt3;
 		if (cnt1 + cnt2 + cnt3) continue;
 		if (qq == 81) break;
-		var cnt4 = rule_lineX_alter() + rule_lineY_alter();
-		var cnt6 = rule_box_alter();
-		var cnt7 = rule_box_3ren() + rule_3renY_line() + rule_3renX_line();
-		var cnt8 = rule_lineY_resv() + rule_lineX_resv();
+		cnt4 = rule_lineX_alter() + rule_lineY_alter();
+		cnt6 = rule_box_alter();
+		cnt7 = rule_box_3ren() + rule_3renY_line() + rule_3renX_line();
+		cnt8 = rule_lineY_resv() + rule_lineX_resv();
 		if (cnt4 + cnt6 + cnt7 + cnt8) continue;
 		break;
 	}
@@ -40,7 +45,7 @@ function start_cross(f) {
 }
 
 function rule_3renY_line() {
-	var cnt = 0;
+	let cnt = 0;
 	for (var y3 = 1; y3 <= 9; y3 += 3) {
 		for (var yy = y3; yy < y3 + 3; yy++) {
 			var dd = 0;
@@ -48,7 +53,7 @@ function rule_3renY_line() {
 			for (var x3 = 1; x3 <= 9; x3 += 3) {
 				var bx = dec2bit[x3];
 				for (var xx = x3; xx < x3 + 3; xx++) {
-					if (map[yy][xx]) continue;
+					if (mainmap[yy][xx]) continue;
 					var bit = nonflag[yy][xx];
 					for (var nn = 1; nn <= 9; nn++) {
 						if ((bit & 1) == 0) {
@@ -92,7 +97,7 @@ function rule_3renX_line() {
 			for (var y3 = 1; y3 <= 9; y3 += 3) {
 				var by = dec2bit[y3];
 				for (var yy = y3; yy < y3 + 3; yy++) {
-					if (map[yy][xx]) continue;
+					if (mainmap[yy][xx]) continue;
 					var bit = nonflag[yy][xx];
 					for (var nn = 1; nn <= 9; nn++) {
 						if ((bit & 1) == 0) {
@@ -132,7 +137,7 @@ function rule_lineX_resv() {
 	for (var xx = 1; xx <= 9; xx++) {
 		//var chk = [];
 		for (var yy = 1; yy < 9; yy++) {
-			if (map[yy][xx]) continue;
+			if (mainmap[yy][xx]) continue;
 			var bit = nonflag[yy][xx];
 			var xorb = 511 ^ bit;
 			var nob = numofbits(xorb);
@@ -156,7 +161,7 @@ function rule_lineY_resv() {
 	for (var yy = 1; yy <= 9; yy++) {
 		//var chk = [];
 		for (var xx = 1; xx < 9; xx++) {
-			if (map[yy][xx]) continue;
+			if (mainmap[yy][xx]) continue;
 			var bit = nonflag[yy][xx];
 			var xorb = 511 ^ bit;
 			var nob = numofbits(xorb);
@@ -198,7 +203,7 @@ function rule_box_3ren() {
 			for (var yy = y3; yy < y3 + 3; yy++) {
 				var by = dec2bit[yy];
 				for (var xx = x3; xx < x3 + 3; xx++) {
-					if (map[yy][xx]) continue;
+					if (mainmap[yy][xx]) continue;
 					var bx = dec2bit[xx];
 					var bit = nonflag[yy][xx];
 					for (var nn = 1; nn <= 9; nn++) {
@@ -258,7 +263,7 @@ function rule_box_alter() {
 			var zz = 0;
 			for (var yy = y3; yy < y3 + 3; yy++) {
 				for (var xx = x3; xx < x3 + 3; xx++, zz++) {
-					if (map[yy][xx]) continue;
+					if (mainmap[yy][xx]) continue;
 					check_array(chk, nonflag[yy][xx], zz);
 					dd++;
 				}
@@ -303,7 +308,7 @@ function rule_lineY_alter() {
 		var chk = [];
 		var dd = 0;
 		for (var xx = 1; xx <= 9; xx++) {
-			if (map[yy][xx]) continue;
+			if (mainmap[yy][xx]) continue;
 			check_array(chk, nonflag[yy][xx], xx);
 			dd++;
 		}
@@ -355,7 +360,7 @@ function rule_lineX_alter() {
 		var chk = [];
 		var dd = 0;
 		for (var yy = 1; yy <= 9; yy++) {
-			if (map[yy][xx]) continue;
+			if (mainmap[yy][xx]) continue;
 			check_array(chk, nonflag[yy][xx], yy);
 			dd++;
 		}
@@ -430,20 +435,20 @@ function put_flag(yy, xx, dec) {
 }
 
 function read_table(mmaapp) {
-	map = [];
+	mainmap = [];
 	for (var i = 1; i <= 9; i++) {
-		map[i] = [];
+		mainmap[i] = [];
 	}
 	for (let i = 0, xy = 0; i < mmaapp.length && xy < 81; i++) {
 		var chr = mmaapp.charAt(i);
 		if (chr == "-" || chr == "0" || (0 < (chr - 0) && (chr - 0) << 9)) { //ignore everything but 0-9 and -
 			var xx = (xy % 9) + 1;
 			var yy = Math.floor(xy / 9) + 1;
-			map[yy][xx] = (chr == "-") ? null : chr - 0; //map of 1-9 or null
+			mainmap[yy][xx] = (chr == "-") ? null : chr - 0; //map of 1-9 or null
 			xy++;
 		}
 	}
-	display("result_here");
+	//display("result_here");
 }
 
 function init_flag() {
@@ -454,7 +459,7 @@ function init_flag() {
 	}
 	for (var yy = 1; yy <= 9; yy++) {
 		for (var xx = 1; xx <= 9; xx++) {
-			var dec = map[yy][xx];
+			var dec = mainmap[yy][xx];
 			if (!dec) continue;
 			put_flag(yy, xx, dec);
 			cnt++;
@@ -467,11 +472,11 @@ function rule_shoukyo_hou() {
 	var cnt = 0;
 	for (var yy = 1; yy <= 9; yy++) {
 		for (var xx = 1; xx <= 9; xx++) {
-			if (map[yy][xx]) continue;
+			if (mainmap[yy][xx]) continue;
 			var nonbit = nonflag[yy][xx];
 			for (var nn = 1; nn <= 9; nn++) {
 				if ((nonbit ^ dec2bit[nn]) == 511) {
-					map[yy][xx] = nn;
+					mainmap[yy][xx] = nn;
 					put_flag(yy, xx, nn);
 					cnt++;
 					break;
@@ -488,7 +493,7 @@ function rule_line_kakutei() {
 	for (var yy = 1; yy <= 9; yy++) {
 		for (var xx = 1; xx <= 9; xx++) {
 
-			if (map[yy][xx]) continue;
+			if (mainmap[yy][xx]) continue;
 			var yandbit = 511;
 			for (var y1 = 1; y1 <= 9; y1++) {
 				var nonbit = nonflag[y1][xx];
@@ -506,7 +511,7 @@ function rule_line_kakutei() {
 			//              mess( "["+yy+"]["+xx+"] xandbit="+ xandbit+" yandbit="+ yandbit );
 			for (var nn = 1; nn <= 9; nn++) {
 				if (xybit & dec2bit[nn]) {
-					map[yy][xx] = nn;
+					mainmap[yy][xx] = nn;
 					put_flag(yy, xx, nn);
 					cnt++;
 					break;
@@ -523,7 +528,7 @@ function rule_box_kakutei() {
 		for (var x3 = 1; x3 <= 9; x3 += 3) {
 			for (var y1 = y3; y1 < y3 + 3; y1++) {
 				for (var x1 = x3; x1 < x3 + 3; x1++) {
-					if (map[y1][x1]) continue;
+					if (mainmap[y1][x1]) continue;
 					var boxbit = 511;
 					for (var y2 = y3; y2 < y3 + 3; y2++) {
 						for (var x2 = x3; x2 < x3 + 3; x2++) {
@@ -536,7 +541,7 @@ function rule_box_kakutei() {
 					//                      mess( "["+y1+"]["+x1+"] boxbit="+ boxbit );
 					for (var nn = 1; nn <= 9; nn++) {
 						if (boxbit & dec2bit[nn]) {
-							map[y1][x1] = nn;
+							mainmap[y1][x1] = nn;
 							put_flag(y1, x1, nn);
 							cnt++;
 							break;
@@ -560,15 +565,15 @@ function numofbits(bits) {
 function display(id) {
 	var tabletag = document.createElement("table");
 	var tbodytag = document.createElement("tbody");
-	for (var y = 1; y <= 9; y++) {
-		var trtag = document.createElement("tr");
-		for (var x = 1; x <= 9; x++) {
-			var tdtag = document.createElement("td");
-			var val = map[y][x];
+	for (let y = 1; y <= 9; y++) {
+		let trtag = document.createElement("tr");
+		for (let x = 1; x <= 9; x++) {
+			let tdtag = document.createElement("td");
+			let val = mainmap[y][x];
 			if (!val) {
 				if (nonflag && nonflag[y]) {
 					val = "";
-					for (var nn = 1; nn <= 9; nn++) {
+					for (let nn = 1; nn <= 9; nn++) {
 						if (nonflag[y][x] & dec2bit[nn]) continue;
 						val += nn;
 						if (val.length == 3 || val.length == 7) val += " ";
@@ -582,7 +587,7 @@ function display(id) {
 				}
 				tdtag.className += " null";
 			}
-			var tnode = document.createTextNode(val);
+			let tnode = document.createTextNode(val);
 			tdtag.appendChild(tnode);
 			if (x == 3 || x == 6) tdtag.className += " right";
 			if (y == 3 || y == 6) tdtag.className += " bottom";
@@ -593,7 +598,7 @@ function display(id) {
 	tabletag.appendChild(tbodytag);
 
 	//vinman start
-	var ptag = document.createElement("div");
+	let ptag = document.createElement("div");
 	ptag.innerHTML = cnt1 + " " + cnt2 + " " + cnt3 + " " + cnt4 + " " + cnt6 + " " + cnt7 + " " + cnt8;
 
 	tabletag.appendChild(ptag);
