@@ -1,0 +1,134 @@
+ body{
+   text-align:center;
+  }
+  
+.cellnotselectedclass {
+  background-color: white;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+		font-weight: bold;
+  font-size: 2vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.cellselectedclass {
+  background-color: yellow;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+		font-weight: bold;
+  font-size: 2vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.cellstaticclass {
+  background-color: #CCFFFF;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+  font-weight: bold;
+		font-size: 6vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.celllockedclass {
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+  font-weight: bold;
+  font-size: 6vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.cellgrayclass {
+  background-color: gray;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+  font-weight: bold;
+  font-size: 6vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.cellredclass {
+  background-color: red;
+  text-align: center;
+  height: 8vmin;
+  width: 8vmin;
+  font-size: 6vmin;
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.BigTable
+{
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+#game_area{
+ border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+  background-color: white;
+display: inline-block;
+}
+
+#archive_area{
+ background-color: white;
+}
+
+.PadTable
+{
+
+}
+
+.subtable{
+  border-top: 1pt black solid;
+  border-right: 1pt Black solid;
+  border-bottom: 1pt Black solid;
+  border-left: 1pt Black solid;
+}
+
+.pad_button_numeric
+{
+  height: 8vmin;
+  width: 8vmin;
+border-radius: 3pt;
+font-size: 6vmin;
+}
+
+.dialogs
+{
+	font-size: 2vmin;
+}
+
+#dialog-waiting /*center spinner*/  
+{  
+position: fixed;  
+top: 50%;  
+left: 50%;  
+transform: translate(-50%, -50%);  
+z-index: 999;  
+}

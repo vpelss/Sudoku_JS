@@ -14,7 +14,6 @@ var prevmap = "";
 var cnt1 , cnt2 , cnt3 , cnt4 , cnt6 , cnt7 , cnt8;
 
 function start_cross(f) {
-	//read_table(f.map.value);
 	read_table(f);
 
 	var curmap = "";
@@ -23,7 +22,6 @@ function start_cross(f) {
 			curmap += mainmap[y][x] || "-";
 		}
 	}
-	//if ( curmap == prevmap ) return; //vinman always update
 	prevmap = curmap;
 
 	var qq = init_flag();
@@ -135,7 +133,6 @@ function rule_3renX_line() {
 function rule_lineX_resv() {
 	var cnt = 0;
 	for (var xx = 1; xx <= 9; xx++) {
-		//var chk = [];
 		for (var yy = 1; yy < 9; yy++) {
 			if (mainmap[yy][xx]) continue;
 			var bit = nonflag[yy][xx];
@@ -159,7 +156,6 @@ function rule_lineX_resv() {
 function rule_lineY_resv() {
 	var cnt = 0;
 	for (var yy = 1; yy <= 9; yy++) {
-		//var chk = [];
 		for (var xx = 1; xx < 9; xx++) {
 			if (mainmap[yy][xx]) continue;
 			var bit = nonflag[yy][xx];
@@ -403,15 +399,6 @@ function rule_lineX_alter() {
 		}
 	}
 	return cnt;
-}
-
-function bit2str(bits) {
-	var str = [];
-	while (bits) {
-		str.unshift(bits & 1 ? "1" : "0");
-		bits >>= 1;
-	}
-	return str.join("");
 }
 
 function put_flag(yy, xx, dec) {
