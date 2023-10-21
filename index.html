@@ -152,10 +152,9 @@ z-index: 999;
    <SCRIPT SRC="./js/ncross.js"></SCRIPT>  
    <SCRIPT SRC="https://code.jquery.com/jquery-3.7.1.min.js"></SCRIPT>
    <SCRIPT SRC="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></SCRIPT>
-   <SCRIPT SRC="./js/cookie.js"></SCRIPT>
-  </HEAD>
+     </HEAD>
   
-  <body id="body" background="./images/sudoku.gif">
+  <body id="body" background="https://emogic.com/sudoku_js/images/sudoku.gif">
   
 <SCRIPT TYPE = "text/javascript">
 
@@ -167,6 +166,7 @@ var count = 0;
 var LastCursorID = "cell_0_0";
 var blanksquares = "%blanksquares%";
 var intable = 1;
+var count_type = {}; // count_type["ns"] = 5
 
 document.getElementById("body").onload = Main;
 
@@ -358,7 +358,7 @@ function RemoveCells() {
 	let time = d.getTime();
 	let try_time = document.getElementById("TimeToTry").value;
 	let finished = time + (1000 * try_time); //5 sec max
-	let one_value;
+	//let one_value;
 	let possible_sudoku;
 	let blank_cells = 0;
 
@@ -377,11 +377,12 @@ function RemoveCells() {
 			//if (sudoku[bx][by][lx][ly].length == 1) {
 				//one_value = true;
 			//}
-		} while ( ! (sudoku[bx][by][lx][ly].length == 1)  );
+		} while ( sudoku[bx][by][lx][ly].length != 1 );
 
 		sudoku[bx][by][lx][ly] = []; //remove value
 
 		possible_sudoku = JSON.stringify(sudoku);
+  count_type = {"ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xy":0 , "yw":0 }; //start new count. this might be final run
 		//try to solve sudoku array. Solve me mangles global sudoku array so we will need to restore it
 		if (Solve_Me()) { //success : save 
 			sudoku = JSON.parse(possible_sudoku); //save board
@@ -395,22 +396,9 @@ function RemoveCells() {
 
 function Solve_Me() { //mangles sudoku. so calling routines must accommodate
 	let progress = 0; // > 0 if we made any progress
-	//start board off by calculating simple starting probabilities for blank cells in entire board. See NS below
-
-	//maybe check ns here also and return true if we have a ns? maybe put in while loop?
-	//ISSUE NS is part of this implicitly
-	//solved = Calculate_Simple_Probabilities(); //?? need this one?
-	//return 1 if solved (all cells have 1)
-	//return 0 if ?
-	//return 2 if progress?
-	//note we ask Solve_me to fill in BLANK squares, but fill with probabilities and continue....
-	//logic???
-	//maybe this also checks if all cells have single probability (then it is solved)!!!!!
-	//Call it Calculate_Simple_Probabilities_and_check_solved 
-
+	//start board off by calculating simple starting probabilities for blank cells in entire board
 	//then try to reduce all probabilities to 1 value for each cell     
-
-	Calculate_Simple_Probabilities(); //fill probable values for all empty cells
+Calculate_Simple_Probabilities(); //fill probable values for all empty cells. note this will solve all easy ns at the start also
 	do {
   progress = 0;
 		for (let cell_count = 0; cell_count < 81; cell_count++) {
@@ -427,13 +415,14 @@ function Solve_Me() { //mangles sudoku. so calling routines must accommodate
    if(document.getElementById('HS').checked == true){
     progress = progress + HS(); //hs
    }
-
+ 
 			//np
 			//hp      
 			//ir does probabilities
 			//xwing
 			//ywing
 
+   //remove in production EVERYWHERE after Calculate_Simple_Probabilities. we should never have this condition....
    if(sudoku[bx][by][lx][ly].length == 0){ //if any cell has no probabilities, fail
     return false;
    }
@@ -472,7 +461,8 @@ function NS(bx, by, lx, ly){
     	let value = sudoku[bx][by][lx][ly];
     	let removed = Remove_A_Potential_Value_From_Regions(bx, by, lx, ly, value);
      if(removed){//progress
-      console.log("NS at " + bx + by + lx + ly);
+      //console.log("NS at " + bx + by + lx + ly);
+      count_type.ns++; 
       return 1;
      }
      else{
@@ -512,14 +502,17 @@ function HS() {
 
 function HS_By_Region( region , bx, by, lx, ly){
  let progress = 0;
- if(sudoku[bx][by][lx][ly].length == 0){return false;}
+ if(sudoku[bx][by][lx][ly].length == 0){
+  return false;
+  }
  if(sudoku[bx][by][lx][ly].length > 1){//hs only lloks at 2 or more possible values
  	let region_values = [...sudoku[bx][by][lx][ly]]; //start with our cell
 		region_values.push(...All_Values_From_Region(region , bx, by, lx, ly));
   for(let prob of sudoku[bx][by][lx][ly]){ //see if any of current cell values occurs once in this array
    if(Array_Count_Value(region_values , prob) == 1){ //found a hs
      sudoku[bx][by][lx][ly] = [prob]; //convert to ns. must be array!
-     console.log("HS at " + bx + by + lx + ly);
+     //console.log("HS at " + bx + by + lx + ly);
+     count_type.hs++; 
      progress++;
      break;
     }
@@ -543,7 +536,7 @@ function Solved() { //is sudoku solved?
 	return solved;
 }
 
-function Blank_Cells() { //is sudoku valid
+function Are_There_Blank_Cells() { 
 	for (let cell_count = 0; cell_count < 81; cell_count++) {
 		let next_square = path[cell_count];
 		let bx = next_square[0];
@@ -636,7 +629,9 @@ function All_Values_From_Region(region, bigx, bigy, littlex, littley) { //given 
 					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
 						return accumulate_array; //next loop. return in case we are last cell
 					}
-     if(sudoku[bx][by][lx][ly].length == 0){return false;}
+     if(sudoku[bx][by][lx][ly].length == 0){
+      return false;
+      }
 					//if (sudoku[bx][by][lx][ly].length > 0) { //??? causes ... to fail, an empty cell will be caught at 
 					//accumulate_array.push(...function(){return sudoku[bx][by][lx][ly];});
 					//accumulate_array.push( ...sudoku[bx][by][lx][ly] );
@@ -665,7 +660,7 @@ function SetNextSquare(path) { //recursive routine
 		let chosen = potential_numbers.pop(); //pick a number
 		sudoku[bigx][bigy][littlex][littley] = [chosen]; //set chosen number
 		Remove_A_Potential_Value_From_Regions(bigx, bigy, littlex, littley, chosen); //remove chosen number from potential values in squ,col,row
-		if (Blank_Cells() == true) { //a square ran out of potential numbers
+		if (Are_There_Blank_Cells() == true) { //a square ran out of potential numbers
 			sudoku = JSON.parse(backup_for_possible_fail); //restore board
 			continue; //try another 
 		}
@@ -1236,9 +1231,73 @@ Diff[7] = function() {
 	document.getElementById('XW').checked = true;
 	document.getElementById('YW').checked = true;
 };
+
+//COOKIE CODE starts
+
+var Cookie   = new Object();
+
+Cookie.day   = 86400000;
+Cookie.week  = Cookie.day * 7;
+Cookie.month = Cookie.day * 31;
+Cookie.year  = Cookie.day * 365;
+
+function getCookie(name) {
+  var cookies = document.cookie;
+  var start = cookies.indexOf(name + '=');
+  if (start == -1) return null;
+  var len = start + name.length + 1;
+  var end = cookies.indexOf(';',len);
+  if (end == -1) end = cookies.length;
+  //return unescape(cookies.substring(len,end));
+  return  decodeURIComponent(cookies.substring(len,end));
+}
+
+function setCookie(name, value, expires, path, domain, secure) {
+    value = encodeURIComponent(value);
+  //value = escape(value);
+  expires = (expires) ? ';expires=' + expires.toGMTString() :'';
+  path    = (path)    ? ';path='    + path                  :'';
+  domain  = (domain)  ? ';domain='  + domain                :'';
+  secure  = (secure)  ? ';secure'                           :'';
+
+  document.cookie =
+    name + '=' + value + expires + path + domain + secure;
+}
+
+function deleteCookie(name, path, domain) {
+  var expires = ';expires=Thu, 01-Jan-70 00:00:01 GMT';
+  (path)    ? ';path='    + path                  : '';
+  (domain)  ? ';domain='  + domain                : '';
+
+  if (getCookie(name))
+    document.cookie = name + '=' + expires + path + domain;
+}
+
+function listCookies() {
+    var theCookies = document.cookie.split(';');
+    var anArray = [];
+    for (var i = 0 ; i < theCookies.length; i++) {
+        theCookie = theCookies[i].split('=');
+        anArray[i] =  theCookie[0].trim();
+    }
+return anArray;
+}
+
+function DeleteCookies() {
+    var theCookies = document.cookie.split(';');
+    for (var i = 0 ; i < theCookies.length; i++) {
+        var mycookie = theCookies[i].split('=');
+        var cookiename = mycookie[0];
+        cookiename = cookiename.trim();
+        deleteCookie(cookiename);
+    }
+}
+
+//COOKIE CODE ends
+
 </SCRIPT>
   
- <DIV ID="dialog-waiting"><IMG SRC="./images/flash.gif"></DIV>
+ <DIV ID="dialog-waiting"><IMG SRC="https://emogic.com/sudoku_js/images/flash.gif"></DIV>
     
   <div id="accordion">
 	  <h3>Create / Load Sudoku - click to open/close</h3>
@@ -1492,7 +1551,7 @@ Diff[7] = function() {
 				 </table>
 			 </td>
 
-			 <td><img src="./images/lock.jpg" alt=" Lock / Unlock " width=" 113" height=" 136" border=" 0" onclick="SimulateKey('s');" class=" pad_button_numeric" title=" Lock / Unlock "></td>
+			 <td><img src="https://emogic.com/sudoku_js/images/lock.jpg" alt=" Lock / Unlock " width=" 113" height=" 136" border=" 0" onclick="SimulateKey('s');" class=" pad_button_numeric" title=" Lock / Unlock "></td>
 		 </tr>
 
 		 <tr>
@@ -1661,7 +1720,7 @@ Diff[7] = function() {
 				 </table>
 			 </td>
 
-			 <td><img src="./images/clearcell.jpg" alt=" Clear Cell " title=" Clear Cell " width=" 200" height=" 200" border=" 0" onclick="SimulateKey('c');" class=" pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/sudoku_js/images/clearcell.jpg" alt=" Clear Cell " title=" Clear Cell " width=" 200" height=" 200" border=" 0" onclick="SimulateKey('c');" class=" pad_button_numeric"></td>
 		 </tr>
 
 		 <tr>
@@ -1830,7 +1889,7 @@ Diff[7] = function() {
 				 </table>
 			 </td>
 
-			 <td><img src="./images/clearunlockedcells.jpg" alt="Clear unlocked cells" title="Clear blank cells" id="clear_unlocked_cells" border=" 0" width=" 200" height=" 200" class=" pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/sudoku_js/images/clearunlockedcells.jpg" alt="Clear unlocked cells" title="Clear blank cells" id="clear_unlocked_cells" border=" 0" width=" 200" height=" 200" class=" pad_button_numeric"></td>
 		 </tr>
 	 </table>
   
@@ -1894,17 +1953,17 @@ Diff[7] = function() {
   
 	 <table class="subtable" style="border-top: 1px solid; border-right: 1px solid; border-bottom: 1px solid; border-left: 1px solid"cellpadding="5">
 		 <tr>
-			 <td><img src="./images/help.gif" alt=" How do I play " title=" How do I play" id="how_to_play" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/sudoku_js/images/help.gif" alt=" How do I play " title=" How do I play" id="how_to_play" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
 
-			 <td><img src="./images/check.jpg" alt=" How am I doing " title=" How am I doing " width="200" height="200" border=" 0" onclick="SimulateKey('h');" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/sudoku_js/images/check.jpg" alt=" How am I doing " title=" How am I doing " width="200" height="200" border=" 0" onclick="SimulateKey('h');" class="pad_button_numeric"></td>
 
-			 <td><img src="./images/badchoices.jpg" alt=" Reveal bad choices " title=" Reveal bad choices " width="200" height="200" border=" 0" onclick="SimulateKey('r');" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/sudoku_js/images/badchoices.jpg" alt=" Reveal bad choices " title=" Reveal bad choices " width="200" height="200" border=" 0" onclick="SimulateKey('r');" class="pad_button_numeric"></td>
 
-			 <td><img src="./images/statistics.png" alt=" Puzzle statistics " title=" Puzzle statistics " id="statistics" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/sudoku_js/images/statistics.png" alt=" Puzzle statistics " title=" Puzzle statistics " id="statistics" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
 
-			 <td><img src="./images/solution.jpg" alt=" Puzzle solution " title="Puzzle solution" id="solution" width="200" height="200" border=" 0" onclick="SolutionsDialog();" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/sudoku_js/images/solution.jpg" alt=" Puzzle solution " title="Puzzle solution" id="solution" width="200" height="200" border=" 0" onclick="SolutionsDialog();" class="pad_button_numeric"></td>
 
-			 <td><img src="./images/restart.jpg" id="reset_sudoku" alt=" Restart puzzle " title=" Restart puzzle " width="200" height="200" border=" 0" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/sudoku_js/images/restart.jpg" id="reset_sudoku" alt=" Restart puzzle " title=" Restart puzzle " width="200" height="200" border=" 0" class="pad_button_numeric"></td>
 		 </tr>
 	 </table>
   
