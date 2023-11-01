@@ -7,23 +7,16 @@
 	  CONTENT="Sudoku : Infinite Free Sudoku Puzzle Generator Script to create Sudoku for prining">
 
 	 <TITLE>Sudoku Puzzle Generator by Emogic.com</TITLE>
-  <LINK REL="stylesheet" TYPE="text/css" HREF="./css/sudoku.css">
-   <LINK REL="stylesheet" TYPE="text/css" HREF="./css/ncross.css">
-   
-   <STYLE TYPE="text/css">
- 
-</STYLE>
- 
+  <LINK REL="stylesheet" HREF="./css/sudoku.css">
 	 <LINK REL="stylesheet" HREF="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
    <SCRIPT SRC="./js/sudoku.js"></SCRIPT>  
-   <SCRIPT SRC="./js/ncross.js"></SCRIPT>  
    <SCRIPT SRC="https://code.jquery.com/jquery-3.7.1.min.js"></SCRIPT>
    <SCRIPT SRC="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></SCRIPT>
      </HEAD>
   
-  <body id="body" background="https://emogic.com/sudoku_js/images/sudoku.gif">
+  <body id="body" background="https://emogic.com/mine/sudoku_js/images/sudoku.gif">
    
- <DIV ID="dialog-waiting"><IMG SRC="https://emogic.com/sudoku_js/images/flash.gif"></DIV>
+ <DIV ID="dialog-waiting"><IMG SRC="https://emogic.com/mine/sudoku_js/images/flash.gif"></DIV>
     
   <div id="accordion">
 	  <h3>Create / Load Sudoku - click to open/close</h3>
@@ -279,7 +272,7 @@
 				 </table>
 			 </td>
 
-			 <td><img src="https://emogic.com/sudoku_js/images/lock.jpg" alt=" Lock / Unlock " width=" 113" height=" 136" border=" 0" onclick="SimulateKey('s');" class=" pad_button_numeric" title=" Lock / Unlock "></td>
+			 <td><img src="https://emogic.com/mine/sudoku_js/images/lock.jpg" alt=" Lock / Unlock " width=" 113" height=" 136" border=" 0" onclick="SimulateKey('s');" class=" pad_button_numeric" title=" Lock / Unlock "></td>
 		 </tr>
 
 		 <tr>
@@ -448,7 +441,7 @@
 				 </table>
 			 </td>
 
-			 <td><img src="https://emogic.com/sudoku_js/images/clearcell.jpg" alt=" Clear Cell " title=" Clear Cell " width=" 200" height=" 200" border=" 0" onclick="SimulateKey('c');" class=" pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/mine/sudoku_js/images/clearcell.jpg" alt=" Clear Cell " title=" Clear Cell " width=" 200" height=" 200" border=" 0" onclick="SimulateKey('c');" class=" pad_button_numeric"></td>
 		 </tr>
 
 		 <tr>
@@ -617,7 +610,7 @@
 				 </table>
 			 </td>
 
-			 <td><img src="https://emogic.com/sudoku_js/images/clearunlockedcells.jpg" alt="Clear unlocked cells" title="Clear blank cells" id="clear_unlocked_cells" border=" 0" width=" 200" height=" 200" class=" pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/mine/sudoku_js/images/clearunlockedcells.jpg" alt="Clear unlocked cells" title="Clear blank cells" id="clear_unlocked_cells" border=" 0" width=" 200" height=" 200" class=" pad_button_numeric"></td>
 		 </tr>
 	 </table>
   
@@ -681,17 +674,17 @@
   
 	 <table class="subtable" style="border-top: 1px solid; border-right: 1px solid; border-bottom: 1px solid; border-left: 1px solid"cellpadding="5">
 		 <tr>
-			 <td><img src="https://emogic.com/sudoku_js/images/help.gif" alt=" How do I play " title=" How do I play" id="how_to_play" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/mine/sudoku_js/images/help.gif" alt=" How do I play " title=" How do I play" id="how_to_play" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
 
-			 <td><img src="https://emogic.com/sudoku_js/images/check.jpg" alt=" How am I doing " title=" How am I doing " width="200" height="200" border=" 0" onclick="SimulateKey('h');" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/mine/sudoku_js/images/check.jpg" alt=" How am I doing " title=" How am I doing " width="200" height="200" border=" 0" onclick="SimulateKey('h');" class="pad_button_numeric"></td>
 
-			 <td><img src="https://emogic.com/sudoku_js/images/badchoices.jpg" alt=" Reveal bad choices " title=" Reveal bad choices " width="200" height="200" border=" 0" onclick="SimulateKey('r');" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/mine/sudoku_js/images/badchoices.jpg" alt=" Reveal bad choices " title=" Reveal bad choices " width="200" height="200" border=" 0" onclick="SimulateKey('r');" class="pad_button_numeric"></td>
 
-			 <td><img src="https://emogic.com/sudoku_js/images/statistics.png" alt=" Puzzle statistics " title=" Puzzle statistics " id="statistics" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/mine/sudoku_js/images/statistics.png" alt=" Puzzle statistics " title=" Puzzle statistics " id="statistics" width="200" height="200" border=" 0" class="pad_button_numeric"></td>
 
-			 <td><img src="https://emogic.com/sudoku_js/images/solution.jpg" alt=" Puzzle solution " title="Puzzle solution" id="solution" width="200" height="200" border=" 0" onclick="SolutionsDialog();" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/mine/sudoku_js/images/solution.jpg" alt=" Puzzle solution " title="Puzzle solution" id="solution" width="200" height="200" border=" 0" onclick="SolutionsDialog();" class="pad_button_numeric"></td>
 
-			 <td><img src="https://emogic.com/sudoku_js/images/restart.jpg" id="reset_sudoku" alt=" Restart puzzle " title=" Restart puzzle " width="200" height="200" border=" 0" class="pad_button_numeric"></td>
+			 <td><img src="https://emogic.com/mine/sudoku_js/images/restart.jpg" id="reset_sudoku" alt=" Restart puzzle " title=" Restart puzzle " width="200" height="200" border=" 0" class="pad_button_numeric"></td>
 		 </tr>
 	 </table>
   
