@@ -1,75 +1,4 @@
-var Diff = [];
-Diff[1] = function() {
-	document.getElementById('NS').checked = true;
-	document.getElementById('HS').checked = false;
-	document.getElementById('NP').checked = false;
-	document.getElementById('HP').checked = false;
-	document.getElementById('IR').checked = false;
-	document.getElementById('XW').checked = false;
-	document.getElementById('YW').checked = false;
-};
-
-Diff[2] = function() {
-	document.getElementById('NS').checked = true;
-	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = false;
-	document.getElementById('HP').checked = false;
-	document.getElementById('IR').checked = false;
-	document.getElementById('XW').checked = false;
-	document.getElementById('YW').checked = false;
-};
-
-Diff[3] = function() {
-	document.getElementById('NS').checked = true;
-	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = true;
-	document.getElementById('HP').checked = false;
-	document.getElementById('IR').checked = false;
-	document.getElementById('XW').checked = false;
-	document.getElementById('YW').checked = false;
-};
-
-Diff[4] = function() {
-	document.getElementById('NS').checked = true;
-	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = true;
-	document.getElementById('HP').checked = true;
-	document.getElementById('IR').checked = false;
-	document.getElementById('XW').checked = false;
-	document.getElementById('YW').checked = false;
-};
-
-Diff[5] = function() {
-	document.getElementById('NS').checked = true;
-	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = true;
-	document.getElementById('HP').checked = true;
-	document.getElementById('IR').checked = true;
-	document.getElementById('XW').checked = false;
-	document.getElementById('YW').checked = false;
-};
-
-Diff[6] = function() {
-	document.getElementById('NS').checked = true;
-	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = true;
-	document.getElementById('HP').checked = true;
-	document.getElementById('IR').checked = true;
-	document.getElementById('XW').checked = true;
-	document.getElementById('YW').checked = false;
-};
-
-Diff[7] = function() {
-	document.getElementById('NS').checked = true;
-	document.getElementById('HS').checked = true;
-	document.getElementById('NP').checked = true;
-	document.getElementById('HP').checked = true;
-	document.getElementById('IR').checked = true;
-	document.getElementById('XW').checked = true;
-	document.getElementById('YW').checked = true;
-};
-
-var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [] 1..9
+var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [1..9] 
 var path = [];
 var forever = new Date('October 17, 2050 03:24:00'); // use in cookies
 var count = 0;
@@ -185,9 +114,7 @@ function Main() {
 	document.getElementById("reset_sudoku").onclick = ResetSudoku;
 	document.getElementById("Export_Archive").onclick = Export_Archive;
 	document.getElementById("Import_Archive").onclick = Import_Archive;
-	document.getElementById("difficulty").onchange = Diff;
-
-	Diff[document.getElementById("difficulty").value](); //set difficulty based on default selection
+	document.getElementById("difficulty").onchange = Difficulty;
 
 	//remember last save_slot
 	let slot = getCookie("save_slot");
@@ -301,7 +228,6 @@ function Create_Path() {
 	return path;
 }
 
-
 function Create_Full_Sudoku() {
 	sudoku = DIM([3, 3, 3, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9]); //fill Sudoku board with all possibilities 1..9
 	//start create full Sudoku board
@@ -405,7 +331,7 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 	FillBlankCellsWithPossibleValues(); //fill possible values for all empty cells. note this will solve all easy ns at the start also
 
 	do {
-  progress = 0;
+		progress = 0;
 		for (let cell_count = 0; cell_count < 81; cell_count++) {
 			let next_square = path[cell_count];
 			let bx = next_square[0];
@@ -413,25 +339,27 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 			let lx = next_square[2];
 			let ly = next_square[3];
 
-   //likely only useful on complex levels as FillBlankCellsWithPossibleValues fills in all squares on easy levels
-			if(document.getElementById('NS').checked == true){
-    progress = progress + NS(bx, by, lx, ly); //ns
-   }
-   if(document.getElementById('HS').checked == true){
-    progress = progress + HS(); //hs
-   }
- 
-			//np
+			//only useful on complex levels as FillBlankCellsWithPossibleValues fills in all squares on easy levels
+			if (document.getElementById('NS').checked == true) {
+				progress = progress + NS(bx, by, lx, ly);
+			} //ns
+			if (document.getElementById('HS').checked == true) {
+				progress = progress + HS();
+			} //hs
+			if (document.getElementById('NP').checked == true) {
+				progress = progress + NP();
+			} //np
+
 			//hp      
 			//ir does possibilities
 			//xwing
 			//ywing
 
-   //remove in production EVERYWHERE after FillBlankCellsWithPossibleValues. we should never have this condition....
-   if(sudoku[bx][by][lx][ly].length == 0){ //if any cell has no possibilities, fail
-    return false;
-   }
-   let solved = Solved(); //if all cells have 1 value
+			//remove in production EVERYWHERE after FillBlankCellsWithPossibleValues. we should never have this condition....
+			if (sudoku[bx][by][lx][ly].length == 0) { //if any cell has no possibilities, fail
+				return false;
+			}
+			let solved = Solved(); //if all cells have 1 value
 			if (solved) { //solved if all cells have 1 possibility (ns)
 				return true;
 			} else { //just keep going
@@ -1841,4 +1769,70 @@ function display(id) {
 		divtag.appendChild(tabletag);
 	}
 	//vinman end
+}
+
+function Difficulty() {
+	if (this.value == 1) {
+		document.getElementById('NS').checked = true;
+		document.getElementById('HS').checked = false;
+		document.getElementById('NP').checked = false;
+		document.getElementById('HP').checked = false;
+		document.getElementById('IR').checked = false;
+		document.getElementById('XW').checked = false;
+		document.getElementById('YW').checked = false;
+	}
+	if (this.value == 2) {
+		document.getElementById('NS').checked = true;
+		document.getElementById('HS').checked = true;
+		document.getElementById('NP').checked = false;
+		document.getElementById('HP').checked = false;
+		document.getElementById('IR').checked = false;
+		document.getElementById('XW').checked = false;
+		document.getElementById('YW').checked = false;
+	}
+	if (this.value == 3) {
+		document.getElementById('NS').checked = true;
+		document.getElementById('HS').checked = true;
+		document.getElementById('NP').checked = true;
+		document.getElementById('HP').checked = false;
+		document.getElementById('IR').checked = false;
+		document.getElementById('XW').checked = false;
+		document.getElementById('YW').checked = false;
+	}
+	if (this.value == 4) {
+		document.getElementById('NS').checked = true;
+		document.getElementById('HS').checked = true;
+		document.getElementById('NP').checked = true;
+		document.getElementById('HP').checked = true;
+		document.getElementById('IR').checked = false;
+		document.getElementById('XW').checked = false;
+		document.getElementById('YW').checked = false;
+	}
+	if (this.value == 5) {
+		document.getElementById('NS').checked = true;
+		document.getElementById('HS').checked = true;
+		document.getElementById('NP').checked = true;
+		document.getElementById('HP').checked = true;
+		document.getElementById('IR').checked = true;
+		document.getElementById('XW').checked = false;
+		document.getElementById('YW').checked = false;
+	}
+	if (this.value == 6) {
+		document.getElementById('NS').checked = true;
+		document.getElementById('HS').checked = true;
+		document.getElementById('NP').checked = true;
+		document.getElementById('HP').checked = true;
+		document.getElementById('IR').checked = true;
+		document.getElementById('XW').checked = true;
+		document.getElementById('YW').checked = false;
+	}
+	if (this.value == 7) {
+		document.getElementById('NS').checked = true;
+		document.getElementById('HS').checked = true;
+		document.getElementById('NP').checked = true;
+		document.getElementById('HP').checked = true;
+		document.getElementById('IR').checked = true;
+		document.getElementById('XW').checked = true;
+		document.getElementById('YW').checked = true;
+	}
 }
