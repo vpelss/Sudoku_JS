@@ -77,30 +77,33 @@ return cells;
 }
 
 function RemoveValuesFromCellsInAll3Regions(bigx, bigy, littlex, littley, values) { //remove value from all regions. return true if one was removed
-	let removed = 0;
+	let removed = 0; 
 	let[row_count, col_count, squ_count] = ReturnAllThreeRegionCountsForCell(bigx, bigy, littlex, littley);
 	removed = removed + RemoveValuesFromCellsInRegionAndRegionCount("squ", squ_count, values); //remove from squ
-	result = removed + RemoveValuesFromCellsInRegionAndRegionCount("row", row_count, values); //remove from row
-	result = removed + RemoveValuesFromCellsInRegionAndRegionCount("col", col_count, values); //remove from col
-	if (removed > 0) {
-		return true;
-	} else {
-		return false;
-	}
+	removed = removed + RemoveValuesFromCellsInRegionAndRegionCount("row", row_count, values); //remove from row
+	removed = removed + RemoveValuesFromCellsInRegionAndRegionCount("col", col_count, values); //remove from col
+	return removed;
 }
 
 function RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values) { //remove value from specific region. return number of values removed
 	let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 	let removed = 0;
+	//let removed = - values.length; //we will we removing values in our cell also, so don't count
 	cells.forEach(function(cell) {
 		let[bx, by, lx, ly] = cell;
-		values.forEach(function(value) {
-			if (sudoku[bx][by][lx][ly].includes(value)) { //will we be removing value?
-				sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], [value]); //remove it
-				removed++;
-			}
-		});
+		//values.forEach(function(value) {
+			//if (sudoku[bx][by][lx][ly].includes(value)) { //will we be removing value?
+				//sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], [value]); //remove it
+				let array_start = sudoku[bx][by][lx][ly].join("");
+				sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], values); //remove them
+				let array_end = sudoku[bx][by][lx][ly].join("");
+				if(array_start != array_end){
+				removed++; //FIX
+				};
+			//}
+		//});
 	});
+	if(removed < 0){removed = 0;}
 	return removed;
 }
 
@@ -386,7 +389,7 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 		
 		//region centric searches here
 		if (document.getElementById('NP').checked == true) {
-				//progress = progress + NP();
+			progress = progress + NP();
 		} //np			
 
 	let solved = Solved(); //if all cells have 1 value
@@ -421,10 +424,10 @@ function FillBlankCellsWithPossibleValues() { //calculates possible values for b
 
 function NS(bx, by, lx, ly){
  	if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
-    	let value = sudoku[bx][by][lx][ly];
-    	let removed = RemoveValuesFromCellsInAll3Regions(bx, by, lx, ly, [value]);
-		sudoku[bx][by][lx][ly] = value ; //restore
-     if(removed){//progress
+    	let values = sudoku[bx][by][lx][ly];
+    	let removed = RemoveValuesFromCellsInAll3Regions(bx, by, lx, ly, values);
+		sudoku[bx][by][lx][ly] = values ; //restore
+     if(removed > 1){//progress account for removing in our cell
       count_type.ns++; 
       return 1;
      }
@@ -483,47 +486,41 @@ function HS_By_Region( region , bx, by, lx, ly){
  return progress;
 }
 
-function NP(){
-let progress = 0;
-//for each region
-regions.forEach(function(region){
-	region_counts.forEach(function(region_count){
-		let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
-		
-		let cells =  ReturnCellsForRegionAndRegionCount( region , region_count );
-		cells.forEach(function(cell){
-			let [bx,by,lx,ly] = cell;
-			if(sudoku[bx][by][lx][ly].length == 2){//store cells with two values
-				let value_string = sudoku[bx][by][lx][ly].join();
-				if(typeof two_values_cells[value_string] == "undefined"){
-					two_values_cells[value_string] = [];
+function NP() {
+	let progress = 0;
+	//for each region
+	regions.forEach(function(region) {
+		region_counts.forEach(function(region_count) {
+			let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
+
+			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
+			cells.forEach(function(cell) {
+				let[bx, by, lx, ly] = cell;
+				if (sudoku[bx][by][lx][ly].length == 2) { //store cells with two values
+					let value_string = sudoku[bx][by][lx][ly].join("");
+					if (typeof two_values_cells[value_string] == "undefined") {
+						two_values_cells[value_string] = [];
+					}
+					two_values_cells[value_string].push(cell);
 				}
-				two_values_cells[value_string].push(cell);
-			}
 			});
-		
-		let possible_pairs = Object.keys(two_values_cells);
-		possible_pairs.forEach(function(possible_pair){
-			if(possible_pairs[possible_pair].length == 2){//found NP
-				let values = possible_pair.split("");//get both values
-				
-				//remove from region
-				//progress = progress + rem(region ,region_count , values);
-				
-				//restore pairs to np cells
-				//possible_pairs[possible_pair].forEach(function(cell){
-				//let [bx,by,lx,ly] = cell;
-				//sudoku[bx][by][lx][ly] = values;
-				//});
-				
-			}
-			
+
+			let possible_pairs = Object.keys(two_values_cells);
+			possible_pairs.forEach(function(possible_pair) {
+				if (two_values_cells[possible_pair].length == 2) { //found NP
+					let values = possible_pair.split(""); //get both values
+					//remove from region
+					progress = progress + RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values);
+					//restore pairs to np cells
+					two_values_cells[possible_pair].forEach(function(cell) {
+						let[bx, by, lx, ly] = cell;
+						sudoku[bx][by][lx][ly] = values;
+					});
+				}
 			});
-		
-		
 		});
 	});
-
+	return progress;
 }
 
 function Solved() { //is sudoku solved?
