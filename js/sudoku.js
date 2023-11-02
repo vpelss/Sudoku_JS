@@ -10,6 +10,14 @@ var count_type = {}; // count_type["ns"] = 5
 const regions = ["row","col","squ"];
 const region_counts = ["00" , "01" , "02" , "10" , "11" , "12" , "20" , "21" , "22"]; //will be bxlx for col , byly for row , bxby for squ
 
+function ConvertCellToThreeRegionCounts(bx , by , lx ,ly){
+//returns region_count for [row,col,squ] eg: [02,12,01]
+let row = "" + by + ly;
+let col = "" + bx + lx;
+let squ = "" + bx + by;
+return([row , col , squ]);		
+}
+
 function ReturnCellsIn3RegionsFromBxByLxly( bx , by , lx , ly ){
 	let cells = [];
 	regions.forEach(function(region){
@@ -68,12 +76,91 @@ if(region == "squ"){return "" + bx + by;}
 return false; //failed?
 }
 
-function ReturnThreeRegionCountsForCell(bx , by , lx ,ly){
-//returns region_count for [row,col,squ] eg: [02,12,01]
-let row = "" + by + ly;
-let col = "" + bx + lx;
-let squ = "" + bx + by;
-return([row , col , squ]);		
+function Remove_A_Potential_Value_From_Regions(bigx, bigy, littlex, littley, values) { //remove value from all regions. return true if one was removed
+ let removed = 0;
+	removed = removed + Remove_A_Potential_Value_From_A_Region("squ", bigx, bigy, littlex, littley, values); //remove from squ
+	result = removed + Remove_A_Potential_Value_From_A_Region("row", bigx, bigy, littlex, littley, values); //remove from row
+	result = removed +  Remove_A_Potential_Value_From_A_Region("col", bigx, bigy, littlex, littley, values); //remove from col
+	if(removed > 0){
+  return true;
+ }
+ else{
+  return false;
+ }
+}
+
+function Remove_A_Potential_Value_From_A_Region(region, bigx, bigy, littlex, littley, values) { //remove value from specific region. if one is removed, return number of values removed
+	if (region == "row") {
+		bigxArray = [0, 1, 2];
+		bigyArray = [bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [littley];
+	}
+	if (region == "col") {
+		bigxArray = [bigx];
+		bigyArray = [0, 1, 2];
+		littlexArray = [littlex];
+		littleyArray = [0, 1, 2];
+	}
+	if (region == "squ") {
+		bigxArray = [bigx];
+		bigyArray = [bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [0, 1, 2];
+	}
+	let removed = 0;
+	bigxArray.forEach(function(bx) {
+		bigyArray.forEach(function(by) {
+			littlexArray.forEach(function(lx) {
+				littleyArray.forEach(function(ly) {
+					values.forEach(function(value) {
+						if (sudoku[bx][by][lx][ly].includes(value)) { //will we be removing value?
+							sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], [value]); //remove it
+							removed++;
+						}
+					});
+				});
+			});
+		});
+	});
+	return removed;
+}
+
+function RemoveValuesFromRegionAndRegionCount(region , region_count , values) { //remove value from specific region. if one is removed, return number of values removed
+	if (region == "row") {
+		bigxArray = [0, 1, 2];
+		bigyArray = [bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [littley];
+	}
+	if (region == "col") {
+		bigxArray = [bigx];
+		bigyArray = [0, 1, 2];
+		littlexArray = [littlex];
+		littleyArray = [0, 1, 2];
+	}
+	if (region == "squ") {
+		bigxArray = [bigx];
+		bigyArray = [bigy];
+		littlexArray = [0, 1, 2];
+		littleyArray = [0, 1, 2];
+	}
+	let removed = 0;
+	bigxArray.forEach(function(bx) {
+		bigyArray.forEach(function(by) {
+			littlexArray.forEach(function(lx) {
+				littleyArray.forEach(function(ly) {
+					values.forEach(function(value) {
+						if (sudoku[bx][by][lx][ly].includes(value)) { //will we be removing value?
+							sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], [value]); //remove it
+							removed++;
+						}
+					});
+				});
+			});
+		});
+	});
+	return removed;
 }
 
 window.onload = Main;
@@ -141,8 +228,7 @@ function Load_Sudoku() {
 
 	path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
 	path_temp.forEach(function(cell) {
-		let bx, by, lx, ly, x, y;
-		[bx, by, lx, ly] = cell;
+		let [bx, by, lx, ly] = cell;
 		[x, y] = BL_To_XY(cell);
 		let cellID = "cell_" + x + "_" + y;
 		let solutionID = "solution_" + x + "_" + y;
@@ -185,8 +271,7 @@ function Save_Sudoku() {
 	let save_array = [];
 	path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
 	path_temp.forEach(function(cell) {
-		let bx, by, lx, ly, x, y;
-		[bx, by, lx, ly] = cell;
+		let [bx, by, lx, ly] = cell;
 		[x, y] = BL_To_XY(cell);
 		let cellID = "cell_" + x + "_" + y;
 		let solutionID = "solution_" + x + "_" + y;
@@ -237,9 +322,8 @@ function Create_Full_Sudoku() {
 	//place selections on board
 	path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
 	path_temp.forEach(function(cell) {
-		let bx, by, lx, ly, x, y;
-		[bx, by, lx, ly] = cell;
-		[x, y] = BL_To_XY(cell);
+		let [bx, by, lx, ly] = cell;
+		let [x, y] = BL_To_XY(cell);
 		let cellID = "cell_" + x + "_" + y;
 		let solutionID = "solution_" + x + "_" + y;
 		let value = sudoku[bx][by][lx][ly][0];
@@ -339,6 +423,8 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 			let lx = next_square[2];
 			let ly = next_square[3];
 
+			//cell centric searches go here
+			
 			//only useful on complex levels as FillBlankCellsWithPossibleValues fills in all squares on easy levels
 			if (document.getElementById('NS').checked == true) {
 				progress = progress + NS(bx, by, lx, ly);
@@ -346,25 +432,28 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 			if (document.getElementById('HS').checked == true) {
 				progress = progress + HS();
 			} //hs
-			if (document.getElementById('NP').checked == true) {
-				progress = progress + NP();
-			} //np
-
+	
 			//hp      
 			//ir does possibilities
 			//xwing
 			//ywing
-
-			//remove in production EVERYWHERE after FillBlankCellsWithPossibleValues. we should never have this condition....
+			
 			if (sudoku[bx][by][lx][ly].length == 0) { //if any cell has no possibilities, fail
 				return false;
 			}
-			let solved = Solved(); //if all cells have 1 value
-			if (solved) { //solved if all cells have 1 possibility (ns)
+		}//all 81 cell for loop
+		
+		//region centric searches here
+		if (document.getElementById('NP').checked == true) {
+				//progress = progress + NP();
+		} //np			
+
+	let solved = Solved(); //if all cells have 1 value
+	if (solved) { //solved if all cells have 1 possibility (ns)
 				return true;
-			} else { //just keep going
-			}
-		}
+	} else { //just keep going
+			}		
+		
 	} while (progress > 0); //true if we made any progress
 	//no more progress and we never solved it
 	//sudoku = JSON.parse(backup_sudoku_array); //restore board 
@@ -373,16 +462,14 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 
 function FillBlankCellsWithPossibleValues() { //calculates possible values for blank cells.
 	path.forEach(function(cell_path){
-		let bx, by, lx, ly;
-		[bx, by, lx, ly] = cell_path;
+		let [bx, by, lx, ly] = cell_path;
 		let solved_numbers = [];
 		if (sudoku[bx][by][lx][ly].length == 0) {
 			let cells = ReturnCellsIn3RegionsFromBxByLxly(bx, by, lx, ly);
 			cells.forEach(function(cell) {
-				let bx2, by2, lx2, ly2;
-				[bx2, by2, lx2, ly2] = cell;
-				if (sudoku[bx2][by2][lx2][ly2].length == 1) {
-					solved_numbers.push(sudoku[bx2][by2][lx2][ly2][0]);
+				let [bx, by, lx, ly] = cell;
+				if (sudoku[bx][by][lx][ly].length == 1) {
+					solved_numbers.push(sudoku[bx][by][lx][ly][0]);
 				}
 			});
 			let possible_numbers = Array_Difference([1, 2, 3, 4, 5, 6, 7, 8, 9], solved_numbers); //difference of that list
@@ -394,9 +481,9 @@ function FillBlankCellsWithPossibleValues() { //calculates possible values for b
 function NS(bx, by, lx, ly){
  	if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
     	let value = sudoku[bx][by][lx][ly];
-    	let removed = Remove_A_Potential_Value_From_Regions(bx, by, lx, ly, value);
+    	let removed = Remove_A_Potential_Value_From_Regions(bx, by, lx, ly, [value]);
+		sudoku[bx][by][lx][ly] = value ; //restore
      if(removed){//progress
-      //console.log("NS at " + bx + by + lx + ly);
       count_type.ns++; 
       return 1;
      }
@@ -456,7 +543,46 @@ function HS_By_Region( region , bx, by, lx, ly){
 }
 
 function NP(){
-	
+let progress = 0;
+//for each region
+regions.forEach(function(region){
+	region_counts.forEach(function(region_count){
+		let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
+		
+		let cells =  ReturnCellsFromRegionAndRegionCount( region , region_count );
+		cells.forEach(function(cell){
+			let [bx,by,lx,ly] = cell;
+			if(sudoku[bx][by][lx][ly].length == 2){//store cells with two values
+				let value_string = sudoku[bx][by][lx][ly].join();
+				if(typeof two_values_cells[value_string] == "undefined"){
+					two_values_cells[value_string] = [];
+				}
+				two_values_cells[value_string].push(cell);
+			}
+			});
+		
+		let possible_pairs = Object.keys(two_values_cells);
+		possible_pairs.forEach(function(possible_pair){
+			if(possible_pairs[possible_pair].length == 2){//found NP
+				let values = possible_pair.split("");//get both values
+				
+				//remove from region
+				//progress = progress + rem(region ,region_count , values);
+				
+				//restore pairs to np cells
+				//possible_pairs[possible_pair].forEach(function(cell){
+				//let [bx,by,lx,ly] = cell;
+				//sudoku[bx][by][lx][ly] = values;
+				//});
+				
+			}
+			
+			});
+		
+		
+		});
+	});
+
 }
 
 function Solved() { //is sudoku solved?
@@ -615,8 +741,8 @@ function SetCellsRecursive(path) { //recursive routine
 	potential_numbers = Array_Shuffle(potential_numbers); //shuffle
 	while (potential_numbers.length > 0) { //if we still have potential numbers in this square try another one 
 		let chosen = potential_numbers.pop(); //pick a number
+		Remove_A_Potential_Value_From_Regions(bigx, bigy, littlex, littley, [chosen]); //remove chosen number from potential values in squ,col,row
 		sudoku[bigx][bigy][littlex][littley] = [chosen]; //set chosen number
-		Remove_A_Potential_Value_From_Regions(bigx, bigy, littlex, littley, chosen); //remove chosen number from potential values in squ,col,row
 		if (Are_There_Blank_Cells() == true) { //a square ran out of potential numbers
 			sudoku = JSON.parse(backup_for_possible_fail); //restore board
 			continue; //try another 
@@ -632,57 +758,6 @@ function SetCellsRecursive(path) { //recursive routine
 	//all potential numbers failed on this cell. return false. recurse back
 	path.unshift(next_square); //must unshift if we want to come back here. and we do.
 	return false;
-}
-
-function Remove_A_Potential_Value_From_Regions(bigx, bigy, littlex, littley, value) { //remove value from all regions. return true if one was removed
- let removed = 0;
-	removed = removed + Remove_A_Potential_Value_From_A_Region("squ", bigx, bigy, littlex, littley, value); //remove from squ
-	result = removed + Remove_A_Potential_Value_From_A_Region("row", bigx, bigy, littlex, littley, value); //remove from row
-	result = removed +  Remove_A_Potential_Value_From_A_Region("col", bigx, bigy, littlex, littley, value); //remove from col
-	if(removed > 0){
-  return true;
- }
- else{
-  return false;
- }
-}
-
-function Remove_A_Potential_Value_From_A_Region(region, bigx, bigy, littlex, littley, value) {//remove value from specific region. if one is removed, return number of values removed
-	if (region == "row") {
-		bigxArray = [0, 1, 2];
-		bigyArray = [bigy];
-		littlexArray = [0, 1, 2];
-		littleyArray = [littley];
-	}
-	if (region == "col") {
-		bigxArray = [bigx];
-		bigyArray = [0, 1, 2];
-		littlexArray = [littlex];
-		littleyArray = [0, 1, 2];
-	}
-	if (region == "squ") {
-		bigxArray = [bigx];
-		bigyArray = [bigy];
-		littlexArray = [0, 1, 2];
-		littleyArray = [0, 1, 2];
-	}
-	let removed = 0;
-	bigxArray.forEach(function(bx) {
-		bigyArray.forEach(function(by) {
-			littlexArray.forEach(function(lx) {
-				littleyArray.forEach(function(ly) {
-					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
-						return removed; //return this in case we are at last cell
-					} //skip our cell
-     if( sudoku[bx][by][lx][ly].includes(value) ){//will we be removing value?
-      sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], [value]);//remove it
-      removed++;
-     }
-				});
-			});
-		});
-	});
-	return removed;
 }
 
 function getRandomInt(max) {
