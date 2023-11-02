@@ -360,6 +360,19 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 
 	do {
 		progress = 0;
+		
+		//MAYBE MAIN LOOP =
+		//regions.forEach(function(region) {
+			//region_counts.forEach(function(region_count) {
+				// values =
+				//ns
+				// values =
+				//hs
+				// values =
+				//np
+				//hp
+				//...
+		
 		for (let cell_count = 0; cell_count < 81; cell_count++) {
 			let next_square = path[cell_count];
 			let bx = next_square[0];
@@ -389,7 +402,7 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 		
 		//region centric searches here
 		if (document.getElementById('NP').checked == true) {
-			progress = progress + NP();
+			//progress = progress + NP();
 		} //np			
 
 	let solved = Solved(); //if all cells have 1 value
@@ -440,7 +453,62 @@ function NS(bx, by, lx, ly){
     }
 }
 
+//ns
+//hs?
+//np
+//hp?
+//ip?
+//xw?
+//yw?
+//maybe not worth it
+function ValuesOfCellsForRegionAndRegionCount(region, region_count) {
+	let values_of_cells_as_keys_and_locations_as_arrays = {};
+	regions.forEach(function(region) {
+		let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
+		cells.forEach(function(cell) { //count values
+			let[bx, by, lx, ly] = cell;
+			let values_string = sudoku[bx][by][lx][ly].join("");
+			//sudoku[bx][by][lx][ly].forEach(function(value){
+			values_of_cells_as_keys_and_locations_as_arrays[values_string] = cell;
+		});
+	});
+	return values_of_cells_as_keys_and_locations_as_arrays; //return values["45"] = [cell1,cell2]
+}
+
 function HS() {
+	//for each cell, get all possibilities including current cell for each region.
+	//if a a value in this cell has only one value (no doubles, etc) in a region, it is a hs. convert it to ns
+	let progress = 0;
+	//build: single_values_associative[single_value] = [cell1 , cell2]
+	regions.forEach(function(region) {
+		region_counts.forEach(function(region_count) {
+			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
+			let single_values_associative = {};
+			cells.forEach(function([bx, by, lx, ly]) { //count values
+				sudoku[bx][by][lx][ly].forEach(function(value) {
+					if(typeof single_values_associative[value] == "undefined"){
+						single_values_associative[value] = [];
+					}
+					single_values_associative[value].push([bx, by, lx, ly]);
+				}); //count single values
+			}); //cells
+			//search for NS
+			let single_values = Object.keys(single_values_associative);
+			single_values.forEach(function(single_value) {	
+				if (single_values_associative[single_value].length == 1) {
+					let[bx, by, lx, ly] = single_values_associative[single_value][0];
+					if(sudoku[bx][by][lx][ly].length > 1){//it is only a HS if it is hidden : found HS
+						sudoku[bx][by][lx][ly] = [single_value];
+						progress++;
+					}
+				}				
+			});
+		}); //regoin_counts
+	}); //regions
+	return progress;
+}
+
+function HS2() {
 	//for each cell, get all possibilities including current cell for each region.
 	//if a a value in this cell has only one value (no doubles, etc) in a region, it is a hs. convert it to ns
 	let progress = 0;
@@ -469,7 +537,7 @@ function HS() {
 function HS_By_Region( region , bx, by, lx, ly){
  let progress = 0;
  if(sudoku[bx][by][lx][ly].length == 0){
-  return false;
+  Error("Blank cell. How?");
   }
  if(sudoku[bx][by][lx][ly].length > 1){//hs only looks at 2 or more possible values
  	let region_values = [...sudoku[bx][by][lx][ly]]; //start with our cell
