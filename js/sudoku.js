@@ -9,6 +9,7 @@ var count_type = {}; // count_type["ns"] = 5
 
 const regions = ["row","col","squ"];
 const region_counts = ["00" , "01" , "02" , "10" , "11" , "12" , "20" , "21" , "22"]; //will be bxlx for col , byly for row , bxby for squ
+const one_to_nine = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 function ReturnAllThreeRegionCountsForCell(bx , by , lx ,ly){
 //returns region_count for [row,col,squ] eg: [02,12,01]
@@ -99,7 +100,7 @@ function RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, value
 				let array_end = sudoku[bx][by][lx][ly].join("");
 				if(array_start != array_end){
 				removed++; //FIX
-				};
+				}
 			//}
 		//});
 	});
@@ -156,9 +157,6 @@ function Main() {
 	Load_Sudoku(); //previous save
 }
 
-
-
-
 function Load_Sudoku() {
 	let slot = document.getElementById("save_slot").value;
 	setCookie("save_slot", slot, forever, '', '', ''); //we may have changed it
@@ -172,7 +170,6 @@ function Load_Sudoku() {
 
 	path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
 	path_temp.forEach(function(cell) {
-		let [bx, by, lx, ly] = cell;
 		[x, y] = BL_To_XY(cell);
 		let cellID = "cell_" + x + "_" + y;
 		let solutionID = "solution_" + x + "_" + y;
@@ -215,7 +212,6 @@ function Save_Sudoku() {
 	let save_array = [];
 	path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
 	path_temp.forEach(function(cell) {
-		let [bx, by, lx, ly] = cell;
 		[x, y] = BL_To_XY(cell);
 		let cellID = "cell_" + x + "_" + y;
 		let solutionID = "solution_" + x + "_" + y;
@@ -258,7 +254,8 @@ function Create_Path() {
 }
 
 function Create_Full_Sudoku() {
-	sudoku = DIM([3, 3, 3, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9]); //fill Sudoku board with all possibilities 1..9
+	//sudoku = DIM([3, 3, 3, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9]); //fill Sudoku board with all possibilities 1..9
+	sudoku = DIM([3, 3, 3, 3], one_to_nine); //fill Sudoku board with all possibilities "1".."9" : string values so array_diff routine does not fail
 	//start create full Sudoku board
 	let path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
 	SetCellsRecursive(path_temp); //clears path
@@ -373,6 +370,8 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 				//hp
 				//...
 		
+		
+		//maybe no main loop as ns,hs, etc have their own...
 		for (let cell_count = 0; cell_count < 81; cell_count++) {
 			let next_square = path[cell_count];
 			let bx = next_square[0];
@@ -386,9 +385,7 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 			if (document.getElementById('NS').checked == true) {
 				progress = progress + NS(bx, by, lx, ly);
 			} //ns
-			if (document.getElementById('HS').checked == true) {
-				progress = progress + HS();
-			} //hs
+			
 	
 			//hp      
 			//ir does possibilities
@@ -401,8 +398,12 @@ function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
 		}//all 81 cell for loop
 		
 		//region centric searches here
+		if (document.getElementById('HS').checked == true) {
+				progress = progress + HS();
+			} //hs
+		
 		if (document.getElementById('NP').checked == true) {
-			//progress = progress + NP();
+			progress = progress + NP();
 		} //np			
 
 	let solved = Solved(); //if all cells have 1 value
@@ -429,13 +430,17 @@ function FillBlankCellsWithPossibleValues() { //calculates possible values for b
 					solved_numbers.push(sudoku[bx][by][lx][ly][0]);
 				}
 			});
-			let possible_numbers = Array_Difference([1, 2, 3, 4, 5, 6, 7, 8, 9], solved_numbers); //difference of that list
+			let possible_numbers = Array_Difference(one_to_nine , solved_numbers); //difference of that list
 			sudoku[bx][by][lx][ly] = possible_numbers; //used by hs,mp,hp,ir,xw,yw...
 		}
 		});		
 }
 
 function NS(bx, by, lx, ly){
+
+	//region = "row";
+		//region_counts.forEach(function(region_count) {
+			
  	if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
     	let values = sudoku[bx][by][lx][ly];
     	let removed = RemoveValuesFromCellsInAll3Regions(bx, by, lx, ly, values);
@@ -508,52 +513,6 @@ function HS() {
 	return progress;
 }
 
-function HS2() {
-	//for each cell, get all possibilities including current cell for each region.
-	//if a a value in this cell has only one value (no doubles, etc) in a region, it is a hs. convert it to ns
-	let progress = 0;
-	for (let cell_count = 0; cell_count < 81; cell_count++) {
-		let next_square = path[cell_count];
-		let bx = next_square[0];
-		let by = next_square[1];
-		let lx = next_square[2];
-		let ly = next_square[3];
-
-  if (sudoku[bx][by][lx][ly].length == 0) {
-			Error("Blank cell. How?");
-		}
-  
-  progress = progress + HS_By_Region( "row" , bx, by, lx, ly);
-  if(progress == 0){
-   progress = progress + HS_By_Region( "col" , bx, by, lx, ly);
-  }
-  if(progress == 0){
-  progress = progress + HS_By_Region( "squ" , bx, by, lx, ly);
-  }
-	}
-	return progress;
-}
-
-function HS_By_Region( region , bx, by, lx, ly){
- let progress = 0;
- if(sudoku[bx][by][lx][ly].length == 0){
-  Error("Blank cell. How?");
-  }
- if(sudoku[bx][by][lx][ly].length > 1){//hs only looks at 2 or more possible values
- 	let region_values = [...sudoku[bx][by][lx][ly]]; //start with our cell
-		region_values.push(...All_Values_From_Region(region , bx, by, lx, ly));
-  for(let prob of sudoku[bx][by][lx][ly]){ //see if any of current cell values occurs once in this array
-   if(Array_Count_Value(region_values , prob) == 1){ //found a hs
-     sudoku[bx][by][lx][ly] = [prob]; //convert to ns. must be array!
-     count_type.hs++; 
-     progress++;
-     break;
-    }
-  }
- }
- return progress;
-}
-
 function NP() {
 	let progress = 0;
 	//for each region
@@ -618,119 +577,6 @@ function Are_There_Blank_Cells() {
    }
 	}
 	return false;
-}
-
-function Return_Region_Cell_Locations(region , bx, by, lx, ly){
-	let location_array = [];
-	if (region == "row") {
-		bigxArray = [0, 1, 2];
-		bigyArray = [bigy];
-		littlexArray = [0, 1, 2];
-		littleyArray = [littley];
-	}
-	if (region == "col") {
-		bigxArray = [bigx];
-		bigyArray = [0, 1, 2];
-		littlexArray = [littlex];
-		littleyArray = [0, 1, 2];
-	}
-	if (region == "squ") {
-		bigxArray = [bigx];
-		bigyArray = [bigy];
-		littlexArray = [0, 1, 2];
-		littleyArray = [0, 1, 2];
-	}
-	bigxArray.forEach(function(bx) {
-		bigyArray.forEach(function(by) {
-			littlexArray.forEach(function(lx) {
-				littleyArray.forEach(function(ly) { //skip our cell
-					//if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
-						//return accumulate_array; //next loop. also return in case we are in last cell
-					//}
-					location_array = location_array.push([bx, by, lx, ly]);
-				});
-			});
-		});
-	});
-	return location_array; 
-}
-
-	//simple
-	//return all values in all cells for a region, including ours.
-	//OR
-	//poss[#][values] = [1..9]
-	//poss[#][string] = "1246"
-	//poss[#][bx] = bx
-	//poss[#][by] = by
-	//poss[#][lx] = bx
-	//poss[#][ly] = by
-	//poss[#][all values minus cell] = [1..9]
-	//poss[#][all values duplicates removed] = [1..9]
-	//poss[#][] =
-	//maybe return counts???
-function Return_All_Region_Possibilities( region , bx, by, lx, ly){
-	let region_array = [];
-
-	region_array = Return_All_Region_Possibilities_Minus_Our_Cell( region , bx, by, lx, ly)
-	
-	//do we need to know cells , order?
- 
-return region_array;
-}
-
-function Return_All_Region_Possibilities_Minus_Our_Cell( region , bx, by, lx, ly){
-	
-}
-
-/*
-function All_Values_From_Regions(region, bigx, bigy, littlex, littley) { //given region and cell: return all values
-	let accumulate_array = [];
- accumulate_array.push( All_Values_From_Region('squ', bigx, bigy, littlex, littley) );
- accumulate_array.push( All_Values_From_Region('row', bigx, bigy, littlex, littley) );
- accumulate_array.push( All_Values_From_Region('col', bigx, bigy, littlex, littley) );
-	return accumulate_array; 	//keep! duplicates
-}
-*/
-function All_Values_From_Region(region, bigx, bigy, littlex, littley) { //given region and cell: return all values
-	let accumulate_array = [];
-	if (region == "row") {
-		bigxArray = [0, 1, 2];
-		bigyArray = [bigy];
-		littlexArray = [0, 1, 2];
-		littleyArray = [littley];
-	}
-	if (region == "col") {
-		bigxArray = [bigx];
-		bigyArray = [0, 1, 2];
-		littlexArray = [littlex];
-		littleyArray = [0, 1, 2];
-	}
-	if (region == "squ") {
-		bigxArray = [bigx];
-		bigyArray = [bigy];
-		littlexArray = [0, 1, 2];
-		littleyArray = [0, 1, 2];
-	}
-	bigxArray.forEach(function(bx) {
-		bigyArray.forEach(function(by) {
-			littlexArray.forEach(function(lx) {
-				littleyArray.forEach(function(ly) { //skip our cell
-					if (bigx == bx && bigy == by && littlex == lx && littley == ly) {
-						return accumulate_array; //next loop. also return in case we are in last cell
-					}
-					if (sudoku[bx][by][lx][ly].length == 0) {
-						return false;
-					}
-					//if (sudoku[bx][by][lx][ly].length > 0) { //??? causes ... to fail, an empty cell will be caught at 
-					//accumulate_array.push(...function(){return sudoku[bx][by][lx][ly];});
-					//accumulate_array.push( ...sudoku[bx][by][lx][ly] );
-					accumulate_array = [...accumulate_array, ...sudoku[bx][by][lx][ly]];
-					//}
-				});
-			});
-		});
-	});
-	return accumulate_array; //keep duplicates
 }
 
 function SetCellsRecursive(path) { //recursive routine
@@ -812,6 +658,9 @@ function Array_Difference(array1, array2) { //array with all items is array1. ar
 	let difference = array1.filter(function(element){
 		return !array2.includes(element);
 	});
+	
+	// do routine with == to avoid string / # comp issues?
+	
 	return difference;
 }
 
