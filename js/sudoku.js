@@ -1,3 +1,5 @@
+//use potential not potential or probable 
+
 var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [1..9] 
 var path = [];
 var forever = new Date('October 17, 2050 03:24:00'); // use in cookies
@@ -318,14 +320,14 @@ function RemoveCells() {
 	let try_time = document.getElementById("TimeToTry").value;
 	let finished = time + (1000 * try_time); //5 sec max
 	//let one_value;
-	let possible_sudoku;
+	let potential_sudoku;
 	let blank_cells = 0;
 
 	while ((d.getTime() < finished) && (blank_cells < document.getElementById("number_of_blank_squares").value)) {
 		//save array status
 		let backup_sudoku_array = JSON.stringify(sudoku);
 
-		//random choose a cell that has one possible value
+		//random choose a cell that has one potential value
 		let bx, by, lx, ly;
 		do {
 			bx = getRandomInt(3);
@@ -336,11 +338,11 @@ function RemoveCells() {
 
 		sudoku[bx][by][lx][ly] = []; //remove value
 
-		possible_sudoku = JSON.stringify(sudoku);
+		potential_sudoku = JSON.stringify(sudoku);
   count_type = {"ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xy":0 , "yw":0 }; //start new count. this might be final run
 		//try to solve sudoku array. Solve me mangles global sudoku array so we will need to restore it
 		if (SolveSudoku()) { //success : save 
-			sudoku = JSON.parse(possible_sudoku); //save board
+			sudoku = JSON.parse(potential_sudoku); //save board
 			blank_cells++;
 		} else { //fail : restore
 			sudoku = JSON.parse(backup_sudoku_array); //restore previous board
@@ -353,7 +355,7 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 	let progress = 0; // > 0 if we made any progress
 	//start board off by calculating simple starting possibilities for blank cells in entire board
 	//then try to reduce all possibilities to 1 value for each cell using ns,hs,np... 
-	FillBlankCellsWithPossibleValues(); //fill possible values for all empty cells. note this will solve all easy ns at the start also
+	FillBlankCellsWithpotentialValues(); //fill potential values for all empty cells. note this will solve all easy ns at the start also
 
 	do {
 		progress = 0;
@@ -365,7 +367,7 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 		// values =
 		//hs
 
-		//only useful on complex levels as FillBlankCellsWithPossibleValues fills in all squares on easy levels
+		//only useful on complex levels as FillBlankCellsWithpotentialValues fills in all squares on easy levels
 		if (document.getElementById('NS').checked == true) {
 			//progress = progress + NS(bx, by, lx, ly);
 			progress = progress + NS();
@@ -384,13 +386,12 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 		let solved = Solved(); //if all cells have 1 value
 		if (solved) { //solved if all cells have 1 possibility (ns)
 			return true;
-		} else { //just keep going
-		}
+		} else {} //just keep going
 	} while (progress > 0); //true if we made any progress
 	return false; //we made no progress and we never solved it
 }
 
-function FillBlankCellsWithPossibleValues() { //calculates possible values for blank cells.
+function FillBlankCellsWithpotentialValues() { //calculates potential values for blank cells.
 	path.forEach(function(cell_path){
 		let [bx, by, lx, ly] = cell_path;
 		let solved_numbers = [];
@@ -402,8 +403,8 @@ function FillBlankCellsWithPossibleValues() { //calculates possible values for b
 					solved_numbers.push(sudoku[bx][by][lx][ly][0]);
 				}
 			});
-			let possible_numbers = Array_Difference(one_to_nine , solved_numbers); //difference of that list
-			sudoku[bx][by][lx][ly] = possible_numbers; //used by hs,mp,hp,ir,xw,yw...
+			let potential_numbers = Array_Difference(one_to_nine , solved_numbers); //difference of that list
+			sudoku[bx][by][lx][ly] = potential_numbers; //used by hs,mp,hp,ir,xw,yw...
 		}
 		});		
 }
@@ -522,14 +523,14 @@ function NP() {
 				}
 			});
 
-			let possible_pairs = Object.keys(two_values_cells);
-			possible_pairs.forEach(function(possible_pair) {
-				if (two_values_cells[possible_pair].length == 2) { //found NP
-					let values = possible_pair.split(""); //get both values
+			let potential_pairs = Object.keys(two_values_cells);
+			potential_pairs.forEach(function(potential_pair) {
+				if (two_values_cells[potential_pair].length == 2) { //found NP
+					let values = potential_pair.split(""); //get both values
 					//remove from region
 					progress = progress + RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values);
 					//restore pairs to np cells
-					two_values_cells[possible_pair].forEach(function(cell) {
+					two_values_cells[potential_pair].forEach(function(cell) {
 						let[bx, by, lx, ly] = cell;
 						sudoku[bx][by][lx][ly] = values;
 						progress--;
@@ -574,7 +575,7 @@ function SetCellsRecursive(path) { //recursive routine
 	if (path.length == 0) {
 		return true;
 	} //made it to the end. done. trigger our journey back
-	let backup_for_possible_fail = JSON.stringify(sudoku);
+	let backup_for_potential_fail = JSON.stringify(sudoku);
 	let next_square = path.shift();
 	let bigx = next_square[0];
 	let bigy = next_square[1];
@@ -587,13 +588,13 @@ function SetCellsRecursive(path) { //recursive routine
 		RemoveValuesFromCellsInAll3Regions(bigx, bigy, littlex, littley, [chosen]); //remove chosen number from potential values in squ,col,row
 		sudoku[bigx][bigy][littlex][littley] = [chosen]; //set chosen number
 		if (Are_There_Blank_Cells() == true) { //a square ran out of potential numbers
-			sudoku = JSON.parse(backup_for_possible_fail); //restore board
+			sudoku = JSON.parse(backup_for_potential_fail); //restore board
 			continue; //try another 
 		}
 		//success. lets try the next cell in the path 
 		result = SetCellsRecursive(path);
 		if (result == false) { //our recursive attempt failed. restore board and try another potential value from this cell
-			sudoku = JSON.parse(backup_for_possible_fail); //restore board
+			sudoku = JSON.parse(backup_for_potential_fail); //restore board
 		} else {
 			return true; //making our way back home
 		}
