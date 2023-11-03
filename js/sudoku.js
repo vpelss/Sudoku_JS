@@ -349,73 +349,45 @@ function RemoveCells() {
 	} //end while
 }
 
-function SolveSudoku() { //mangles sudoku. so calling routines must accommodate
+function SolveSudoku() { // changes/mangles sudoku. so calling routines must accommodate
 	let progress = 0; // > 0 if we made any progress
 	//start board off by calculating simple starting possibilities for blank cells in entire board
-	//then try to reduce all possibilities to 1 value for each cell     
+	//then try to reduce all possibilities to 1 value for each cell using ns,hs,np... 
 	FillBlankCellsWithPossibleValues(); //fill possible values for all empty cells. note this will solve all easy ns at the start also
 
 	do {
 		progress = 0;
-		
-		//MAYBE MAIN LOOP =
+		//MAYBE create MAIN LOOP =
 		//regions.forEach(function(region) {
-			//region_counts.forEach(function(region_count) {
-				// values =
-				//ns
-				// values =
-				//hs
-				// values =
-				//np
-				//hp
-				//...
-		
-		
-		//maybe no main loop as ns,hs, etc have their own...
-		for (let cell_count = 0; cell_count < 81; cell_count++) {
-			let next_square = path[cell_count];
-			let bx = next_square[0];
-			let by = next_square[1];
-			let lx = next_square[2];
-			let ly = next_square[3];
+		//region_counts.forEach(function(region_count) {
+		// values =
+		//ns
+		// values =
+		//hs
 
-			//cell centric searches go here
-			
-			//only useful on complex levels as FillBlankCellsWithPossibleValues fills in all squares on easy levels
-			if (document.getElementById('NS').checked == true) {
-				progress = progress + NS(bx, by, lx, ly);
-			} //ns
-			
-	
-			//hp      
-			//ir does possibilities
-			//xwing
-			//ywing
-			
-			if (sudoku[bx][by][lx][ly].length == 0) { //if any cell has no possibilities, fail
-				return false;
-			}
-		}//all 81 cell for loop
-		
-		//region centric searches here
+		//only useful on complex levels as FillBlankCellsWithPossibleValues fills in all squares on easy levels
+		if (document.getElementById('NS').checked == true) {
+			//progress = progress + NS(bx, by, lx, ly);
+			progress = progress + NS();
+		} //ns
+
 		if (document.getElementById('HS').checked == true) {
-				progress = progress + HS();
-			} //hs
-		
+			progress = progress + HS();
+		} //hs
 		if (document.getElementById('NP').checked == true) {
 			progress = progress + NP();
 		} //np			
-
-	let solved = Solved(); //if all cells have 1 value
-	if (solved) { //solved if all cells have 1 possibility (ns)
-				return true;
-	} else { //just keep going
-			}		
-		
+		//hp      
+		//ir does possibilities
+		//xwing
+		//ywing
+		let solved = Solved(); //if all cells have 1 value
+		if (solved) { //solved if all cells have 1 possibility (ns)
+			return true;
+		} else { //just keep going
+		}
 	} while (progress > 0); //true if we made any progress
-	//no more progress and we never solved it
-	//sudoku = JSON.parse(backup_sudoku_array); //restore board 
-	return false;
+	return false; //we made no progress and we never solved it
 }
 
 function FillBlankCellsWithPossibleValues() { //calculates possible values for blank cells.
@@ -434,28 +406,6 @@ function FillBlankCellsWithPossibleValues() { //calculates possible values for b
 			sudoku[bx][by][lx][ly] = possible_numbers; //used by hs,mp,hp,ir,xw,yw...
 		}
 		});		
-}
-
-function NS(bx, by, lx, ly){
-
-	//region = "row";
-		//region_counts.forEach(function(region_count) {
-			
- 	if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
-    	let values = sudoku[bx][by][lx][ly];
-    	let removed = RemoveValuesFromCellsInAll3Regions(bx, by, lx, ly, values);
-		sudoku[bx][by][lx][ly] = values ; //restore
-     if(removed > 1){//progress account for removing in our cell
-      count_type.ns++; 
-      return 1;
-     }
-     else{
-      return 0;
-     }
-    }
-    else{ // no progress
-     return 0;
-    }
 }
 
 //ns
@@ -478,6 +428,46 @@ function ValuesOfCellsForRegionAndRegionCount(region, region_count) {
 		});
 	});
 	return values_of_cells_as_keys_and_locations_as_arrays; //return values["45"] = [cell1,cell2]
+}
+
+function NS() {
+	let progress = 0;
+	let region = "row";
+	region_counts.forEach(function(region_count) {
+		let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
+		//let single_values_associative = {};
+		cells.forEach(function([bx, by, lx, ly]) { //count values
+
+			if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
+				let values = sudoku[bx][by][lx][ly];
+				let removed = RemoveValuesFromCellsInAll3Regions(bx, by, lx, ly, values);
+				sudoku[bx][by][lx][ly] = values; //restore
+				if (removed > 1) { //progress account for removing in our cell
+					count_type.ns++;
+					progress++;
+				}
+			}
+		});
+	});
+	return progress;
+}
+
+function NS_old(bx, by, lx, ly){	
+ 	if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
+    	let values = sudoku[bx][by][lx][ly];
+    	let removed = RemoveValuesFromCellsInAll3Regions(bx, by, lx, ly, values);
+		sudoku[bx][by][lx][ly] = values ; //restore
+     if(removed > 1){//progress account for removing in our cell
+      count_type.ns++; 
+      return 1;
+     }
+     else{
+      return 0;
+     }
+    }
+    else{ // no progress
+     return 0;
+    }
 }
 
 function HS() {
@@ -542,6 +532,7 @@ function NP() {
 					two_values_cells[possible_pair].forEach(function(cell) {
 						let[bx, by, lx, ly] = cell;
 						sudoku[bx][by][lx][ly] = values;
+						progress--;
 					});
 				}
 			});
