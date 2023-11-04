@@ -90,18 +90,18 @@ function RemoveValuesFromCellsInAll3Regions(bigx, bigy, littlex, littley, values
 
 function RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values) { //remove value from specific region. return number of values removed
 	let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
-	let removed = 0;
+	let removed_cells = 0;
 	cells.forEach(function(cell) {
 		let[bx, by, lx, ly] = cell;
 				let array_start = sudoku[bx][by][lx][ly].join("");
 				sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], values); //remove them
 				let array_end = sudoku[bx][by][lx][ly].join("");
 				if(array_start != array_end){
-				removed++; //FIX
+				removed_cells++; //FIX
 				}
 	});
-	if(removed < 0){removed = 0;}
-	return removed;
+	//if(removed_cells < 0){removed_cells = 0;}
+	return removed_cells; //number of cell that values were removed
 }
 
 window.onload = Main;
@@ -304,6 +304,8 @@ function Create_Playable_Sudoku() {
 	//start_cross(document.getElementById("Solution"));
  	start_cross(document.getElementById("map").value);
 
+	document.getElementById("counts").innerHTML = "NS:" + count_type.ns + " HS:" + count_type.hs + " NP:" + count_type.np + " HP:" + count_type.hp + " IR:" + count_type.ir + " XW:" + count_type.xw + " YW:" + count_type.yw;
+	
 	Save_Sudoku(); //save created sudoku
 	$("#dialog-waiting").hide();
 }
@@ -333,7 +335,7 @@ function RemoveCells() {
 		sudoku[bx][by][lx][ly] = []; //remove value
 
 		potential_sudoku = JSON.stringify(sudoku);
-  count_type = {"ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xy":0 , "yw":0 }; //start new count. this might be final run
+  count_type = {"ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
 		//try to solve sudoku array. Solve me mangles global sudoku array so we will need to restore it
 		let result;
 		try {
@@ -435,8 +437,9 @@ function ReturnRegionRegionCountValues(region, region_count) {
 	cells.forEach(function(cell) {
 		let[bx, by, lx, ly] = cell;
 		if(sudoku[bx][by][lx][ly].length == 0){
+			//indicates something is wrong
 			console.error("No value at " + cell);
-			throw "No value at " + cell;
+			//throw "No value at " + cell;
 			}
 		region_values.push(sudoku[bx][by][lx][ly]);
 	});
@@ -490,6 +493,7 @@ function HS() { //if a value occurs only once in a region, it is a hs if found a
 					let[bx, by, lx, ly] = single_values_associative[single_value][0];
 					if(sudoku[bx][by][lx][ly].length > 1){//it is only a HS if it is hidden : found HS
 						sudoku[bx][by][lx][ly] = [single_value];
+						count_type.hs++;
 						progress++;
 					}
 				}				
@@ -503,9 +507,9 @@ function NP() {
 	let progress = 0;
 	regions.forEach(function(region) {
 		region_counts.forEach(function(region_count) {
-			
+
 			let region_values = ReturnRegionRegionCountValues(region, region_count);
-			
+
 			let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
 			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 			cells.forEach(function(cell) {
@@ -523,12 +527,17 @@ function NP() {
 			potential_pairs.forEach(function(potential_pair) {
 				if (two_values_cells[potential_pair].length == 2) { //found NP
 					let values = potential_pair.split(""); //get both values
-					progress = progress + RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values); //remove from region
+					let cells_removed = RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values); //remove from region								
 					two_values_cells[potential_pair].forEach(function(cell) { //restore pairs to np cells
 						let[bx, by, lx, ly] = cell;
 						sudoku[bx][by][lx][ly] = values;
 						progress--;
 					});
+					cells_removed = cells_removed - 2; //-2 as we removed and added back NP
+					progress = progress + cells_removed;
+					if (cells_removed) { //not only did we find NP, we removed values
+						count_type.np++;
+					}
 				}
 			});
 		});
