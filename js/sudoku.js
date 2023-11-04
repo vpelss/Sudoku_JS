@@ -1,4 +1,4 @@
-//use potential not potential or probable 
+//use potential not possible or probable 
 
 var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [1..9] 
 var path = [];
@@ -91,20 +91,14 @@ function RemoveValuesFromCellsInAll3Regions(bigx, bigy, littlex, littley, values
 function RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values) { //remove value from specific region. return number of values removed
 	let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 	let removed = 0;
-	//let removed = - values.length; //we will we removing values in our cell also, so don't count
 	cells.forEach(function(cell) {
 		let[bx, by, lx, ly] = cell;
-		//values.forEach(function(value) {
-			//if (sudoku[bx][by][lx][ly].includes(value)) { //will we be removing value?
-				//sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], [value]); //remove it
 				let array_start = sudoku[bx][by][lx][ly].join("");
 				sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], values); //remove them
 				let array_end = sudoku[bx][by][lx][ly].join("");
 				if(array_start != array_end){
 				removed++; //FIX
 				}
-			//}
-		//});
 	});
 	if(removed < 0){removed = 0;}
 	return removed;
@@ -359,14 +353,6 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 
 	do {
 		progress = 0;
-		//MAYBE create MAIN LOOP =
-		//regions.forEach(function(region) {
-		//region_counts.forEach(function(region_count) {
-		// values =
-		//ns
-		// values =
-		//hs
-
 		//only useful on complex levels as FillBlankCellsWithpotentialValues fills in all squares on easy levels
 		if (document.getElementById('NS').checked == true) {
 			//progress = progress + NS(bx, by, lx, ly);
@@ -378,8 +364,10 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 		} //hs
 		if (document.getElementById('NP').checked == true) {
 			progress = progress + NP();
-		} //np			
-		//hp      
+		} //np
+		if (document.getElementById('HP').checked == true) {
+			//progress = progress + HP();
+		} //hp	    
 		//ir does possibilities
 		//xwing
 		//ywing
@@ -431,14 +419,12 @@ function ValuesOfCellsForRegionAndRegionCount(region, region_count) {
 	return values_of_cells_as_keys_and_locations_as_arrays; //return values["45"] = [cell1,cell2]
 }
 
-function NS() {
+function NS() { 
 	let progress = 0;
 	let region = "row";
 	region_counts.forEach(function(region_count) {
 		let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
-		//let single_values_associative = {};
 		cells.forEach(function([bx, by, lx, ly]) { //count values
-
 			if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
 				let values = sudoku[bx][by][lx][ly];
 				let removed = RemoveValuesFromCellsInAll3Regions(bx, by, lx, ly, values);
@@ -453,29 +439,8 @@ function NS() {
 	return progress;
 }
 
-function NS_old(bx, by, lx, ly){	
- 	if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
-    	let values = sudoku[bx][by][lx][ly];
-    	let removed = RemoveValuesFromCellsInAll3Regions(bx, by, lx, ly, values);
-		sudoku[bx][by][lx][ly] = values ; //restore
-     if(removed > 1){//progress account for removing in our cell
-      count_type.ns++; 
-      return 1;
-     }
-     else{
-      return 0;
-     }
-    }
-    else{ // no progress
-     return 0;
-    }
-}
-
-function HS() {
-	//for each cell, get all possibilities including current cell for each region.
-	//if a a value in this cell has only one value (no doubles, etc) in a region, it is a hs. convert it to ns
+function HS() { //if a value occurs only once in a region, it is a hs if found among other values. convert it to ns
 	let progress = 0;
-	//build: single_values_associative[single_value] = [cell1 , cell2]
 	regions.forEach(function(region) {
 		region_counts.forEach(function(region_count) {
 			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
@@ -488,7 +453,7 @@ function HS() {
 					single_values_associative[value].push([bx, by, lx, ly]);
 				}); //count single values
 			}); //cells
-			//search for NS
+			//search for HS
 			let single_values = Object.keys(single_values_associative);
 			single_values.forEach(function(single_value) {	
 				if (single_values_associative[single_value].length == 1) {
@@ -506,11 +471,9 @@ function HS() {
 
 function NP() {
 	let progress = 0;
-	//for each region
 	regions.forEach(function(region) {
 		region_counts.forEach(function(region_count) {
 			let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
-
 			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 			cells.forEach(function(cell) {
 				let[bx, by, lx, ly] = cell;
@@ -527,10 +490,8 @@ function NP() {
 			potential_pairs.forEach(function(potential_pair) {
 				if (two_values_cells[potential_pair].length == 2) { //found NP
 					let values = potential_pair.split(""); //get both values
-					//remove from region
-					progress = progress + RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values);
-					//restore pairs to np cells
-					two_values_cells[potential_pair].forEach(function(cell) {
+					progress = progress + RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values); //remove from region
+					two_values_cells[potential_pair].forEach(function(cell) { //restore pairs to np cells
 						let[bx, by, lx, ly] = cell;
 						sudoku[bx][by][lx][ly] = values;
 						progress--;
@@ -540,6 +501,48 @@ function NP() {
 		});
 	});
 	return progress;
+}
+
+function HP(){ //WORKING
+//if two values in a region are found together among other values twice, that is a HP. convert to NP
+	let progress = 0;
+	regions.forEach(function(region) {
+		region_counts.forEach(function(region_count) {
+			let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
+			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
+			cells.forEach(function(cell) {
+				let[bx, by, lx, ly] = cell;
+				if (sudoku[bx][by][lx][ly].length > 2) { // cells with 3 or more values
+					let value_array = sudoku[bx][by][lx][ly];
+					do{ //get all possible pairs
+					let first_value = value_array.shift();
+						value_array.forEach(function(next_value){
+							let pair = "" + first_value + next_value;
+						if (typeof two_values_cells[pair] == "undefined") {
+							two_values_cells[pair] = [];
+							}
+							two_values_cells[pair].push(cell);
+							});			
+					}while(value_array.lenth > 2);
+
+				}
+			});
+
+			let potential_pairs = Object.keys(two_values_cells);
+			potential_pairs.forEach(function(potential_pair) {
+				if (two_values_cells[potential_pair].length == 2) { //found NP
+					let values = potential_pair.split(""); //get both values
+					//progress = progress + RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values); //remove from region
+					two_values_cells[potential_pair].forEach(function(cell) { //convert found HP pairs to np cells
+						let[bx, by, lx, ly] = cell;
+						sudoku[bx][by][lx][ly] = values;
+						//progress--;
+					});
+				}
+			});
+		});
+	});
+	return progress;	
 }
 
 function Solved() { //is sudoku solved?
@@ -622,23 +625,6 @@ function XY_To_BL(xy) {
 	return [bx, by, lx, ly];
 }
 
-function Array_Count_Value(array1, value){
- return array1.filter(function(x){ return x == value; }).length;
-}
-
-function Array_Values_Occur_Once(array1) {
-	for (let ele of array1) {
-		if (count[ele]) {
-			count[ele]++;
-		} else {
-			count[ele] = 1;
-		}
-	}
-	return Object.keys(ele).filter(function(key) { //filter elements with counts 1
-		return ele[key] == 1;
-	});
-}
-
 function Array_Remove_Duplicates(Array1) {
 	let the_set = new Set(Array1);
 	let the_array = Array.from(the_set);
@@ -650,9 +636,6 @@ function Array_Difference(array1, array2) { //array with all items is array1. ar
 	let difference = array1.filter(function(element){
 		return !array2.includes(element);
 	});
-	
-	// do routine with == to avoid string / # comp issues?
-	
 	return difference;
 }
 
