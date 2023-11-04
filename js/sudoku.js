@@ -335,12 +335,21 @@ function RemoveCells() {
 		potential_sudoku = JSON.stringify(sudoku);
   count_type = {"ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xy":0 , "yw":0 }; //start new count. this might be final run
 		//try to solve sudoku array. Solve me mangles global sudoku array so we will need to restore it
-		if (SolveSudoku()) { //success : save 
+		let result;
+		try {
+			result = SolveSudoku();
+			if (SolveSudoku()) { //success : save 
 			sudoku = JSON.parse(potential_sudoku); //save board
 			blank_cells++;
-		} else { //fail : restore
+			} else { //fail : restore
+				sudoku = JSON.parse(backup_sudoku_array); //restore previous board
+			}
+		}
+		catch(err){
+			console.error("found a cell value = [] ");
 			sudoku = JSON.parse(backup_sudoku_array); //restore previous board
 		}
+		
 		d = new Date();
 	} //end while
 }
@@ -366,7 +375,7 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 			progress = progress + NP();
 		} //np
 		if (document.getElementById('HP').checked == true) {
-			//progress = progress + HP();
+			progress = progress + HP();
 		} //hp	    
 		//ir does possibilities
 		//xwing
@@ -419,10 +428,27 @@ function ValuesOfCellsForRegionAndRegionCount(region, region_count) {
 	return values_of_cells_as_keys_and_locations_as_arrays; //return values["45"] = [cell1,cell2]
 }
 
+function ReturnRegionRegionCountValues(region, region_count) {
+	let region_values = [];
+	let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
+	cells.forEach(function(cell) {
+		let[bx, by, lx, ly] = cell;
+		if(sudoku[bx][by][lx][ly].length == 0){
+			console.error("No value at " + cell);
+			throw "0 val found";
+			}
+		region_values.push(sudoku[bx][by][lx][ly]);
+	});
+	return region_values;
+}
+
 function NS() { 
 	let progress = 0;
 	let region = "row";
 	region_counts.forEach(function(region_count) {
+		
+		let region_values = ReturnRegionRegionCountValues(region, region_count);
+		
 		let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 		cells.forEach(function([bx, by, lx, ly]) { //count values
 			if (sudoku[bx][by][lx][ly].length == 1) { //NS (or static) so remove the value from all regions
@@ -443,6 +469,9 @@ function HS() { //if a value occurs only once in a region, it is a hs if found a
 	let progress = 0;
 	regions.forEach(function(region) {
 		region_counts.forEach(function(region_count) {
+			
+			let region_values = ReturnRegionRegionCountValues(region, region_count);
+			
 			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 			let single_values_associative = {};
 			cells.forEach(function([bx, by, lx, ly]) { //count values
@@ -473,12 +502,15 @@ function NP() {
 	let progress = 0;
 	regions.forEach(function(region) {
 		region_counts.forEach(function(region_count) {
+			
+			let region_values = ReturnRegionRegionCountValues(region, region_count);
+			
 			let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
 			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 			cells.forEach(function(cell) {
 				let[bx, by, lx, ly] = cell;
 				if (sudoku[bx][by][lx][ly].length == 2) { //store cells with two values
-					let value_string = sudoku[bx][by][lx][ly].join("");
+					let value_string = sudoku[bx][by][lx][ly].sort().join(""); //sort is important to compare
 					if (typeof two_values_cells[value_string] == "undefined") {
 						two_values_cells[value_string] = [];
 					}
@@ -503,46 +535,46 @@ function NP() {
 	return progress;
 }
 
-function HP(){ //WORKING
-//if two values in a region are found together among other values twice, that is a HP. convert to NP
-	let progress = 0;
+function HP() { //WORKING //if two values in a region are found together among other values twice, that is a HP. convert to NP
+  let progress = 0;
 	regions.forEach(function(region) {
-		region_counts.forEach(function(region_count) {
+		region_counts.forEach(function(region_count) {	
+
+		let region_values = ReturnRegionRegionCountValues(region, region_count);
+			
 			let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
 			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 			cells.forEach(function(cell) {
 				let[bx, by, lx, ly] = cell;
-				if (sudoku[bx][by][lx][ly].length > 2) { // cells with 3 or more values
-					let value_array = sudoku[bx][by][lx][ly];
-					do{ //get all possible pairs
-					let first_value = value_array.shift();
-						value_array.forEach(function(next_value){
+				if (sudoku[bx][by][lx][ly].length > 2) { // cells with 3 or more values to be hidden
+					let value_array = sudoku[bx][by][lx][ly].sort(); //sort is important for comparing
+					while (value_array.length > 1) { //get all possible pairs
+						let first_value = value_array.shift();
+						value_array.forEach(function(next_value) {
 							let pair = "" + first_value + next_value;
-						if (typeof two_values_cells[pair] == "undefined") {
-							two_values_cells[pair] = [];
+							if (typeof two_values_cells[pair] == "undefined") {
+								two_values_cells[pair] = [];
 							}
 							two_values_cells[pair].push(cell);
-							});			
-					}while(value_array.lenth > 2);
-
+						});
+					}
 				}
 			});
-
-			let potential_pairs = Object.keys(two_values_cells);
-			potential_pairs.forEach(function(potential_pair) {
-				if (two_values_cells[potential_pair].length == 2) { //found NP
-					let values = potential_pair.split(""); //get both values
-					//progress = progress + RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, values); //remove from region
-					two_values_cells[potential_pair].forEach(function(cell) { //convert found HP pairs to np cells
-						let[bx, by, lx, ly] = cell;
-						sudoku[bx][by][lx][ly] = values;
-						//progress--;
-					});
-				}
-			});
-		});
-	});
-	return progress;	
+	//look for HP in region,region_count	
+      let potential_pairs = Object.keys(two_values_cells);
+      potential_pairs.forEach(function (potential_pair) {
+        if (two_values_cells[potential_pair].length == 2) { //found HP
+          let values = potential_pair.split(""); //get both values
+          two_values_cells[potential_pair].forEach(function (cell) { //convert found HP pairs to np cells
+            let [bx, by, lx, ly] = cell;
+            sudoku[bx][by][lx][ly] = values;
+            progress++;
+          });
+        }
+      });
+    });
+  });
+  return progress;
 }
 
 function Solved() { //is sudoku solved?
