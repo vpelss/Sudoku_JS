@@ -346,7 +346,7 @@ function RemoveCells() {
 			}
 		}
 		catch(err){
-			console.error("found a cell value = [] ");
+			//console.error("found a cell value = [] ");
 			sudoku = JSON.parse(backup_sudoku_array); //restore previous board
 		}
 		
@@ -428,6 +428,7 @@ function ValuesOfCellsForRegionAndRegionCount(region, region_count) {
 	return values_of_cells_as_keys_and_locations_as_arrays; //return values["45"] = [cell1,cell2]
 }
 
+//currently using for troubleshooting. ie: cell val = []
 function ReturnRegionRegionCountValues(region, region_count) {
 	let region_values = [];
 	let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
@@ -435,7 +436,7 @@ function ReturnRegionRegionCountValues(region, region_count) {
 		let[bx, by, lx, ly] = cell;
 		if(sudoku[bx][by][lx][ly].length == 0){
 			console.error("No value at " + cell);
-			throw "0 val found";
+			throw "No value at " + cell;
 			}
 		region_values.push(sudoku[bx][by][lx][ly]);
 	});
@@ -547,7 +548,7 @@ function HP() { //WORKING //if two values in a region are found together among o
 			cells.forEach(function(cell) {
 				let[bx, by, lx, ly] = cell;
 				if (sudoku[bx][by][lx][ly].length > 2) { // cells with 3 or more values to be hidden
-					let value_array = sudoku[bx][by][lx][ly].sort(); //sort is important for comparing
+					let value_array = sudoku[bx][by][lx][ly].sort().slice(); //sort is important for comparing, slice so we create a NEW array!
 					while (value_array.length > 1) { //get all possible pairs
 						let first_value = value_array.shift();
 						value_array.forEach(function(next_value) {
