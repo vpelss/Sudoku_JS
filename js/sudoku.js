@@ -3,11 +3,13 @@
 var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [1..9] 
 var path = [];
 var forever = new Date('October 17, 2050 03:24:00'); // use in cookies
-var count = 0;
+//var count = 0;
+var blank_cells;
 
 var LastCursorID = "cell_0_0";
 var intable = 1;
 var count_type = {}; // count_type["ns"] = 5
+var last_good_count_type = {};
 
 const regions = ["row","col","squ"];
 const region_counts = ["00" , "01" , "02" , "10" , "11" , "12" , "20" , "21" , "22"]; //will be bxlx for col , byly for row , bxby for squ
@@ -250,7 +252,6 @@ function Create_Path() {
 }
 
 function Create_Full_Sudoku() {
-	//sudoku = DIM([3, 3, 3, 3], [1, 2, 3, 4, 5, 6, 7, 8, 9]); //fill Sudoku board with all possibilities 1..9
 	sudoku = DIM([3, 3, 3, 3], one_to_nine); //fill Sudoku board with all possibilities "1".."9" : string values so array_diff routine does not fail
 	//start create full Sudoku board
 	let path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
@@ -304,7 +305,7 @@ function Create_Playable_Sudoku() {
 	//start_cross(document.getElementById("Solution"));
  	start_cross(document.getElementById("map").value);
 
-	document.getElementById("counts").innerHTML = "NS:" + count_type.ns + " HS:" + count_type.hs + " NP:" + count_type.np + " HP:" + count_type.hp + " IR:" + count_type.ir + " XW:" + count_type.xw + " YW:" + count_type.yw;
+	document.getElementById("counts").innerHTML = "NSF:" + last_good_count_type.nsf + " NS:" + last_good_count_type.ns + " HS:" + last_good_count_type.hs + " NP:" + last_good_count_type.np + " HP:" + last_good_count_type.hp + " IR:" + last_good_count_type.ir + " XW:" + last_good_count_type.xw + " YW:" + last_good_count_type.yw + " Blank Cells: " + blank_cells;
 	
 	Save_Sudoku(); //save created sudoku
 	$("#dialog-waiting").hide();
@@ -317,7 +318,7 @@ function RemoveCells() {
 	let finished = time + (1000 * try_time); //5 sec max
 	//let one_value;
 	let potential_sudoku;
-	let blank_cells = 0;
+	blank_cells = 0;
 
 	while ((d.getTime() < finished) && (blank_cells < document.getElementById("number_of_blank_squares").value)) {
 		//save array status
@@ -335,13 +336,14 @@ function RemoveCells() {
 		sudoku[bx][by][lx][ly] = []; //remove value
 
 		potential_sudoku = JSON.stringify(sudoku);
-  count_type = {"ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
+		count_type = {"nsf":0 , "ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
 		//try to solve sudoku array. Solve me mangles global sudoku array so we will need to restore it
 		let result;
 		try {
 			result = SolveSudoku();
-			if (SolveSudoku()) { //success : save 
+			if (result) { //success : save 
 			sudoku = JSON.parse(potential_sudoku); //save board
+			last_good_count_type = JSON.parse(JSON.stringify(count_type));
 			blank_cells++;
 			} else { //fail : restore
 				sudoku = JSON.parse(backup_sudoku_array); //restore previous board
@@ -360,8 +362,13 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 	let progress = 0; // > 0 if we made any progress
 	//start board off by calculating simple starting possibilities for blank cells in entire board
 	//then try to reduce all possibilities to 1 value for each cell using ns,hs,np... 
-	FillBlankCellsWithpotentialValues(); //fill potential values for all empty cells. note this will solve all easy ns at the start also
+	
+	//count_type = {"nsf":0 , "ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
 
+	//THIS WILL BE NS COUNT ALSO
+	FillBlankCellsWithpotentialValues(); //fill potential values for all empty cells. note this will solve all easy ns at the start also
+  //HOW IS THIS SOLVING FOR MORE COMPLEX SUDOKU WHERE THERE ARE MORE THAN ONE POTENTIAL VALUE?
+  
 	do {
 		progress = 0;
 		//only useful on complex levels as FillBlankCellsWithpotentialValues fills in all squares on easy levels
@@ -390,7 +397,7 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 	return false; //we made no progress and we never solved it
 }
 
-function FillBlankCellsWithpotentialValues() { //calculates potential values for blank cells.
+function FillBlankCellsWithpotentialValues() { //calculates potential values for blank cells by getting all single values (ie: solved values) in all three regions and setting the cell values to those not in those single values 
 	path.forEach(function(cell_path){
 		let [bx, by, lx, ly] = cell_path;
 		let solved_numbers = [];
@@ -398,12 +405,18 @@ function FillBlankCellsWithpotentialValues() { //calculates potential values for
 			let cells = ReturnCellsForAll3RegionsFromCell(bx, by, lx, ly);
 			cells.forEach(function(cell) {
 				let [bx, by, lx, ly] = cell;
-				if (sudoku[bx][by][lx][ly].length == 1) {
-					solved_numbers.push(sudoku[bx][by][lx][ly][0]);
+				if (sudoku[bx][by][lx][ly].length == 1) { // is this cell a solved cell (single value)?
+					solved_numbers.push(sudoku[bx][by][lx][ly][0]);      
 				}
 			});
 			let potential_numbers = Array_Difference(one_to_nine , solved_numbers); //difference of that list
 			sudoku[bx][by][lx][ly] = potential_numbers; //used by hs,mp,hp,ir,xw,yw...
+      if(potential_numbers.length == 1){
+        count_type.nsf++;
+      }
+      else{//this means we need to use other methods to solve sudoku, NS, NP, etc
+         //console.error("multiple values found in blank cells");
+      }
 		}
 		});		
 }
@@ -459,7 +472,8 @@ function NS() {
 				let values = sudoku[bx][by][lx][ly];
 				let removed = RemoveValuesFromCellsInAll3Regions(bx, by, lx, ly, values);
 				sudoku[bx][by][lx][ly] = values; //restore
-				if (removed > 1) { //progress account for removing in our cell
+				removed--; //as we just restored
+				if (removed) { //progress account for removing in our cell
 					count_type.ns++;
 					progress++;
 				}
@@ -579,6 +593,7 @@ function HP() { //WORKING //if two values in a region are found together among o
             let [bx, by, lx, ly] = cell;
             sudoku[bx][by][lx][ly] = values;
             progress++;
+			count_type.hp++;
           });
         }
       });

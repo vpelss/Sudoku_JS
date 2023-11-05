@@ -22,42 +22,38 @@
 	  <h3>Create / Load Sudoku - click to open/close</h3>
 
 	  <div>
-		  <form action="return false;" method="post" name="MyForm" id="MyForm">
+		  <form action="return%20false;" method="post" name="MyForm" id="MyForm">
+			  <p><label for="save_slot">Save Slot:</label> <select id="save_slot" size="1" style="width:50px;" name="save_slot">
+				  <option value="1" selected="selected">
+					  1
+				  </option>
 
-<p><label for="save_slot">Save Slot:</label> <select id="save_slot" size="1" style="width:50px;" name="save_slot">
-	<option value="1" selected="selected">
-		1
-	</option>
+				  <option value="2">
+					  2
+				  </option>
 
-	<option value="2">
-		2
-	</option>
+				  <option value="3">
+					  3
+				  </option>
 
-	<option value="3">
-		3
-	</option>
+				  <option value="4">
+					  4
+				  </option>
 
-	<option value="4">
-		4
-	</option>
+				  <option value="5">
+					  5
+				  </option>
 
-	<option value="5">
-		5
-	</option>
+				  <option value="6">
+					  6
+				  </option>
 
-	<option value="6">
-		6
-	</option>
+				  <option value="7">
+					  7
+				  </option>
+			  </select></p>
 
-	<option value="7">
-		7
-	</option>
-</select></p>
-
-
-			  <p>
-      <label for="difficulty">Difficulty: </label>
-      <select id="difficulty" size="1">
+			  <p><label for="difficulty">Difficulty:</label> <select id="difficulty" size="1">
 				  <option value="1">
 					  Simple - NS
 				  </option>
@@ -85,9 +81,7 @@
 				  <option value="7">
 					  Killer - NS,HS,NP,HP,IR,XW,YW
 				  </option>
-			  </select>
-     
-     </p>
+			  </select></p>
 
 			  <p><input type="button" id="create_sudoku" name="create_sudoku" value="Generate Puzzle - Please wait"></p>
 
@@ -97,10 +91,16 @@
 
 			  <p>Number of Blank Squares:<input type="text" name="number_of_blank_squares" value="58" size="4" id="number_of_blank_squares"><br>
 			  (55 is average. Higher numbers might not be reached.)</p>
-     
-   
-     
+      
 		  </form>
+
+		      <p id="Statistics" title="Statistics" class="_dialogs">
+			  Difficulty:
+     <span id="counts">
+				  ns:0 , hs:4
+			  </span>
+		  </p>
+   
 	  </div>
   </div>
   
@@ -722,8 +722,7 @@
 		  <LI>If you print it, you may want to Show Answers (icon: light bulb) at
 			 the bottom of this page first.</LI>
 		</UL> </DIV>
-	 <DIV ID="Statistics" TITLE="Statistics" CLASS="dialogs"> Difficulty: <B><A	HREF="#"	TITLE="This rating is based on algorithms used to generate this puzzle and may not be reflected in actual gameplay."><div id="counts">ns:0 , hs:4</div></A></B>
-		</DIV>
+	 
   
 	 <div id="SolutionDialog" style="" class="dialogs" title="Solution">
 		 <table class="bigtable" cellspacing="0" cellpadding="0" align="center">
