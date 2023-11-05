@@ -1,4 +1,9 @@
-//use potential not possible or probable 
+//use potential not possible or probable
+
+//counting, two ways:
+//counting for cells solved (but HP and above do not actually solve cells)
+//OR
+//when we make progress with solving method. this is more accurate as it describes steps to solving.
 
 var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [1..9] 
 var path = [];
@@ -10,6 +15,7 @@ var LastCursorID = "cell_0_0";
 var intable = 1;
 var count_type = {}; // count_type["ns"] = 5
 var last_good_count_type = {};
+var current_active_count; //will be ns, np, etc 
 
 const regions = ["row","col","squ"];
 const region_counts = ["00" , "01" , "02" , "10" , "11" , "12" , "20" , "21" , "22"]; //will be bxlx for col , byly for row , bxby for squ
@@ -95,12 +101,15 @@ function RemoveValuesFromCellsInRegionAndRegionCount(region, region_count, value
 	let removed_cells = 0;
 	cells.forEach(function(cell) {
 		let[bx, by, lx, ly] = cell;
-				let array_start = sudoku[bx][by][lx][ly].join("");
-				sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], values); //remove them
-				let array_end = sudoku[bx][by][lx][ly].join("");
-				if(array_start != array_end){
-				removed_cells++; //FIX
-				}
+		let array_start = sudoku[bx][by][lx][ly].join("");
+		sudoku[bx][by][lx][ly] = Array_Difference(sudoku[bx][by][lx][ly], values); //remove them
+		let array_end = sudoku[bx][by][lx][ly].join("");
+		if (array_start != array_end) {
+			removed_cells++; //FIX
+			if (sudoku[bx][by][lx][ly].length == 1) {
+				//count_type[current_active_count]++; 
+			}
+		}
 	});
 	//if(removed_cells < 0){removed_cells = 0;}
 	return removed_cells; //number of cell that values were removed
@@ -135,7 +144,7 @@ function Main() {
 	path = Create_Path(); //set path to traverse Sudoku recursively
 	//set event functions  
 	document.getElementById("how_to_play").onclick = Howtoplay;
-	document.getElementById("statistics").onclick = Statistics;
+	//document.getElementById("statistics").onclick = Statistics;
 	document.getElementById("solution").onclick = SolutionsDialog;
 	document.getElementById("clear_unlocked_cells").onclick = ClearUnlockedCells;
 	document.getElementById("body").onkeydown = keyinput;
@@ -398,6 +407,7 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 }
 
 function FillBlankCellsWithpotentialValues() { //calculates potential values for blank cells by getting all single values (ie: solved values) in all three regions and setting the cell values to those not in those single values 
+	current_active_count = "nsf";
 	path.forEach(function(cell_path){
 		let [bx, by, lx, ly] = cell_path;
 		let solved_numbers = [];
@@ -412,7 +422,7 @@ function FillBlankCellsWithpotentialValues() { //calculates potential values for
 			let potential_numbers = Array_Difference(one_to_nine , solved_numbers); //difference of that list
 			sudoku[bx][by][lx][ly] = potential_numbers; //used by hs,mp,hp,ir,xw,yw...
       if(potential_numbers.length == 1){
-        count_type.nsf++;
+        count_type[current_active_count]++;
       }
       else{//this means we need to use other methods to solve sudoku, NS, NP, etc
          //console.error("multiple values found in blank cells");
@@ -461,10 +471,11 @@ function ReturnRegionRegionCountValues(region, region_count) {
 
 function NS() { 
 	let progress = 0;
+  current_active_count = "ns";
 	let region = "row";
 	region_counts.forEach(function(region_count) {
 		
-		let region_values = ReturnRegionRegionCountValues(region, region_count);
+		//let region_values = ReturnRegionRegionCountValues(region, region_count);
 		
 		let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 		cells.forEach(function([bx, by, lx, ly]) { //count values
@@ -474,7 +485,7 @@ function NS() {
 				sudoku[bx][by][lx][ly] = values; //restore
 				removed--; //as we just restored
 				if (removed) { //progress account for removing in our cell
-					count_type.ns++;
+					count_type[current_active_count]++;
 					progress++;
 				}
 			}
@@ -485,10 +496,11 @@ function NS() {
 
 function HS() { //if a value occurs only once in a region, it is a hs if found among other values. convert it to ns
 	let progress = 0;
+  current_active_count = "hs";
 	regions.forEach(function(region) {
 		region_counts.forEach(function(region_count) {
 			
-			let region_values = ReturnRegionRegionCountValues(region, region_count);
+			//let region_values = ReturnRegionRegionCountValues(region, region_count);
 			
 			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
 			let single_values_associative = {};
@@ -507,7 +519,7 @@ function HS() { //if a value occurs only once in a region, it is a hs if found a
 					let[bx, by, lx, ly] = single_values_associative[single_value][0];
 					if(sudoku[bx][by][lx][ly].length > 1){//it is only a HS if it is hidden : found HS
 						sudoku[bx][by][lx][ly] = [single_value];
-						count_type.hs++;
+						count_type[current_active_count]++;
 						progress++;
 					}
 				}				
@@ -519,10 +531,11 @@ function HS() { //if a value occurs only once in a region, it is a hs if found a
 
 function NP() {
 	let progress = 0;
+  current_active_count = "np";
 	regions.forEach(function(region) {
 		region_counts.forEach(function(region_count) {
 
-			let region_values = ReturnRegionRegionCountValues(region, region_count);
+			//let region_values = ReturnRegionRegionCountValues(region, region_count);
 
 			let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
 			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
@@ -550,7 +563,7 @@ function NP() {
 					cells_removed = cells_removed - 2; //-2 as we removed and added back NP
 					progress = progress + cells_removed;
 					if (cells_removed) { //not only did we find NP, we removed values
-						count_type.np++;
+						count_type[current_active_count]++;
 					}
 				}
 			});
@@ -561,10 +574,11 @@ function NP() {
 
 function HP() { //WORKING //if two values in a region are found together among other values twice, that is a HP. convert to NP
   let progress = 0;
+  current_active_count = "hp";
 	regions.forEach(function(region) {
 		region_counts.forEach(function(region_count) {	
 
-		let region_values = ReturnRegionRegionCountValues(region, region_count);
+		//let region_values = ReturnRegionRegionCountValues(region, region_count);
 			
 			let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
 			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
@@ -593,7 +607,7 @@ function HP() { //WORKING //if two values in a region are found together among o
             let [bx, by, lx, ly] = cell;
             sudoku[bx][by][lx][ly] = values;
             progress++;
-			count_type.hp++;
+            count_type[current_active_count]++;
           });
         }
       });
