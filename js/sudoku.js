@@ -158,7 +158,7 @@ function Main() {
 	//remember last save_slot
 	let slot = getCookie("save_slot");
 	if (slot == null) {
-		slot = 1;
+		slot = "1_Sudoku";
 	}
 	document.getElementById("save_slot").value = slot;
 	Load_Sudoku(); //previous save
@@ -184,7 +184,7 @@ function Load_Sudoku() {
 		if (empty) {
 			[cell_text, solution_text] = ["", ""];
 		} else {
-			[cell_text, solution_text] = save_array.shift();
+			[cell_text, solution_text] = save_array[cellID];
 		}
 		document.getElementById(cellID).innerHTML = cell_text;
 		document.getElementById(solutionID).innerHTML = solution_text; //set solution table
@@ -212,11 +212,14 @@ function Load_Sudoku() {
 	document.getElementById("map").innerHTML = jscalcpuzz;
 	//start_cross(document.getElementById("Solution"));
 	start_cross(document.getElementById("map").value);
+  document.getElementById("difficulty").value = save_array.difficulty;
+	document.getElementById("counts").innerHTML = save_array.counts;
+	Difficulty();
 	return true;
 }
 
 function Save_Sudoku() {
-	let save_array = [];
+	let save_array = {};
 	path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
 	path_temp.forEach(function(cell) {
 		[x, y] = BL_To_XY(cell);
@@ -225,12 +228,14 @@ function Save_Sudoku() {
 		let cell_text, solution_text;
 		cell_text = document.getElementById(cellID).innerHTML;
 		solution_text = document.getElementById(solutionID).innerHTML; //set solution table 
-		save_array.push([cell_text, solution_text]);
+		//save_array.push([cell_text, solution_text]);
+    save_array[cellID] =  [cell_text, solution_text];
 	});
+   save_array.difficulty = document.getElementById("difficulty").value;
+	save_array.counts  = document.getElementById("counts").innerHTML;;
 	//save created sudoku
 	localStorage.setItem(document.getElementById("save_slot").value, JSON.stringify(save_array));
 }
-
 
 function Export_Archive() {
 	document.getElementById("archive").value = JSON.stringify(localStorage);
@@ -345,7 +350,7 @@ function RemoveCells() {
 		sudoku[bx][by][lx][ly] = []; //remove value
 
 		potential_sudoku = JSON.stringify(sudoku);
-		count_type = {"nsf":0 , "ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
+		//count_type = {"nsf":0 , "ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
 		//try to solve sudoku array. Solve me mangles global sudoku array so we will need to restore it
 		let result;
 		try {
@@ -372,7 +377,7 @@ function SolveSudoku() { // changes/mangles sudoku. so calling routines must acc
 	//start board off by calculating simple starting possibilities for blank cells in entire board
 	//then try to reduce all possibilities to 1 value for each cell using ns,hs,np... 
 	
-	//count_type = {"nsf":0 , "ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
+	count_type = {"nsf":0 , "ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
 
 	//THIS WILL BE NS COUNT ALSO
 	FillBlankCellsWithpotentialValues(); //fill potential values for all empty cells. note this will solve all easy ns at the start also
@@ -1748,7 +1753,8 @@ function display(id) {
 }
 
 function Difficulty() {
-	if (this.value == 1) {
+	let value = document.getElementById("difficulty").value;
+	if (value== 1) {
 		document.getElementById('NS').checked = true;
 		document.getElementById('HS').checked = false;
 		document.getElementById('NP').checked = false;
@@ -1757,7 +1763,7 @@ function Difficulty() {
 		document.getElementById('XW').checked = false;
 		document.getElementById('YW').checked = false;
 	}
-	if (this.value == 2) {
+	if (value == 2) {
 		document.getElementById('NS').checked = true;
 		document.getElementById('HS').checked = true;
 		document.getElementById('NP').checked = false;
@@ -1766,7 +1772,7 @@ function Difficulty() {
 		document.getElementById('XW').checked = false;
 		document.getElementById('YW').checked = false;
 	}
-	if (this.value == 3) {
+	if (value == 3) {
 		document.getElementById('NS').checked = true;
 		document.getElementById('HS').checked = true;
 		document.getElementById('NP').checked = true;
@@ -1775,7 +1781,7 @@ function Difficulty() {
 		document.getElementById('XW').checked = false;
 		document.getElementById('YW').checked = false;
 	}
-	if (this.value == 4) {
+	if (value == 4) {
 		document.getElementById('NS').checked = true;
 		document.getElementById('HS').checked = true;
 		document.getElementById('NP').checked = true;
@@ -1784,7 +1790,7 @@ function Difficulty() {
 		document.getElementById('XW').checked = false;
 		document.getElementById('YW').checked = false;
 	}
-	if (this.value == 5) {
+	if (value == 5) {
 		document.getElementById('NS').checked = true;
 		document.getElementById('HS').checked = true;
 		document.getElementById('NP').checked = true;
@@ -1793,7 +1799,7 @@ function Difficulty() {
 		document.getElementById('XW').checked = false;
 		document.getElementById('YW').checked = false;
 	}
-	if (this.value == 6) {
+	if (value == 6) {
 		document.getElementById('NS').checked = true;
 		document.getElementById('HS').checked = true;
 		document.getElementById('NP').checked = true;
@@ -1802,7 +1808,7 @@ function Difficulty() {
 		document.getElementById('XW').checked = true;
 		document.getElementById('YW').checked = false;
 	}
-	if (this.value == 7) {
+	if (value == 7) {
 		document.getElementById('NS').checked = true;
 		document.getElementById('HS').checked = true;
 		document.getElementById('NP').checked = true;
