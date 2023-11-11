@@ -704,66 +704,132 @@ function HP() {
 }
 
 function IR() {
-  //If a region (row, column and 3 x 3 square) has only two or three cells that contain the same possible value,
-  //and these two or three cells intersect with another region,
-  //you can remove this value from the intersecting region.
-  //values_in_reginon_region_count_cells[value][subregion] = [c1,c2,...]
-  //subregions_with_value[value]=[s1,s2,...]
-  //get crossing regions for subregion?
-  let progress = 0;
-  current_active_count = "ir";
-  regions.forEach(function (region) {
-    region_counts.forEach(function (region_count) {
-      let cells_with_value = {}; // cells_with_value[value] = [ [cell1] , [cell2] ]
-      let subregions_with_value = {};
-      let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
-      cells.forEach(function (cell) {
-        let [bx, by, lx, ly] = cell;
-        let values_array = sudoku[bx][by][lx][ly].sort().slice(); //sort is important for comparing, slice so we create a NEW array!
-        values_array.forEach(function (value) {
-          if (typeof cells_with_value[value] == "undefined") {
-            cells_with_value[value] = [];
+	//If a region (row, column and 3 x 3 square) has only two or three cells that contain the same possible value,
+	//and these two or three cells intersect with another region,
+	//you can remove this value from the intersecting region.
+	//values_in_reginon_region_count_cells[value][subregion] = [c1,c2,...]
+	//subregions_with_value[value]=[s1,s2,...]
+	//get crossing regions for subregion?
+	let progress = 0;
+	let removed;
+	current_active_count = "ir";
+	regions.forEach(function(region) {
+		region_counts.forEach(function(region_count) {
+			let cells_with_value = {}; // cells_with_value[value] = [ [cell1] , [cell2] ]
+			let subregions_with_value = {};
+			let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
+			cells.forEach(function(cell) {
+				let[bx, by, lx, ly] = cell;
+				let values_array = sudoku[bx][by][lx][ly].sort().slice(); //sort is important for comparing, slice so we create a NEW array!
+				values_array.forEach(function(value) {
+					if (typeof cells_with_value[value] == "undefined") {
+						cells_with_value[value] = [];
+					}
+					cells_with_value[value].push(cell);
+					let subregions = GetSubRegions(region, cell); //one if row and col, two if squ (horz , vert)
+					subregions.forEach(function(subregion) {
+						if (typeof subregions_with_value[value] == "undefined") {
+							subregions_with_value[value] = [];
+						}
+						subregions_with_value[value].push(subregion);
+					});
+				});
+			});
+			//look for IR in this region and region_count
+			let values = Object.keys(cells_with_value);
+			values.forEach(function(value) {
+				if (cells_with_value[value].length >= 2) {
+					//possible ir
+          
+          let result = IfIrFoundReturnRegionAndRegionCount(region , cells);
+          if(result != false){//ir found
+            let [intersecting_region , intersecting_region_count] = result;
+            removed = RemoveValuesFromCellsInRegionAndRegionCount(intersecting_region , intersecting_region_count , [value]);
+            cells_with_value[value].forEach(function(cell) {//re-add value to triggering cells in subregion
+							let[bx, by, lx, ly] = cell;
+							sudoku[bx][by][lx][ly].push(value);
+							removed++;
+						});  
           }
-          cells_with_value[value].push(cell);
-          let subregions = GetSubRegions(region, cell); //one if row and col, two if squ (horz , vert)
-          subregions.forEach(function (subregion) {
-            if (typeof subregions_with_value[value] == "undefined") {
-              subregions_with_value[value] = [];
-            }
-            subregions_with_value[value].push(subregion);
-          });
-        });
-      });
-      //look for IR in region,region_count
-      let values = Object.keys(cells_with_value);
-      values.forEach(function (value) {
-        if (cells_with_value[value].length >= 2) {
-          //possible ir
-          if (AreCellsInSameSubregion(AreCellsInSameSubregion)) {
-            //ir found in region
-            //remove val from intersecting region
-          }
-        }
-      });
-    });
-  });
-  return progress;
+					//}
+					if (removed > 0) {
+						progress++;
+					}
+				}
+			});
+		});
+	});
+	return progress;
 }
 
-function AreCellsInSameSubregion(cells) {
-  //bx and by must be same
-  //lx or ly count must == number of cells
-  //return row or col??? or false
-  let [last_bx, last_by, last_lx, last_ly] = cells.pop();
+function IfIrFoundReturnRegionAndRegionCount(region , cells){ //are all cells in same (row OR col) AND in same SQU
+  //if no, return false
+  //if yes, IR : return [intersecting_region , intersecting_region_count] to remove value from
+  //note: if region == "cell" return intersecting region will be "row" or "col"
+  //note: if region == "row" or "col" return intersecting region will be "cell"
+  let xCount = {"0":0,"1":0,"2":0};
+  let yCount = {"0":0,"1":0,"2":0};
+  let last_region_count = "none";
   cells.forEach(function (cell) {
-     let [bx, by, lx, ly] = cell;
-    if((last_bx != bx) || (last_by != by)){ //bx and by must be same
+    let [bx, by, lx, ly] = cell;
+    //test to see if all cells are in same squ
+    let region_count = ReturnRegionCountForRegionAndCell("squ", bx, by, lx, ly);
+    if ( (last_region_count != "none") && (region_count != last_region_count) ) { //fail if a cell is not in same squ
       return false;
     }
-    
-    
-    
+    last_region_count = region_count;
+    //count rows and columns to see if all cells are in same row or col
+    xCount[lx]++;
+    yCount[ly]++;
   });
+  //test to see if all cells are in same row or col
+  let all_x_count_equal_one = Object.values(xCount).filter(function(count){return count == 1;});
+  let all_y_count_equal_one = Object.values(yCount).filter(function(count){return count == 1;});
+  let intersecting_region = "";
+  if(all_x_count_equal_one.length == cells.length){ //all cells in same row
+    intersecting_region = "row";
+  }if(all_y_count_equal_one.length == cells.length){ //all cells in same col
+    intersecting_region = "col";
+  }
+  if(intersecting_region != ""){ //IR found
+     if(region != "cell"){
+      intersecting_region = "cell";
+     }
+    let[bx, by, lx, ly] = cell;
+    let intersecting_region_count = ReturnRegionCountForRegionAndCell(intersecting_region, bx, by, lx, ly);
+    return [intersecting_region , intersecting_region_count];
+  }
+  return false;
+}
+
+function AreCellsInHorizOrVertSubregion(cells) {
+  //IfIrFoundReturnRegionAndRegionCount
+  //bx and by must be same : must be in the same squ
+  //if all x counts == 1 return row
+  //if all y counts == 1 return col
+  //return row or col??? or false
+  let xCount = {"0":0,"1":0,"2":0};
+  let yCount = {"0":0,"1":0,"2":0};
+  let last_region_count = "none";
+  cells.forEach(function (cell) {
+    let [bx, by, lx, ly] = cell;
+    let region_count = ReturnRegionCountForRegionAndCell("squ", bx, by, lx, ly);
+    if ( (last_region_count != "none") && (region_count != last_region_count) ) { //fail if a cell is not in same squ
+      return false;
+    }
+    last_region_count = region_count;
+    //count rows and columns
+    xCount[lx]++;
+    yCount[ly]++;
+  });
+  let all_x_count_equal_one = Object.values(xCount).filter(function(count){return count == 1;});
+  let all_y_count_equal_one = Object.values(yCount).filter(function(count){return count == 1;});
+  if(all_x_count_equal_one.length == cells.length){ //all cells in same row
+    return "row";
+  }if(all_y_count_equal_one.length == cells.length){ //all cells in same col
+    return "col";
+  }
+  return "false";
 }
 
 function GetSubRegions(region, cell) {
