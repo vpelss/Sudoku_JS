@@ -1,21 +1,16 @@
-//use potential not possible or probable
-
-//counting, two ways:
-//counting for cells solved (but HP and above do not actually solve cells)
-//OR
-//when we make progress with solving method. this is more accurate as it describes steps to solving.
+//use "potential" not possible or probable
 
 var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [1..9]
-var path = [];
+var path = []; //all cells in order
 var forever = new Date("October 17, 2050 03:24:00"); // use in cookies
-//var count = 0;
-var blank_cells;
+var blank_cells; //running count of removed cells
 
 var LastCursorID = "cell_0_0";
 var intable = 1;
-var count_type = {}; // count_type["ns"] = 5
+
+var count_type = {}; // count_type["ns"] = 5 : we only count when method actualy progresses to a solution
+var current_active_count; //will be ns, np, etc count_type[current_active_count]
 var last_good_count_type = {};
-var current_active_count; //will be ns, np, etc
 
 const regions = ["row", "col", "squ"];
 const region_counts = ["00", "01", "02", "10", "11", "12", "20", "21", "22"]; //will be bxlx for col , byly for row , bxby for squ
@@ -183,6 +178,10 @@ function Main() {
   document.getElementById("Export_Archive").onclick = Export_Archive;
   document.getElementById("Import_Archive").onclick = Import_Archive;
   document.getElementById("difficulty").onchange = Difficulty;
+  document.getElementById("lock_unlock").onclick = LockUnlock;
+  document.getElementById("clear_cell").onclick = ClearCell;
+  document.getElementById("how_am_i_doing").onclick = HowAmIDoing;
+  document.getElementById("reveal_bad_choices").onclick = RevealBadChoices;
 
   //remember last save_slot
   let slot = getCookie("save_slot");
@@ -494,16 +493,14 @@ function FillBlankCellsWithpotentialValues() {
       });
       let potential_numbers = Array_Difference(one_to_nine, solved_numbers); //difference of that list
       sudoku[bx][by][lx][ly] = potential_numbers; //used by hs,mp,hp,ir,xw,yw...
-      if (potential_numbers.length == 1) {
+      if (potential_numbers.length == 1) { //found a pre ns
         count_type[current_active_count]++;
-      } else {
-        //this means we need to use other methods to solve sudoku, NS, NP, etc
-        //console.error("multiple values found in blank cells");
       }
     }
   });
 }
 
+//generic for
 //ns
 //hs?
 //np
@@ -727,16 +724,6 @@ function IR() {
             cells_with_value[value] = [];
           }
           cells_with_value[value].push(cell);
-/*          
-          let subregions = GetSubRegions(region, cell); //one if row and col, two if squ (horz , vert)
-          subregions.forEach(function (subregion) {
-            if (typeof subregions_with_value[value] == "undefined") {
-              subregions_with_value[value] = [];
-            }
-            subregions_with_value[value].push(subregion);
-          });
-  */        
-          
         });
       });
       //look for IR in this region and region_count
@@ -747,9 +734,10 @@ function IR() {
           cells_with_value[value].length == 3
         ) {
           //possible ir
-					let result = IfIrFoundReturnRegionAndRegionCount(
-						region,
-						cells_with_value[value]);
+          let result = IfIrFoundReturnRegionAndRegionCount(
+            region,
+            cells_with_value[value]
+          );
           if (result != false) {
             //ir found
             let [intersecting_region, intersecting_region_count] = result;
@@ -774,14 +762,13 @@ function IR() {
       });
     });
   });
-  //count_type[current_active_count] = count_type[current_active_count] + progress;
   return progress;
 }
 
 function IfIrFoundReturnRegionAndRegionCount(region, cells) {
   //are all cells in same (row OR col) AND in same SQU
   //if no, return false
-  //if yes, IR : return [intersecting_region , intersecting_region_count] to remove value from
+  //if yes, IR : return [intersecting_region , intersecting_region_count] to remove the value from
   //note: if region == "cell" return intersecting region will be "row" or "col"
   //note: if region == "row" or "col" return intersecting region will be "cell"
   let xCount = { 0: 0, 1: 0, 2: 0 };
@@ -833,22 +820,6 @@ function IfIrFoundReturnRegionAndRegionCount(region, cells) {
   }
   return false;
 }
-
-/*
-function GetSubRegions(region, cell) {
-  let [bx, by, lx, ly] = cell;
-  if (region == "row") {
-    return ["h_" + bx];
-  }
-  if (region == "col") {
-    return ["v_" + by];
-  }
-  if (region == "squ") {
-    return ["h_" + bx, "v_" + by]; //horiz , vert
-
-  }
-}
-*/
 
 function Solved() {
   //is sudoku solved?
@@ -1091,30 +1062,47 @@ function keyinput() {
     choose("cell_" + x + "_" + y);
   } //down
 
-  if (keyCode == "c") {
-    //c - clear - clear current cell, if not locked
-    if (IsAnEditCellID(cellID) == 1) {
-      document.getElementById(cellID).innerHTML = "";
-      send_cell_update(document.getElementById(cellID).innerHTML);
+  if (IsCellStaticID(cellID) == true) {
+    return 0;
+  } //static cells can't be modified
+
+  //lock - unlock function
+  if (keyCode == " ") {
+    //s - save
+    LockUnlock();
+  }
+
+  if (one_to_nine.includes(keyCode) && IsCellLockedID(cellID) != 1) {
+    //number keys pressed 1 - 9
+    let numberlist = document.getElementById(cellID).innerHTML;
+    //numberlist = numberlist.replace(/\D/g, ""); //remove all but numbers
+    let numberlist_array = numberlist.split("<br>"); //split lines
+    numberlist = "" + (typeof numberlist_array[0] != "undefined" ? numberlist_array[0] : "") + (typeof numberlist_array[1] != "undefined" ? numberlist_array[1] : "")  + (typeof numberlist_array[2] != "undefined" ? numberlist_array[2] : "");
+    let keychar = keyCode;
+    let founditindex = numberlist.indexOf(keychar, 0);
+    if (founditindex > -1) {
+      //remove number from string
+      let re = new RegExp(keychar, "g");
+      numberlist = numberlist.replace(re, "");
+    } else {
+      numberlist = numberlist + keychar;
     }
+    //sort our number list for display
+    let t = numberlist.split("");
+    t = t.sort();
+    let t1 = t.slice(0, 3);
+    let t2 = t.slice(3, 6);
+    let t3 = t.slice(6, 9);
+    numberlist = t1.join("") + "<br>" + t2.join("") + "<br>" + t3.join("");
+    //numberlist = t.join("");
+    document.getElementById(cellID).innerHTML = numberlist; //put numbers back on board
+    send_cell_update(document.getElementById(cellID).innerHTML);
   }
+  Save_Sudoku(); //after each keystroke
+}
 
-  if (keyCode == "h") {
-    //h - how - check how we are doing status and send to chat box
-
-    var textmsg =
-      "Numbers selected:" +
-      CountLocked() +
-      " Correct:" +
-      CountCorrectLocked("how") +
-      "\n\r\n\rNote: this only counts locked numbers.";
-    //send_chat(textmsg);
-    alert(textmsg);
-    //send_chat('Numbers selected:' + CountLocked() + '    Correct:' + CountCorrectLocked('how'));
-  }
-
-  if (keyCode == "r") {
-    //r - reveal - check how we are doing status and send to chat box
+function RevealBadChoices(){
+     //r - reveal - check how we are doing status and send to chat box
     let textmsg =
       "Numbers selected:" +
       CountLocked() +
@@ -1123,16 +1111,95 @@ function keyinput() {
       "\n\r\n\rNote: this only counts locked numbers.";
     //send_chat(textmsg);
     alert(textmsg);
+}
+
+function HowAmIDoing(){
+      //how - check how we are doing status and send to chat box
+    var textmsg =
+      "Numbers selected:" +
+      CountLocked() +
+      " Correct:" +
+      CountCorrectLocked("how") +
+      "\n\r\n\rNote: this only counts locked numbers.";
+    //send_chat(textmsg);
+    alert(textmsg);
+}
+
+function ClearCell(){
+      //c - clear - clear current cell, if not locked
+    if (IsAnEditCellID(cellID) == 1) {
+      document.getElementById(cellID).innerHTML = "";
+      send_cell_update(document.getElementById(cellID).innerHTML);
+    }
+}
+
+function SimulateKey(key_pushed) {
+  const kbEvent = new KeyboardEvent("keydown", {
+    bubbles: true,
+    cancelable: true,
+    key: key_pushed
+  });
+  document.body.dispatchEvent(kbEvent);
+}
+
+function Howtoplay() {
+  $("#dialog-message").dialog("open");
+  $("#dialog-message").dialog("option", "width", 800);
+}
+
+function Statistics() {
+  $("#Statistics").dialog("open");
+  $("#Statistics").dialog("option", "width", 800);
+}
+
+function SolutionsDialog() {
+  $("#SolutionDialog").dialog("open");
+  $("#SolutionDialog").dialog("option", "width", 800);
+}
+
+function ClearUnlockedCells() {
+  if (
+    !confirm(
+      "Clear Unlocked. Are you sure? This will clear the board of all numbers that are not locked."
+    )
+  ) {
+    return false;
   }
 
-  if (IsCellStaticID(cellID) == 1) {
-    return 0;
-  } //static cells can't be modified
+  for (var x = 0; x <= 8; x++) {
+    for (var y = 0; y <= 8; y++) {
+      var cellID = "cell_" + x + "_" + y;
+      //document.getElementById(CellID).style.backgroundColor = '';
+      if (IsAnEditCellID(cellID) == 1) {
+        document.getElementById(cellID).innerHTML = "";
+      }
+    }
+  }
+  Save_Sudoku();
+}
 
-  //lock - unlock function
-  if (keyCode == "s") {
-    //s - save
-    var numberlist = document.getElementById(cellID).innerHTML;
+function ResetSudoku() {
+  if (
+    !confirm(
+      "Restart Puzzle? Are you sure? This will clear the board of ALL numbers."
+    )
+  ) {
+    return false;
+  }
+
+  for (var x = 0; x <= 8; x++) {
+    for (var y = 0; y <= 8; y++) {
+      var cellID = "cell_" + x + "_" + y;
+      if (IsCellStaticID(cellID) != 1) {
+        document.getElementById(cellID).innerHTML = "";
+      }
+    }
+  }
+  Save_Sudoku();
+}
+
+function LockUnlock(){
+  var numberlist = document.getElementById(cellID).innerHTML;
     numberlist = numberlist.replace(/\D/g, ""); //remove all but numbers
     if (IsCellLockedID(cellID) == 1) {
       //unlock this square
@@ -1160,32 +1227,6 @@ function keyinput() {
         window.alert("You can only lock squares with one number");
       }
     }
-  }
-
-  if (keyCode >= 1 && keyCode <= 9 && IsCellLockedID(cellID) != 1) {
-    //number keys pressed 1 - 9
-    let numberlist = document.getElementById(cellID).innerHTML;
-    numberlist = numberlist.replace(/\D/g, ""); //remove all but numbers
-    let keychar = keyCode;
-    let founditindex = numberlist.indexOf(keychar, 0);
-    if (founditindex > -1) {
-      //remove number from string
-      let re = new RegExp(keychar, "g");
-      numberlist = numberlist.replace(re, "");
-    } else {
-      numberlist = numberlist + keychar;
-    }
-    //sort our number list for display
-    let t = numberlist.split("");
-    t = t.sort();
-    let t1 = t.slice(0, 3);
-    let t2 = t.slice(3, 6);
-    let t3 = t.slice(6, 9);
-    numberlist = t1.join("") + "<br>" + t2.join("") + "<br>" + t3.join("");
-    document.getElementById(cellID).innerHTML = numberlist; //put numbers back on board
-    send_cell_update(document.getElementById(cellID).innerHTML);
-  }
-  Save_Sudoku(); //after each keystroke
 }
 
 function CountCorrectLocked(mode) {
@@ -1283,72 +1324,6 @@ function Win_Done() {
     }
   }
   alert("You Win!");
-}
-
-function SimulateKey(key_pushed) {
-  const kbEvent = new KeyboardEvent("keydown", {
-    bubbles: true,
-    cancelable: true,
-    key: key_pushed
-  });
-  document.body.dispatchEvent(kbEvent);
-}
-//SimulateKey(); //just to get rid of false not used error
-
-function Howtoplay() {
-  $("#dialog-message").dialog("open");
-  $("#dialog-message").dialog("option", "width", 800);
-}
-
-function Statistics() {
-  $("#Statistics").dialog("open");
-  $("#Statistics").dialog("option", "width", 800);
-}
-
-function SolutionsDialog() {
-  $("#SolutionDialog").dialog("open");
-  $("#SolutionDialog").dialog("option", "width", 800);
-}
-
-function ClearUnlockedCells() {
-  if (
-    !confirm(
-      "Clear Unlocked. Are you sure? This will clear the board of all numbers that are not locked."
-    )
-  ) {
-    return false;
-  }
-
-  for (var x = 0; x <= 8; x++) {
-    for (var y = 0; y <= 8; y++) {
-      var cellID = "cell_" + x + "_" + y;
-      //document.getElementById(CellID).style.backgroundColor = '';
-      if (IsAnEditCellID(cellID) == 1) {
-        document.getElementById(cellID).innerHTML = "";
-      }
-    }
-  }
-  Save_Sudoku();
-}
-
-function ResetSudoku() {
-  if (
-    !confirm(
-      "Restart Puzzle? Are you sure? This will clear the board of ALL numbers."
-    )
-  ) {
-    return false;
-  }
-
-  for (var x = 0; x <= 8; x++) {
-    for (var y = 0; y <= 8; y++) {
-      var cellID = "cell_" + x + "_" + y;
-      if (IsCellStaticID(cellID) != 1) {
-        document.getElementById(cellID).innerHTML = "";
-      }
-    }
-  }
-  Save_Sudoku();
 }
 
 //COOKIE CODE starts
