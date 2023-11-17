@@ -14,7 +14,7 @@ var last_good_count_type = {};
 
 const regions = ["row", "col", "squ"];
 const region_counts = ["00", "01", "02", "10", "11", "12", "20", "21", "22"]; //will be bxlx for col , byly for row , bxby for squ
-const one_to_nine = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+var one_to_nine = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 function ReturnAllThreeRegionCountsForCell(bx, by, lx, ly) {
   //returns region_count for [row,col,squ] eg: [02,12,01]
@@ -245,6 +245,13 @@ function Load_Sudoku() {
   start_cross(document.getElementById("map").value);
   document.getElementById("difficulty").value = save_array.difficulty;
   document.getElementById("counts").innerHTML = save_array.counts;
+  if (typeof save_array.characters != "undefined") {
+    document.getElementById("characters").value = save_array.characters;
+  } else {
+    document.getElementById("characters").value = "123456789";
+  }
+  let characters = document.getElementById("characters").value.trim();
+  one_to_nine = characters.split("");
   Difficulty();
   return true;
 }
@@ -264,6 +271,7 @@ function Save_Sudoku() {
   });
   save_array.difficulty = document.getElementById("difficulty").value;
   save_array.counts = document.getElementById("counts").innerHTML;
+  save_array.characters = document.getElementById("characters").value;
   //save created sudoku
   localStorage.setItem(
     document.getElementById("save_slot").value,
@@ -300,27 +308,46 @@ function Create_Path() {
   return path;
 }
 
-function Create_Full_Sudoku() {
-  sudoku = DIM([3, 3, 3, 3], one_to_nine); //fill Sudoku board with all possibilities "1".."9" : string values so array_diff routine does not fail
-  //start create full Sudoku board
-  let path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
-  SetCellsRecursive(path_temp); //clears path
-
-  //place selections on board
+function Sudoku_To_Board() {
   path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
   path_temp.forEach(function (cell) {
-    let [bx, by, lx, ly] = cell;
-    let [x, y] = BL_To_XY(cell);
+    let bx, by, lx, ly, x, y;
+    [bx, by, lx, ly] = cell;
+    [x, y] = BL_To_XY(cell);
     let cellID = "cell_" + x + "_" + y;
-    let solutionID = "solution_" + x + "_" + y;
-    let value = sudoku[bx][by][lx][ly][0];
+    let value = sudoku[bx][by][lx][ly].toString();
+    if (value != "") {
+      //static
+      //cell_text = "<!--static-->" + value;
+      //document.getElementById(cellID).className = "cellstaticclass";
+      //jscalcpuzz = jscalcpuzz + value;
+    } else {
+      //blank
+      //cell_text = value;
+      //document.getElementById(cellID).className = "cellnotselectedclass";
+      //jscalcpuzz = jscalcpuzz + "-";
+    }
+    //document.getElementById(cellID).onclick = chooseOnClick; //also set onclick
+    //document.getElementById(cellID).innerHTML = cell_text;
     document.getElementById(cellID).innerHTML = value;
-    document.getElementById(solutionID).innerHTML = value; //set solution table
+    // if (count % 9 == 0) {
+    //every 8 count start new line
+    //jscalcpuzz = jscalcpuzz + "\r\n";
+    //}
+    //count++;
   });
 }
 
 function Create_Playable_Sudoku() {
-  $("#dialog-waiting").show();
+  //$("#dialog-waiting").show();
+
+  let characters = document.getElementById("characters").value.trim();
+  if (characters.length != 9) {
+    alert("You need 9 characters");
+    return false;
+  }
+  one_to_nine = characters.split("");
+
   Create_Full_Sudoku();
   RemoveCells();
 
@@ -377,8 +404,67 @@ function Create_Playable_Sudoku() {
     " Blank Cells: " +
     blank_cells;
 
+  ttt = SolveSudoku(); // shows true when not solvable...
+  tt = Solved(); // shows true when not solvable...
+
   Save_Sudoku(); //save created sudoku
   $("#dialog-waiting").hide();
+}
+
+function Create_Full_Sudoku() {
+  sudoku = DIM([3, 3, 3, 3], one_to_nine); //fill Sudoku board with all possibilities "1".."9" : string values so array_diff routine does not fail
+  //start create full Sudoku board
+  let path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
+  SetCellsRecursive(path_temp); //clears path
+
+  //place selections on board
+  path_temp = JSON.parse(JSON.stringify(path)); //temp path as SetCellsRecursive() wipes it
+  path_temp.forEach(function (cell) {
+    let [bx, by, lx, ly] = cell;
+    let [x, y] = BL_To_XY(cell);
+    let cellID = "cell_" + x + "_" + y;
+    let solutionID = "solution_" + x + "_" + y;
+    let value = sudoku[bx][by][lx][ly][0];
+    document.getElementById(cellID).innerHTML = value;
+    document.getElementById(solutionID).innerHTML = value; //set solution table
+  });
+}
+
+function SetCellsRecursive(path) {
+  //recursive routine
+  if (path.length == 0) {
+    return true;
+  } //made it to the end. done. trigger our journey back
+  let backup_for_potential_fail = JSON.stringify(sudoku);
+  let next_square = path.shift();
+  let bigx = next_square[0];
+  let bigy = next_square[1];
+  let littlex = next_square[2];
+  let littley = next_square[3];
+  let potential_numbers = sudoku[bigx][bigy][littlex][littley]; //convert set to array
+  potential_numbers = Array_Shuffle(potential_numbers); //shuffle
+  while (potential_numbers.length > 0) {
+    //if we still have potential numbers in this square try another one
+    let chosen = potential_numbers.pop(); //pick a number
+    RemoveValuesFromCellsInAll3Regions(bigx, bigy, littlex, littley, [chosen]); //remove chosen number from potential values in squ,col,row
+    sudoku[bigx][bigy][littlex][littley] = [chosen]; //set chosen number
+    if (Are_There_Blank_Cells() == true) {
+      //a square ran out of potential numbers
+      sudoku = JSON.parse(backup_for_potential_fail); //restore board
+      continue; //try another
+    }
+    //success. lets try the next cell in the path
+    result = SetCellsRecursive(path);
+    if (result == false) {
+      //our recursive attempt failed. restore board and try another potential value from this cell
+      sudoku = JSON.parse(backup_for_potential_fail); //restore board
+    } else {
+      return true; //making our way back home
+    }
+  }
+  //all potential numbers failed on this cell. return false. recurse back
+  path.unshift(next_square); //must unshift if we want to come back here. and we do.
+  return false;
 }
 
 function RemoveCells() {
@@ -412,24 +498,31 @@ function RemoveCells() {
     //count_type = {"nsf":0 , "ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
     //try to solve sudoku array. Solve me mangles global sudoku array so we will need to restore it
     let result;
-    try {
-      result = SolveSudoku();
-      if (result) {
-        //success : save
-        sudoku = JSON.parse(potential_sudoku); //save board
-        last_good_count_type = JSON.parse(JSON.stringify(count_type));
-        blank_cells++;
-      } else {
-        //fail : restore
-        sudoku = JSON.parse(backup_sudoku_array); //restore previous board
-      }
-    } catch (err) {
-      console.error(err);
+    //try {
+    result = SolveSudoku();
+    if (result) {
+      //success : save
+      sudoku = JSON.parse(potential_sudoku); //save board
+      last_good_count_type = JSON.parse(JSON.stringify(count_type));
+      blank_cells++;
+      //document.getElementById("puzz").innerHTML = result + JSON.stringify(sudoku);
+    } else {
+      //fail : restore
       sudoku = JSON.parse(backup_sudoku_array); //restore previous board
+      //document.getElementById("puzz").innerHTML = result + JSON.stringify(sudoku);
     }
+    //} catch (err) {
+    //console.error(err);
+    //sudoku = JSON.parse(backup_sudoku_array); //restore previous board
+    //}
 
     d = new Date();
   } //end while
+
+  //ttt = SolveSudoku(); // shows true when not solvable...
+  //tt = Solved(); // shows true when not solvable...
+
+  //var tt = 9;
 }
 
 function SolveSudoku() {
@@ -440,33 +533,46 @@ function SolveSudoku() {
 
   count_type = { nsf: 0, ns: 0, hs: 0, np: 0, hp: 0, ir: 0, xw: 0, yw: 0 }; //start new count. this might be final run
 
-  //THIS WILL BE NS COUNT ALSO
   FillBlankCellsWithpotentialValues(); //fill potential values for all empty cells. note this will solve all easy ns at the start also
-  //HOW IS THIS SOLVING FOR MORE COMPLEX SUDOKU WHERE THERE ARE MORE THAN ONE POTENTIAL VALUE?
+  //will have multiple values
+  //Sudoku_To_Board();
 
   do {
     progress = 0;
+
     //only useful on complex levels as FillBlankCellsWithpotentialValues fills in all squares on easy levels
     if (document.getElementById("NS").checked == true) {
-      //progress = progress + NS(bx, by, lx, ly);
       progress = progress + NS();
     } //ns
-
     if (document.getElementById("HS").checked == true) {
       progress = progress + HS();
     } //hs
+    //reduces some cells to 1
+    //Sudoku_To_Board();
     if (document.getElementById("NP").checked == true) {
       progress = progress + NP();
     } //np
+    //reduces some cells by one or two
+    //Sudoku_To_Board();
     if (document.getElementById("HP").checked == true) {
       progress = progress + HP();
     } //hp
+    //reduces some cells to 2
+    //Sudoku_To_Board();
     if (document.getElementById("IR").checked == true) {
       progress = progress + IR();
     } //ir
+    //reduces some cells by one
+    //Sudoku_To_Board();
+
+    //reduces some cells by 1
+    //Sudoku_To_Board();
     //xwing
     //ywing
     let solved = Solved(); //if all cells have 1 value
+
+    //Sudoku_To_Board();
+
     if (solved) {
       //solved if all cells have 1 possibility (ns)
       return true;
@@ -493,7 +599,8 @@ function FillBlankCellsWithpotentialValues() {
       });
       let potential_numbers = Array_Difference(one_to_nine, solved_numbers); //difference of that list
       sudoku[bx][by][lx][ly] = potential_numbers; //used by hs,mp,hp,ir,xw,yw...
-      if (potential_numbers.length == 1) { //found a pre ns
+      if (potential_numbers.length == 1) {
+        //found a pre ns
         count_type[current_active_count]++;
       }
     }
@@ -656,46 +763,59 @@ function NP() {
 }
 
 function HP() {
-  //if two values in a region are found together among other values twice, that is a HP. convert to NP
+  //if two values in a region are found together among other values in two cells, that is a HP. convert to NP
   let progress = 0;
   current_active_count = "hp";
   regions.forEach(function (region) {
     region_counts.forEach(function (region_count) {
-      let two_values_cells = {}; // two_values_cells[value_pair] = [ [cell1] , [cell2] ]
+      let single_values = {};
+      let values_in_two_cells = [];
       let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
       cells.forEach(function (cell) {
         let [bx, by, lx, ly] = cell;
-        if (sudoku[bx][by][lx][ly].length > 2) {
-          // cells with 3 or more values to be hidden
-          let value_array = sudoku[bx][by][lx][ly].sort().slice(); //sort is important for comparing, slice so we create a NEW array!
-          while (value_array.length > 1) {
-            //get all possible pairs
-            let first_value = value_array.shift();
-            value_array.forEach(function (next_value) {
-              let pair = "" + first_value + next_value;
-              if (typeof two_values_cells[pair] == "undefined") {
-                two_values_cells[pair] = [];
-              }
-              two_values_cells[pair].push(cell);
-            });
+        let values = sudoku[bx][by][lx][ly];
+        values.forEach(function (value) {
+          if (typeof single_values[value] == "undefined") {
+            single_values[value] = [];
           }
-        }
+          single_values[value].push(cell); //list cells and single values.
+        });
       });
-      //look for HP in region,region_count
-      let potential_pairs = Object.keys(two_values_cells);
-      potential_pairs.forEach(function (potential_pair) {
-        if (two_values_cells[potential_pair].length == 2) {
-          //found HP
-          let values = potential_pair.split(""); //get both values
-          two_values_cells[potential_pair].forEach(function (cell) {
-            //convert found HP pairs to np cells
-            let [bx, by, lx, ly] = cell;
-            sudoku[bx][by][lx][ly] = values;
-            progress++;
-            count_type[current_active_count]++;
-          });
-        }
+      //find values with 2 cells only,
+      values_in_two_cells = Object.keys(single_values).filter(function (value) {
+        return single_values[value].length == 2;
       });
+      while (values_in_two_cells.length > 1) {
+        //get and test all possible pairs
+        let first_value = values_in_two_cells.shift();
+        values_in_two_cells.forEach(function (next_value) {
+          let fv_cell1 = single_values[first_value][0].join();
+          let nv_cell1 = single_values[next_value][0].join();
+          let fv_cell2 = single_values[first_value][1].join();
+          let nv_cell2 = single_values[next_value][1].join();
+
+          if (
+            single_values[first_value][0].join() ==
+              single_values[next_value][0].join() &&
+            single_values[first_value][1].join() ==
+              single_values[next_value][1].join()
+          ) {
+            // pairs are in same cells
+            single_values[first_value].forEach(function (cell) {
+              let [bx, by, lx, ly] = cell;
+              if (sudoku[bx][by][lx][ly].length > 2) {
+                //check each cell and if length > 2 we have found an hp
+                sudoku[bx][by][lx][ly] = [first_value, next_value];
+                progress++;
+                count_type[current_active_count]++;
+              }
+            });
+          } else {
+            let t = 9;
+            //does it ever fail, if not why?
+          }
+        });
+      }
     });
   });
   return progress;
@@ -853,43 +973,6 @@ function Are_There_Blank_Cells() {
   return false;
 }
 
-function SetCellsRecursive(path) {
-  //recursive routine
-  if (path.length == 0) {
-    return true;
-  } //made it to the end. done. trigger our journey back
-  let backup_for_potential_fail = JSON.stringify(sudoku);
-  let next_square = path.shift();
-  let bigx = next_square[0];
-  let bigy = next_square[1];
-  let littlex = next_square[2];
-  let littley = next_square[3];
-  let potential_numbers = sudoku[bigx][bigy][littlex][littley]; //convert set to array
-  potential_numbers = Array_Shuffle(potential_numbers); //shuffle
-  while (potential_numbers.length > 0) {
-    //if we still have potential numbers in this square try another one
-    let chosen = potential_numbers.pop(); //pick a number
-    RemoveValuesFromCellsInAll3Regions(bigx, bigy, littlex, littley, [chosen]); //remove chosen number from potential values in squ,col,row
-    sudoku[bigx][bigy][littlex][littley] = [chosen]; //set chosen number
-    if (Are_There_Blank_Cells() == true) {
-      //a square ran out of potential numbers
-      sudoku = JSON.parse(backup_for_potential_fail); //restore board
-      continue; //try another
-    }
-    //success. lets try the next cell in the path
-    result = SetCellsRecursive(path);
-    if (result == false) {
-      //our recursive attempt failed. restore board and try another potential value from this cell
-      sudoku = JSON.parse(backup_for_potential_fail); //restore board
-    } else {
-      return true; //making our way back home
-    }
-  }
-  //all potential numbers failed on this cell. return false. recurse back
-  path.unshift(next_square); //must unshift if we want to come back here. and we do.
-  return false;
-}
-
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
@@ -1003,9 +1086,7 @@ function choose(cellID) {
   }
 
   //take care of new cell
-  //LastCursorClass = document.getElementById(cellID).className; //remember the last cursor color
   LastCursorID = cellID; //remember the last cursor cell
-
   //asumption
   document.getElementById(cellID).className = "cellselectedclass"; //selected square back to yellow
   if (IsCellLockedID(cellID) == 1) {
@@ -1077,7 +1158,11 @@ function keyinput() {
     let numberlist = document.getElementById(cellID).innerHTML;
     //numberlist = numberlist.replace(/\D/g, ""); //remove all but numbers
     let numberlist_array = numberlist.split("<br>"); //split lines
-    numberlist = "" + (typeof numberlist_array[0] != "undefined" ? numberlist_array[0] : "") + (typeof numberlist_array[1] != "undefined" ? numberlist_array[1] : "")  + (typeof numberlist_array[2] != "undefined" ? numberlist_array[2] : "");
+    numberlist =
+      "" +
+      (typeof numberlist_array[0] != "undefined" ? numberlist_array[0] : "") +
+      (typeof numberlist_array[1] != "undefined" ? numberlist_array[1] : "") +
+      (typeof numberlist_array[2] != "undefined" ? numberlist_array[2] : "");
     let keychar = keyCode;
     let founditindex = numberlist.indexOf(keychar, 0);
     if (founditindex > -1) {
@@ -1101,36 +1186,36 @@ function keyinput() {
   Save_Sudoku(); //after each keystroke
 }
 
-function RevealBadChoices(){
-     //r - reveal - check how we are doing status and send to chat box
-    let textmsg =
-      "Numbers selected:" +
-      CountLocked() +
-      "Correct:" +
-      CountCorrectLocked("reveal") +
-      "\n\r\n\rNote: this only counts locked numbers.";
-    //send_chat(textmsg);
-    alert(textmsg);
+function RevealBadChoices() {
+  //r - reveal - check how we are doing status and send to chat box
+  let textmsg =
+    "Numbers selected:" +
+    CountLocked() +
+    "Correct:" +
+    CountCorrectLocked("reveal") +
+    "\n\r\n\rNote: this only counts locked numbers.";
+  //send_chat(textmsg);
+  alert(textmsg);
 }
 
-function HowAmIDoing(){
-      //how - check how we are doing status and send to chat box
-    var textmsg =
-      "Numbers selected:" +
-      CountLocked() +
-      " Correct:" +
-      CountCorrectLocked("how") +
-      "\n\r\n\rNote: this only counts locked numbers.";
-    //send_chat(textmsg);
-    alert(textmsg);
+function HowAmIDoing() {
+  //how - check how we are doing status and send to chat box
+  var textmsg =
+    "Numbers selected:" +
+    CountLocked() +
+    " Correct:" +
+    CountCorrectLocked("how") +
+    "\n\r\n\rNote: this only counts locked numbers.";
+  //send_chat(textmsg);
+  alert(textmsg);
 }
 
-function ClearCell(){
-      //c - clear - clear current cell, if not locked
-    if (IsAnEditCellID(cellID) == 1) {
-      document.getElementById(cellID).innerHTML = "";
-      send_cell_update(document.getElementById(cellID).innerHTML);
-    }
+function ClearCell() {
+  //c - clear - clear current cell, if not locked
+  if (IsAnEditCellID(cellID) == 1) {
+    document.getElementById(cellID).innerHTML = "";
+    send_cell_update(document.getElementById(cellID).innerHTML);
+  }
 }
 
 function SimulateKey(key_pushed) {
@@ -1198,35 +1283,37 @@ function ResetSudoku() {
   Save_Sudoku();
 }
 
-function LockUnlock(){
+function LockUnlock() {
   var numberlist = document.getElementById(cellID).innerHTML;
-    numberlist = numberlist.replace(/\D/g, ""); //remove all but numbers
-    if (IsCellLockedID(cellID) == 1) {
-      //unlock this square
-      document.getElementById(cellID).innerHTML = numberlist;
-      document.getElementById(cellID).className = "cellnotselectedclass";
+  //numberlist = numberlist.replace(/\D/g, ""); //remove all but numbers
+  let numberlist_array = numberlist.split("<br>"); //split lines
+  numberlist_array = numberlist_array[0].split("<!--locked-->"); //remove <!--locked-->
+  numberlist = numberlist_array[0];
+  if (IsCellLockedID(cellID) == 1) {
+    //unlock this square
+    document.getElementById(cellID).innerHTML = numberlist_array[0];
+    document.getElementById(cellID).className = "cellnotselectedclass";
+    LastCursorClass = document.getElementById(cellID).className;
+    document.getElementById(cellID).className = "cellselectedclass";
+    send_cell_update(document.getElementById(cellID).innerHTML);
+  } else {
+    //lock the square
+    if (numberlist.length == 1) {
+      //lock this square
+      document.getElementById(cellID).innerHTML = numberlist + "<!--locked-->";
+      document.getElementById(cellID).className = "celllockedclass";
       LastCursorClass = document.getElementById(cellID).className;
-      document.getElementById(cellID).className = "cellselectedclass";
+      document.getElementById(cellID).className = "cellgrayclass";
       send_cell_update(document.getElementById(cellID).innerHTML);
-    } else {
-      //lock the square
-      if (numberlist.length == 1) {
-        //lock this square
-        document.getElementById(cellID).innerHTML =
-          numberlist + "<!--locked-->";
-        document.getElementById(cellID).className = "celllockedclass";
-        LastCursorClass = document.getElementById(cellID).className;
-        document.getElementById(cellID).className = "cellgrayclass";
-        send_cell_update(document.getElementById(cellID).innerHTML);
-        //if (blanksquares == CountCorrectLocked(count)) { //did we win?
-        if (Did_We_Win()) {
-          //did we win?
-          IWin();
-        }
-      } else {
-        window.alert("You can only lock squares with one number");
+      //if (blanksquares == CountCorrectLocked(count)) { //did we win?
+      if (Did_We_Win()) {
+        //did we win?
+        IWin();
       }
+    } else {
+      window.alert("You can only lock squares with one number");
     }
+  }
 }
 
 function CountCorrectLocked(mode) {
@@ -1395,8 +1482,9 @@ function DeleteCookies() {
 
 //COOKIE CODE ends
 
-//code found author unknown
-//called ncross.js
+//sudoku solve code found many years ago. author unknown. it was called ncross.js
+//I use to compare and verify the sudoku my code created
+//I have modified display code
 
 var dec2bit = [];
 var bit2dec = [];
@@ -1946,6 +2034,7 @@ function numofbits(bits) {
 }
 
 function display(id) {
+  document.getElementById("ok").innerHTML = "ok";
   var tabletag = document.createElement("table");
   var tbodytag = document.createElement("tbody");
   for (let y = 1; y <= 9; y++) {
@@ -1969,6 +2058,7 @@ function display(id) {
           val = "-"; // at first
         }
         tdtag.className += " null";
+        document.getElementById("ok").innerHTML = "not ok";
       }
       let tnode = document.createTextNode(val);
       tdtag.appendChild(tnode);
