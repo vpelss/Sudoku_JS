@@ -1,4 +1,8 @@
 //use "potential" not possible or probable
+//candidate?
+//box not squ?
+//NT - hp and hs solces
+//HT !!
 
 var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [1..9]
 var path = []; //all cells in order
@@ -563,6 +567,11 @@ function SolveSudoku() {
       progress = progress + IR();
     } //ir
     //reduces some cells by one
+
+    if (document.getElementById("XW").checked == true) {
+      progress = progress + XW();
+    } //xw
+    //reduces some cells by ??
     //Sudoku_To_Board();
 
     //reduces some cells by 1
@@ -882,6 +891,76 @@ function IR() {
       });
     });
   });
+  return progress;
+}
+
+function XW() {
+  let progress = 0;
+  let removed;
+  current_active_count = "xr";
+  ["row", "col"].forEach(function (region) {
+    let cells_of_value_twice_for_region_count = {}; //cells_of_value_twice_for_region_count[value][region_count] = [cell1, cell2]]
+    let region_counts_with_two_values = {};
+    let cells_with_value = {};
+    region_counts.forEach(function (region_count) {
+      // count values for each cell in region count. we are looking fow values that occur only twice in a region_count and twice in a second region_count
+      let cells_with_value_for_region_count = {};
+      let cells = ReturnCellsForRegionAndRegionCount(region, region_count);
+      cells.forEach(function (cell) {
+        let [bx, by, lx, ly] = cell;
+        let values_array = sudoku[bx][by][lx][ly];
+        values_array.forEach(function (value) {
+          if (typeof cells_with_value[value] == "undefined") {
+            cells_with_value[value] = [];
+          }
+          if (typeof cells_with_value_for_region_count[value] == "undefined") {
+            cells_with_value_for_region_count[value] = [];
+          }
+          cells_with_value[value].push(cell);
+          cells_with_value_for_region_count[value].push(cell);
+        }); //we have values per region_count
+      }); // cells
+      
+      //now look for values that occur only twice in a region_count and twice in a second region_count
+      //find region_counts that have 2 values
+      let values = Object.keys(cells_with_value_for_region_count);
+      values.forEach(function (value) {
+        if (cells_with_value_for_region_count[value].length == 2) {
+          //if (typeof region_counts_with_two_values[value] == "undefined") {
+            //region_counts_with_two_values[value] = [];
+          //}
+          //region_counts_with_two_values[value].push(region_count);
+  
+          if (typeof cells_of_value_twice_for_region_count[value] == "undefined") {
+            cells_of_value_twice_for_region_count[value] = {};
+          }
+          if (typeof cells_of_value_twice_for_region_count[value][region_count] == "undefined") {
+            cells_of_value_twice_for_region_count[value][region_count] = {};
+          }        
+          cells_of_value_twice_for_region_count[value][region_count] = cells_with_value_for_region_count[value];
+        }
+      }); //values
+    }); //region counts
+    
+    //look for region_counts_with_two_values that have 2 region_counts
+    one_to_nine.forEach(function(value){
+    //try all combos of pairs of region_counts_with_two_values[value] and test for xwing
+    let region_counts = Object.keys(cells_of_value_twice_for_region_count[value]);
+
+    //cycle though each region_counts pairs and look for xwing   
+    while(region_counts.length > 1){
+      let first_region_count = region_counts.shift;
+      region_counts.forEach(function(region_count){
+        let [c1,c2] = cells_of_value_twice_for_region_count[value][first_region_count];
+        let [c3,c4] = cells_of_value_twice_for_region_count[value][region_count];
+        //look for xw
+        
+        }); 
+    }
+    
+     }); // one_to_nine
+    
+  }); //regions row / col
   return progress;
 }
 
