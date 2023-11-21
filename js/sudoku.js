@@ -798,10 +798,10 @@ function HP() {
         //get and test all possible pairs
         let first_value = values_in_two_cells.shift();
         values_in_two_cells.forEach(function (next_value) {
-          let fv_cell1 = single_values[first_value][0].join();
-          let nv_cell1 = single_values[next_value][0].join();
-          let fv_cell2 = single_values[first_value][1].join();
-          let nv_cell2 = single_values[next_value][1].join();
+          //let fv_cell1 = single_values[first_value][0].join();
+          //let nv_cell1 = single_values[next_value][0].join();
+          //let fv_cell2 = single_values[first_value][1].join();
+          //let nv_cell2 = single_values[next_value][1].join();
 
           if (
             single_values[first_value][0].join() ==
@@ -897,11 +897,9 @@ function IR() {
 function XW() {
 	let progress = 0;
 	let removed = 0;
-	current_active_count = "xr";
+	current_active_count = "xw";
 	["row", "col"].forEach(function(region) {
 		let cells_of_value_twice_for_region_count = {}; //cells_of_value_twice_for_region_count[value][region_count] = [cell1, cell2]]
-		let region_counts_with_two_values = {};
-		let cells_with_value = {};
 		region_counts.forEach(function(region_count) {
 			// count values for each cell in region count. we are looking fow values that occur only twice in a region_count and twice in a second region_count
 			let cells_with_value_for_region_count = {};
@@ -910,40 +908,21 @@ function XW() {
 				let[bx, by, lx, ly] = cell;
 				let values_array = sudoku[bx][by][lx][ly];
 				values_array.forEach(function(value) {
-          cells_with_value[value] = cells_with_value[value] || [];
-					//if (typeof cells_with_value[value] == "undefined") {
-						//cells_with_value[value] = [];
-					//}
-          cells_with_value_for_region_count[value] = cells_with_value_for_region_count[value] || [];
-					//if (typeof cells_with_value_for_region_count[value] == "undefined") {
-						//cells_with_value_for_region_count[value] = [];
-					//}
-					cells_with_value[value].push(cell);
+          cells_with_value_for_region_count[value] = cells_with_value_for_region_count[value] || []; //create if required
 					cells_with_value_for_region_count[value].push(cell);
 				}); //we have values per region_count
 			}); // cells
-
 			//now look for values that occur only twice in a region_count and twice in a second region_count
 			//find region_counts that have 2 values
 			let values = Object.keys(cells_with_value_for_region_count);
 			values.forEach(function(value) {
 				if (cells_with_value_for_region_count[value].length == 2) {
-					//if (typeof region_counts_with_two_values[value] == "undefined") {
-					//region_counts_with_two_values[value] = [];
-					//}
-					//region_counts_with_two_values[value].push(region_count);
-
-					if (typeof cells_of_value_twice_for_region_count[value] == "undefined") {
-						cells_of_value_twice_for_region_count[value] = {};
-					}
-					if (typeof cells_of_value_twice_for_region_count[value][region_count] == "undefined") {
-						cells_of_value_twice_for_region_count[value][region_count] = {};
-					}
+           cells_of_value_twice_for_region_count[value] = cells_of_value_twice_for_region_count[value] || {}; //create if required
+           cells_of_value_twice_for_region_count[value][region_count] = cells_of_value_twice_for_region_count[value][region_count] || {}; //create if required
 					cells_of_value_twice_for_region_count[value][region_count] = cells_with_value_for_region_count[value];
 				}
 			}); //values
 		}); //region counts
-
 		//for each region_counts that were found to have 2 values, try all pair combinations and  and look for xwing   
 		one_to_nine.forEach(function(value) {
       let region_counts;
@@ -954,8 +933,7 @@ function XW() {
 				region_counts.forEach(function(region_count) {
 					let[c1, c2] = cells_of_value_twice_for_region_count[value][first_region_count];
 					let[c3, c4] = cells_of_value_twice_for_region_count[value][region_count];
-          let crossing_region;
-          (region == "row") ? crossing_region = "col" : crossing_region = "row" ;       
+          let crossing_region = (region == "row") ? "col" : "row" ;       
           let c1_crossing_region_count = ReturnRegionCountForRegionAndCell(crossing_region, ...c1);
           let c2_crossing_region_count = ReturnRegionCountForRegionAndCell(crossing_region, ...c2);
           let c3_crossing_region_count = ReturnRegionCountForRegionAndCell(crossing_region, ...c3);
@@ -964,6 +942,7 @@ function XW() {
             removed = 0;
             removed = removed + RemoveValuesFromCellsInRegionAndRegionCount(crossing_region,c1_crossing_region_count,[value]);
             removed = removed + RemoveValuesFromCellsInRegionAndRegionCount(crossing_region,c2_crossing_region_count,[value]);
+            //putem back
             let [bx,by,lx,ly] = c1;
             sudoku[bx][by][lx][ly].push(value);
             [bx,by,lx,ly] = c2;
