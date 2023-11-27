@@ -1,8 +1,8 @@
 //use "potential" not possible or probable
 //candidate?
 //box not squ?
-//NT - hp and hs solces
-//HT !!
+//HT - hp and hs solves for hidden triplets?
+//NT ??
 
 var sudoku; // sudoku[BigX][BigY][LittleX][LittleY] = [1..9]
 var path = []; //all cells in order
@@ -10,11 +10,10 @@ var forever = new Date("October 17, 2050 03:24:00"); // use in cookies
 var blank_cells; //running count of removed cells
 
 var LastCursorID = "cell_0_0";
-var intable = 1;
 
-var count_type = {}; // count_type["ns"] = 5 : we only count when method actualy progresses to a solution
-var current_active_count; //will be ns, np, etc count_type[current_active_count]
-var last_good_count_type = {};
+var solve_method_count = {}; // solve_method_count["ns"] = 5 : we only count when method actually progresses to a solution
+var current_active_count; //will be ns, np, etc solve_method_count[current_active_count]
+var last_good_solve_method_count = {};
 
 const regions = ["row", "col", "squ"];
 const region_counts = ["00", "01", "02", "10", "11", "12", "20", "21", "22"]; //will be bxlx for col , byly for row , bxby for squ
@@ -135,7 +134,7 @@ function RemoveValuesFromCellsInRegionAndRegionCount(
     if (array_start != array_end) {
       removed_cells++; //FIX
       if (sudoku[bx][by][lx][ly].length == 1) {
-        //count_type[current_active_count]++;
+        //solve_method_count[current_active_count]++;
       }
     }
   });
@@ -390,21 +389,21 @@ function Create_Playable_Sudoku() {
 
   document.getElementById("counts").innerHTML =
     "NSF:" +
-    last_good_count_type.nsf +
+    last_good_solve_method_count.nsf +
     " NS:" +
-    last_good_count_type.ns +
+    last_good_solve_method_count.ns +
     " HS:" +
-    last_good_count_type.hs +
+    last_good_solve_method_count.hs +
     " NP:" +
-    last_good_count_type.np +
+    last_good_solve_method_count.np +
     " HP:" +
-    last_good_count_type.hp +
+    last_good_solve_method_count.hp +
     " IR:" +
-    last_good_count_type.ir +
+    last_good_solve_method_count.ir +
     " XW:" +
-    last_good_count_type.xw +
+    last_good_solve_method_count.xw +
     " YW:" +
-    last_good_count_type.yw +
+    last_good_solve_method_count.yw +
     " Blank Cells: " +
     blank_cells;
 
@@ -499,7 +498,7 @@ function RemoveCells() {
     sudoku[bx][by][lx][ly] = []; //remove value
 
     potential_sudoku = JSON.stringify(sudoku);
-    //count_type = {"nsf":0 , "ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
+    //solve_method_count = {"nsf":0 , "ns":0 , "hs":0 , "np":0 , "hp":0 , "ir":0 , "xw":0 , "yw":0 }; //start new count. this might be final run
     //try to solve sudoku array. Solve me mangles global sudoku array so we will need to restore it
     let result;
     //try {
@@ -507,7 +506,7 @@ function RemoveCells() {
     if (result) {
       //success : save
       sudoku = JSON.parse(potential_sudoku); //save board
-      last_good_count_type = JSON.parse(JSON.stringify(count_type));
+      last_good_solve_method_count = JSON.parse(JSON.stringify(solve_method_count));
       blank_cells++;
       //document.getElementById("puzz").innerHTML = result + JSON.stringify(sudoku);
     } else {
@@ -535,7 +534,7 @@ function SolveSudoku() {
   //start board off by calculating simple starting possibilities for blank cells in entire board
   //then try to reduce all possibilities to 1 value for each cell using ns,hs,np...
 
-  count_type = { nsf: 0, ns: 0, hs: 0, np: 0, hp: 0, ir: 0, xw: 0, yw: 0 }; //start new count. this might be final run
+  solve_method_count = { nsf: 0, ns: 0, hs: 0, np: 0, hp: 0, ir: 0, xw: 0, yw: 0 }; //start new count. this might be final run
 
   FillBlankCellsWithpotentialValues(); //fill potential values for all empty cells. note this will solve all easy ns at the start also
   //will have multiple values
@@ -610,7 +609,7 @@ function FillBlankCellsWithpotentialValues() {
       sudoku[bx][by][lx][ly] = potential_numbers; //used by hs,mp,hp,ir,xw,yw...
       if (potential_numbers.length == 1) {
         //found a pre ns
-        count_type[current_active_count]++;
+        solve_method_count[current_active_count]++;
       }
     }
   });
@@ -678,7 +677,7 @@ function NS() {
         removed--; //as we just restored
         if (removed) {
           //progress account for removing in our cell
-          count_type[current_active_count]++;
+          solve_method_count[current_active_count]++;
           progress++;
         }
       }
@@ -698,9 +697,7 @@ function HS() {
       cells.forEach(function ([bx, by, lx, ly]) {
         //count values
         sudoku[bx][by][lx][ly].forEach(function (value) {
-          if (typeof single_values_associative[value] == "undefined") {
-            single_values_associative[value] = [];
-          }
+          single_values_associative[value] = single_values_associative[value] || []; //create if required
           single_values_associative[value].push([bx, by, lx, ly]);
         }); //count single values
       }); //cells
@@ -712,7 +709,7 @@ function HS() {
           if (sudoku[bx][by][lx][ly].length > 1) {
             //it is only a HS if it is hidden : found HS
             sudoku[bx][by][lx][ly] = [single_value];
-            count_type[current_active_count]++;
+            solve_method_count[current_active_count]++;
             progress++;
           }
         }
@@ -734,9 +731,7 @@ function NP() {
         if (sudoku[bx][by][lx][ly].length == 2) {
           //store cells with two values
           let value_string = sudoku[bx][by][lx][ly].sort().join(""); //sort is important to compare
-          if (typeof two_values_cells[value_string] == "undefined") {
-            two_values_cells[value_string] = [];
-          }
+          two_values_cells[value_string] = two_values_cells[value_string] || []; //create if required
           two_values_cells[value_string].push(cell);
         }
       });
@@ -762,7 +757,7 @@ function NP() {
           if (cells_removed) {
             //not only did we find NP, we removed values
             progress++;
-            count_type[current_active_count]++;
+            solve_method_count[current_active_count]++;
           }
         }
       });
@@ -784,10 +779,8 @@ function HP() {
         let [bx, by, lx, ly] = cell;
         let values = sudoku[bx][by][lx][ly];
         values.forEach(function (value) {
-          if (typeof single_values[value] == "undefined") {
-            single_values[value] = [];
-          }
-          single_values[value].push(cell); //list cells and single values.
+          single_values[value] = single_values[value] || []; //create if required
+         single_values[value].push(cell); //list cells and single values.
         });
       });
       //find values with 2 cells only,
@@ -798,11 +791,6 @@ function HP() {
         //get and test all possible pairs
         let first_value = values_in_two_cells.shift();
         values_in_two_cells.forEach(function (next_value) {
-          //let fv_cell1 = single_values[first_value][0].join();
-          //let nv_cell1 = single_values[next_value][0].join();
-          //let fv_cell2 = single_values[first_value][1].join();
-          //let nv_cell2 = single_values[next_value][1].join();
-
           if (
             single_values[first_value][0].join() ==
               single_values[next_value][0].join() &&
@@ -816,7 +804,7 @@ function HP() {
                 //check each cell and if length > 2 we have found an hp
                 sudoku[bx][by][lx][ly] = [first_value, next_value];
                 progress++;
-                count_type[current_active_count]++;
+                solve_method_count[current_active_count]++;
               }
             });
           } else {
@@ -849,9 +837,7 @@ function IR() {
         let [bx, by, lx, ly] = cell;
         let values_array = sudoku[bx][by][lx][ly].sort().slice(); //sort is important for comparing, slice so we create a NEW array!
         values_array.forEach(function (value) {
-          if (typeof cells_with_value[value] == "undefined") {
-            cells_with_value[value] = [];
-          }
+          cells_with_value[value] = cells_with_value[value] || []; //create if required
           cells_with_value[value].push(cell);
         });
       });
@@ -885,7 +871,7 @@ function IR() {
           //}
           if (removed > 0) {
             progress++;
-            count_type[current_active_count]++;
+            solve_method_count[current_active_count]++;
           }
         }
       });
@@ -954,7 +940,7 @@ function XW() {
             removed = removed - 4;            
             if(removed > 0){
               progress++;
-              count_type[current_active_count]++;
+              solve_method_count[current_active_count]++;
             }
           }       
 				});
@@ -962,6 +948,12 @@ function XW() {
 		}); // one_to_nine
 	}); //regions row / col 
 	return progress;
+}
+
+function YW(){
+//yw: cell with two values, if one of those values is in an overlapping region, and the other value in in another overlapping region, and those cells are mixed with a same third value, then y wing. remove the third value from ??? the intersection of those two regions?  
+//https://www.sudokuwiki.org/Y_Wing_Strategy
+  
 }
 
 function IfIrFoundReturnRegionAndRegionCount(region, cells) {
@@ -1096,8 +1088,8 @@ function Array_Shuffle(array) {
 }
 
 function DIM(arrayOfDimensions, theValue) {
-  //like the BASIC DIM : var multiDimensionalArray = DIM([7,8,9],{jj:9 , kk:8})
-  let localArrayOfDimensions = arrayOfDimensions.slice(); //must copy array as scope for arrayofdimensions is global
+  //like the BASIC DIM : var multiDimensionalArray = DIM([7,8,9],{jj:9 , kk:8}), will return multiDimensionalArray[7][8][9] with all values set to {jj:9 , kk:8}
+  let localArrayOfDimensions = [...arrayOfDimensions]; //must copy array as scope for arrayofdimensions is not local scope
   let returnArray = [];
   if (localArrayOfDimensions.length === 0) {
     //no more dimensions
@@ -1185,11 +1177,7 @@ function keyinput() {
   var x = xy[0];
   var y = xy[1];
 
-  if (intable == 0) {
-    return 0;
-  } //we are not typing in the table. ignore
-
-  if (keyCode == "ArrowLeft") {
+   if (keyCode == "ArrowLeft") {
     if (x <= 0) {
       x = 8;
     } else {
