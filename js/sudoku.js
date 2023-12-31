@@ -134,11 +134,9 @@ function RemoveValuesFromCellsInRegionAndRegionCount(
     if (array_start != array_end) {
       removed_cells++; //FIX
       if (sudoku[bx][by][lx][ly].length == 1) {
-        //solve_method_count[current_active_count]++;
       }
     }
   });
-  //if(removed_cells < 0){removed_cells = 0;}
   return removed_cells; //number of cell that values were removed
 }
 
@@ -807,10 +805,7 @@ function HP() {
                 solve_method_count[current_active_count]++;
               }
             });
-          } else {
-            let t = 9;
-            //does it ever fail, if not why?
-          }
+          } 
         });
       }
     });
@@ -951,7 +946,10 @@ function XW() {
 }
 
 function YW(){
-//yw: cell with two values, if one of those values is in an overlapping region, and the other value in in another overlapping region, and those cells are mixed with a same third value, then y wing. remove the third value from ??? the intersection of those two regions?  
+//yw: a cell in region alpha with two values, if one of those values is in a cell in a shared / overlapping region,
+//and the other value is in a cell in a second shared / overlapping region,
+//and those cells are mixed with a same third value, 
+//then y wing. remove the third value from ??? the intersection of those two regions?
 //https://www.sudokuwiki.org/Y_Wing_Strategy
   
 }
@@ -1508,43 +1506,6 @@ function setCookie(name, value, expires, path, domain, secure) {
   secure = secure ? ";secure" : "";
 
   document.cookie = name + "=" + value + expires + path + domain + secure;
-}
-
-function deleteCookie(name, path, domain) {
-  var expires = ";expires=Thu, 01-Jan-70 00:00:01 GMT";
-  if (path) {
-    path = ";path=" + path;
-  } else {
-    path = "";
-  }
-  if (domain) {
-    domain = ";domain=" + domain;
-  } else {
-    domain = "";
-  }
-  //(path)    ? ';path='    + path                  : '';
-  //(domain)  ? ';domain='  + domain                : '';
-  if (getCookie(name)) document.cookie = name + "=" + expires + path + domain;
-}
-
-function listCookies() {
-  var theCookies = document.cookie.split(";");
-  var anArray = [];
-  for (var i = 0; i < theCookies.length; i++) {
-    theCookie = theCookies[i].split("=");
-    anArray[i] = theCookie[0].trim();
-  }
-  return anArray;
-}
-
-function DeleteCookies() {
-  var theCookies = document.cookie.split(";");
-  for (var i = 0; i < theCookies.length; i++) {
-    var mycookie = theCookies[i].split("=");
-    var cookiename = mycookie[0];
-    cookiename = cookiename.trim();
-    deleteCookie(cookiename);
-  }
 }
 
 //COOKIE CODE ends
